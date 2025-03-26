@@ -170,6 +170,9 @@ class OSInAppBrowser: CordovaPlugin() {
                     },
                     onBrowserFinished = {
                         sendSuccess(callbackContext, OSIABEventType.BROWSER_FINISHED)
+                    },
+                    onBrowserPageNavigationCompleted = { data ->
+                        sendSuccess(callbackContext, OSIABEventType.BROWSER_PAGE_NAVIGATION_COMPLETED, data)
                     }
                 )
 
@@ -261,8 +264,11 @@ class OSInAppBrowser: CordovaPlugin() {
      * @param callbackContext CallbackContext to send the result to
      * @param event Event to be sent (SUCCESS, BROWSER_PAGE_LOADED, or BROWSER_FINISHED)
      */
-    private fun sendSuccess(callbackContext: CallbackContext, event: OSIABEventType) {
-        val pluginResult = PluginResult(PluginResult.Status.OK, event.value)
+    private fun sendSuccess(callbackContext: CallbackContext, event: OSIABEventType, data: Any? = null) {
+        val dataToSend: Map<String, Any?> = mapOf("eventType" to event.value, "data" to data);
+        val jsonString = gson.toJson(dataToSend)
+
+        val pluginResult = PluginResult(PluginResult.Status.OK, jsonString)
         pluginResult.keepCallback = true
         callbackContext.sendPluginResult(pluginResult)
     }
@@ -288,5 +294,6 @@ class OSInAppBrowser: CordovaPlugin() {
 enum class OSIABEventType(val value: Int) {
     SUCCESS(1),
     BROWSER_FINISHED(2),
-    BROWSER_PAGE_LOADED(3)
+    BROWSER_PAGE_LOADED(3),
+    BROWSER_PAGE_NAVIGATION_COMPLETED(4)
 }

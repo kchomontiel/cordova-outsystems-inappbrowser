@@ -1,21 +1,26 @@
 import { require } from "cordova";
-import { BrowserCallbacks, PluginError, PluginListenerHandle, SystemBrowserOptions, WebViewOptions, CallbackEvent } from "./definitions";
+import { BrowserCallbacks, PluginError, SystemBrowserOptions, WebViewOptions, CallbackEvent, CallbackEventType } from "./definitions";
 import { DefaultSystemBrowserOptions, DefaultWebViewOptions } from "./defaults";
 var exec = require('cordova/exec')
 
-function trigger(type: CallbackEvent, success: () => void, onbrowserClosed: (() => void) | undefined = undefined, onbrowserPageLoaded: (() => void) | undefined = undefined) {
+function trigger(type: CallbackEventType, success: () => void, data?: any, onbrowserClosed: (() => void) | undefined = undefined, onbrowserPageLoaded: (() => void) | undefined = undefined, onbrowserPageNavigationCompleted: ((data?: string) => void) | undefined = undefined) {
   switch (type) {
-  case CallbackEvent.SUCCESS: 
+  case CallbackEventType.SUCCESS: 
     success();
     break
-  case CallbackEvent.PAGE_CLOSED:
+  case CallbackEventType.PAGE_CLOSED:
     if (onbrowserClosed) {
       onbrowserClosed();
     }
     break;
-  case CallbackEvent.PAGE_LOAD_COMPLETED:
+  case CallbackEventType.PAGE_LOAD_COMPLETED:
     if (onbrowserPageLoaded) {
       onbrowserPageLoaded();
+    }
+    break;
+  case CallbackEventType.PAGE_NAVIGATION_COMPLETED:
+    if (onbrowserPageNavigationCompleted) {
+      onbrowserPageNavigationCompleted(data);
     }
     break;
   default: break;
@@ -25,12 +30,13 @@ function trigger(type: CallbackEvent, success: () => void, onbrowserClosed: (() 
 function openInWebView(url: string, options: WebViewOptions,  success: () => void, error: (error: PluginError) => void,  browserCallbacks?: BrowserCallbacks): void {
   options = options || DefaultWebViewOptions;
   
-  let triggerCorrectCallback = function (result: CallbackEvent) {
-    if (result) {
+  let triggerCorrectCallback = function (result: string) {
+    const parsedResult: CallbackEvent = JSON.parse(result);
+    if (parsedResult) {
       if (browserCallbacks) {
-        trigger(result, success, browserCallbacks.onbrowserClosed, browserCallbacks.onbrowserPageLoaded);
+        trigger(parsedResult.eventType, success, parsedResult.data, browserCallbacks.onbrowserClosed, browserCallbacks.onbrowserPageLoaded, browserCallbacks.onbrowserPageNavigationCompleted);
       } else {
-        trigger(result, success);
+        trigger(parsedResult.eventType, success, parsedResult.data);
       }
     }
   };
@@ -41,12 +47,13 @@ function openInWebView(url: string, options: WebViewOptions,  success: () => voi
 function openInSystemBrowser(url: string, options: SystemBrowserOptions, success: () => void, error: (error: PluginError) => void, browserCallbacks?: BrowserCallbacks): void {
   options = options || DefaultSystemBrowserOptions;
   
-  let triggerCorrectCallback = function (result: CallbackEvent) {
-    if (result) {
+  let triggerCorrectCallback = function (result: string) {
+    const parsedResult: CallbackEvent = JSON.parse(result);
+    if (parsedResult) {
       if (browserCallbacks) {
-        trigger(result, success, browserCallbacks.onbrowserClosed, browserCallbacks.onbrowserPageLoaded);
+        trigger(parsedResult.eventType, success, parsedResult.data, browserCallbacks.onbrowserClosed, browserCallbacks.onbrowserPageLoaded);
       } else {
-        trigger(result, success);
+        trigger(parsedResult.eventType, success);
       }
     }
   };

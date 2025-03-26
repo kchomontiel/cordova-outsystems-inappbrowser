@@ -37,12 +37,13 @@
     DismissStyle2[DismissStyle2["DONE"] = 2] = "DONE";
     return DismissStyle2;
   })(DismissStyle || {});
-  var CallbackEvent = /* @__PURE__ */ ((CallbackEvent2) => {
-    CallbackEvent2[CallbackEvent2["SUCCESS"] = 1] = "SUCCESS";
-    CallbackEvent2[CallbackEvent2["PAGE_CLOSED"] = 2] = "PAGE_CLOSED";
-    CallbackEvent2[CallbackEvent2["PAGE_LOAD_COMPLETED"] = 3] = "PAGE_LOAD_COMPLETED";
-    return CallbackEvent2;
-  })(CallbackEvent || {});
+  var CallbackEventType = /* @__PURE__ */ ((CallbackEventType2) => {
+    CallbackEventType2[CallbackEventType2["SUCCESS"] = 1] = "SUCCESS";
+    CallbackEventType2[CallbackEventType2["PAGE_CLOSED"] = 2] = "PAGE_CLOSED";
+    CallbackEventType2[CallbackEventType2["PAGE_LOAD_COMPLETED"] = 3] = "PAGE_LOAD_COMPLETED";
+    CallbackEventType2[CallbackEventType2["PAGE_NAVIGATION_COMPLETED"] = 4] = "PAGE_NAVIGATION_COMPLETED";
+    return CallbackEventType2;
+  })(CallbackEventType || {});
   const DefaultAndroidWebViewOptions = {
     allowZoom: false,
     hardwareBack: true,
@@ -89,19 +90,24 @@
     iOS: DefaultiOSSystemBrowserOptions
   };
   var exec = cordova.require("cordova/exec");
-  function trigger(type, success, onbrowserClosed = void 0, onbrowserPageLoaded = void 0) {
+  function trigger(type, success, data, onbrowserClosed = void 0, onbrowserPageLoaded = void 0, onbrowserPageNavigationCompleted = void 0) {
     switch (type) {
-      case CallbackEvent.SUCCESS:
+      case CallbackEventType.SUCCESS:
         success();
         break;
-      case CallbackEvent.PAGE_CLOSED:
+      case CallbackEventType.PAGE_CLOSED:
         if (onbrowserClosed) {
           onbrowserClosed();
         }
         break;
-      case CallbackEvent.PAGE_LOAD_COMPLETED:
+      case CallbackEventType.PAGE_LOAD_COMPLETED:
         if (onbrowserPageLoaded) {
           onbrowserPageLoaded();
+        }
+        break;
+      case CallbackEventType.PAGE_NAVIGATION_COMPLETED:
+        if (onbrowserPageNavigationCompleted) {
+          onbrowserPageNavigationCompleted(data);
         }
         break;
     }
@@ -109,11 +115,12 @@
   function openInWebView(url, options, success, error, browserCallbacks) {
     options = options || DefaultWebViewOptions;
     let triggerCorrectCallback = function(result) {
-      if (result) {
+      const parsedResult = JSON.parse(result);
+      if (parsedResult) {
         if (browserCallbacks) {
-          trigger(result, success, browserCallbacks.onbrowserClosed, browserCallbacks.onbrowserPageLoaded);
+          trigger(parsedResult.eventType, success, parsedResult.data, browserCallbacks.onbrowserClosed, browserCallbacks.onbrowserPageLoaded, browserCallbacks.onbrowserPageNavigationCompleted);
         } else {
-          trigger(result, success);
+          trigger(parsedResult.eventType, success, parsedResult.data);
         }
       }
     };
@@ -122,11 +129,12 @@
   function openInSystemBrowser(url, options, success, error, browserCallbacks) {
     options = options || DefaultSystemBrowserOptions;
     let triggerCorrectCallback = function(result) {
-      if (result) {
+      const parsedResult = JSON.parse(result);
+      if (parsedResult) {
         if (browserCallbacks) {
-          trigger(result, success, browserCallbacks.onbrowserClosed, browserCallbacks.onbrowserPageLoaded);
+          trigger(parsedResult.eventType, success, parsedResult.data, browserCallbacks.onbrowserClosed, browserCallbacks.onbrowserPageLoaded);
         } else {
-          trigger(result, success);
+          trigger(parsedResult.eventType, success);
         }
       }
     };
@@ -146,7 +154,7 @@
   };
   exports2.AndroidAnimation = AndroidAnimation;
   exports2.AndroidViewStyle = AndroidViewStyle;
-  exports2.CallbackEvent = CallbackEvent;
+  exports2.CallbackEventType = CallbackEventType;
   exports2.DismissStyle = DismissStyle;
   exports2.ToolbarPosition = ToolbarPosition;
   exports2.iOSAnimation = iOSAnimation;
