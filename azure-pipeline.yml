@@ -13,7 +13,7 @@ resources:
 trigger: none
 
 pool:
-  vmImage: ubuntu-20.04
+  vmImage: ubuntu-24.04
 variables:
   - name: StampsInformationFileName
     value: eng-mobile.StampsInformation.json
