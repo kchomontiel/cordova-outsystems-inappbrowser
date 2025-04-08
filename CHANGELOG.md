@@ -8,6 +8,10 @@ The changes documented here do not include those from the original repository.
 
 ## Unreleased
 
+#### Features
+
+- Users now receive an event when the navigation occurs (for openInWebView option only) (https://outsystemsrd.atlassian.net/browse/RMET-4120).
+
 ### Android
 
 #### Chores

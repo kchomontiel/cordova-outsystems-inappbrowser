@@ -112,11 +112,18 @@ export interface AndroidSystemBrowserOptions {
 
 export interface BrowserCallbacks {
   onbrowserClosed: () => void,
-  onbrowserPageLoaded: () => void
+  onbrowserPageLoaded: () => void,
+  onbrowserPageNavigationCompleted: (url?: string) => void
 }
 
-export enum CallbackEvent {
+export enum CallbackEventType {
   SUCCESS = 1,
   PAGE_CLOSED = 2,
-  PAGE_LOAD_COMPLETED = 3
+  PAGE_LOAD_COMPLETED = 3,
+  PAGE_NAVIGATION_COMPLETED = 4
+} 
+
+export interface CallbackEvent {
+  eventType: CallbackEventType, 
+  data: any
 } 
