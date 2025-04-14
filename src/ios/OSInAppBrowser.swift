@@ -39,7 +39,7 @@ class OSInAppBrowser: CDVPlugin {
         func delegateSystemBrowser(_ url: URL, _ options: OSIABSystemBrowserOptions) {
             DispatchQueue.main.async {
                 self.plugin?.openSystemBrowser(url, options, { [weak self] event, viewControllerToOpen in
-                    self?.handleResult(event, for: command.callbackId, checking: viewControllerToOpen, error: .failedToOpen(url: url.absoluteString, onTarget: target))
+                    self?.handleResult(event, for: command.callbackId, checking: viewControllerToOpen, data: nil, error: .failedToOpen(url: url.absoluteString, onTarget: target))
                 })
             }
         }
@@ -75,8 +75,8 @@ class OSInAppBrowser: CDVPlugin {
                     },
                     onDelegateAlertController: { [weak self] alert in
                         self?.viewController.presentedViewController?.show(alert, sender: nil)
-                    }, { [weak self] event, viewControllerToOpen in
-                        self?.handleResult(event, for: command.callbackId, checking: viewControllerToOpen, error: .failedToOpen(url: url.absoluteString, onTarget: target))
+                    }, { [weak self] event, viewControllerToOpen, data  in
+                        self?.handleResult(event, for: command.callbackId, checking: viewControllerToOpen, data: data, error: .failedToOpen(url: url.absoluteString, onTarget: target))
                     }
                 )
             }
@@ -129,15 +129,15 @@ private extension OSInAppBrowser {
         }
     }
     
-    func handleResult(_ event: OSIABEventType, for callbackId: String, checking viewController: UIViewController?, error: OSInAppBrowserError) {
-        let sendEvent: () -> Void = { self.sendSuccess(event, for: callbackId) }
+    func handleResult(_ event: OSIABEventType, for callbackId: String, checking viewController: UIViewController?, data: Any?, error: OSInAppBrowserError) {
+        let sendEvent: (Any?) -> Void = { data in self.sendSuccess(event, for: callbackId, data: data) }
         
         switch event {
         case .success:
             if let viewController {
                 self.present(viewController) { [weak self] in
                     self?.openedViewController = viewController
-                    sendEvent()
+                    sendEvent(data)
                 }
             } else {
                 self.send(error: error, for: callbackId)
@@ -146,7 +146,9 @@ private extension OSInAppBrowser {
             self.openedViewController = nil
             fallthrough
         case .pageLoadCompleted:
-            sendEvent()
+            sendEvent(data)
+        case .pageNavigationCompleted:
+            sendEvent(data)
         }
     }
 }
@@ -172,10 +174,19 @@ private extension OSInAppBrowser {
         }
     }
     
-    func sendSuccess(_ eventType: OSIABEventType? = nil, for callbackId: String) {
+    func sendSuccess(_ eventType: OSIABEventType? = nil, for callbackId: String, data: Any? = nil) {
         let pluginResult: CDVPluginResult
+        var dataToSend = [String: Any]()
+
         if let eventType {
-            pluginResult = .init(status: .ok, messageAs: eventType.rawValue)
+            dataToSend["eventType"] = eventType.rawValue
+            dataToSend["data"] = data
+            if let jsonData = try? JSONSerialization.data(withJSONObject: dataToSend, options: .prettyPrinted),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                pluginResult = .init(status: .ok, messageAs: jsonString)
+            } else {
+                pluginResult = .init(status: .ok)
+            }
         } else {
             pluginResult = .init(status: .ok)
         }
@@ -191,7 +202,7 @@ private extension OSInAppBrowser {
 
 private extension OSInAppBrowserEngine {
     func openExternalBrowser(_ url: URL, _ completionHandler: @escaping (Bool) -> Void) {
-        let router = OSIABApplicationRouterAdapter(UIApplication.shared)
+        let router = OSIABApplicationRouterAdapter()
         self.openExternalBrowser(url, routerDelegate: router, completionHandler)
     }
     
@@ -210,21 +221,23 @@ private extension OSInAppBrowserEngine {
         onDelegateClose: @escaping () -> Void,
         onDelegateURL: @escaping (URL) -> Void,
         onDelegateAlertController: @escaping (UIAlertController) -> Void,
-        _ completionHandler: @escaping (OSIABEventType, UIViewController?) -> Void
+        _ completionHandler: @escaping (OSIABEventType, UIViewController?, String?) -> Void
     ) {
         let callbackHandler = OSIABWebViewCallbackHandler(
             onDelegateURL: onDelegateURL,
             onDelegateAlertController: onDelegateAlertController,
-            onBrowserPageLoad: { completionHandler(.pageLoadCompleted, nil) },
+            onBrowserPageLoad: { completionHandler(.pageLoadCompleted, nil, nil) },
             onBrowserClosed: { isAlreadyClosed in
                 if !isAlreadyClosed {
                     onDelegateClose()
                 }
-                completionHandler(.pageClosed, nil)
+                completionHandler(.pageClosed, nil, nil)
+            }, onBrowserPageNavigationCompleted: { url in
+                completionHandler(.pageNavigationCompleted, nil, url)
             }
         )
         let router = OSIABWebViewRouterAdapter(options, cacheManager: OSIABBrowserCacheManager(dataStore: .default()), callbackHandler: callbackHandler)
-        self.openWebView(url, routerDelegate: router) { completionHandler(.success, $0) }
+        self.openWebView(url, routerDelegate: router) { completionHandler(.success, $0, nil) }
     }
 }
  
@@ -232,4 +245,5 @@ enum OSIABEventType: Int {
     case success = 1
     case pageClosed
     case pageLoadCompleted
+    case pageNavigationCompleted
 }

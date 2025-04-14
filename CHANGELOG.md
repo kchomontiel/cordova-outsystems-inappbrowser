@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 The changes documented here do not include those from the original repository.
 
+## 1.3.0
+
+#### Features
+
+- Users now receive an event when the navigation occurs (for openInWebView option only) (https://outsystemsrd.atlassian.net/browse/RMET-4120).
+
+### Android
+
+#### Chores
+
+- Update dependency to Android native library (https://outsystemsrd.atlassian.net/browse/RMET-3982).
+
 ## 1.2.1
 
 ### Android
