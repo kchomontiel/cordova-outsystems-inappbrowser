@@ -50,6 +50,7 @@ export interface iOSWebViewOptions {
     surpressIncrementalRendering: boolean;
     viewStyle: iOSViewStyle;
     animationEffect: iOSAnimation;
+    allowsBackForwardNavigationGestures: boolean;
 }
 export interface AndroidWebViewOptions {
     allowZoom: boolean;

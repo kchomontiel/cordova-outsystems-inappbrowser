@@ -55,7 +55,8 @@
     allowInLineMediaPlayback: false,
     surpressIncrementalRendering: false,
     viewStyle: iOSViewStyle.FULL_SCREEN,
-    animationEffect: iOSAnimation.COVER_VERTICAL
+    animationEffect: iOSAnimation.COVER_VERTICAL,
+    allowsBackForwardNavigationGestures: true
   };
   const DefaultWebViewOptions = {
     showToolbar: true,

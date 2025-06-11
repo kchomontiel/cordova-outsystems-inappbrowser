@@ -5,7 +5,7 @@ export const DefaultAndroidWebViewOptions: AndroidWebViewOptions = {
     hardwareBack: true,
     pauseMedia: true
 }
-  
+
 export const DefaultiOSWebViewOptions: iOSWebViewOptions = {
     allowOverScroll: true,
 
@@ -14,7 +14,8 @@ export const DefaultiOSWebViewOptions: iOSWebViewOptions = {
     surpressIncrementalRendering: false,
 
     viewStyle: iOSViewStyle.FULL_SCREEN,
-    animationEffect: iOSAnimation.COVER_VERTICAL
+    animationEffect: iOSAnimation.COVER_VERTICAL,
+    allowsBackForwardNavigationGestures: true
 }
 
 export const DefaultWebViewOptions: WebViewOptions = {
@@ -49,11 +50,11 @@ export const DefaultAndroidSystemBrowserOptions: AndroidSystemBrowserOptions = {
     showTitle: false,
     hideToolbarOnScroll: false,
     viewStyle: AndroidViewStyle.BOTTOM_SHEET,
-    
+
     startAnimation: AndroidAnimation.FADE_IN,
     exitAnimation: AndroidAnimation.FADE_OUT
 }
-   
+
 export const DefaultSystemBrowserOptions: SystemBrowserOptions = {
     android: DefaultAndroidSystemBrowserOptions,
     iOS: DefaultiOSSystemBrowserOptions

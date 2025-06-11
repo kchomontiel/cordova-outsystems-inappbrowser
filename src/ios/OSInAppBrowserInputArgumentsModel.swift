@@ -17,6 +17,7 @@ class OSInAppBrowserInputArgumentsComplexModel: OSInAppBrowserInputArgumentsSimp
             let enableViewportScale: Bool?
             let allowInLineMediaPlayback: Bool?
             let surpressIncrementalRendering: Bool?
+            let allowsBackForwardNavigationGestures: Bool?
         }
         
         let iOS: iOS
@@ -74,7 +75,8 @@ extension OSInAppBrowserInputArgumentsComplexModel {
             surpressIncrementalRendering: self.options.iOS.surpressIncrementalRendering ?? false,
             viewStyle: self.options.iOS.viewStyle ?? .defaultValue,
             animationEffect: self.options.iOS.animationEffect ?? .defaultValue,
-            customUserAgent: self.options.customWebViewUserAgent
+            customUserAgent: self.options.customWebViewUserAgent,
+            allowsBackForwardNavigationGestures: self.options.iOS.allowsBackForwardNavigationGestures ?? true
         )
     }
 }
