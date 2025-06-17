@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 The changes documented here do not include those from the original repository.
 
+## 1.3.1
+
+### iOS
+
+#### Features
+
+- Added support for back and forward swipe navigation gestures in `WKWebView` via the `allowsBackForwardNavigationGestures` option. (for openInWebView option only) (https://outsystemsrd.atlassian.net/browse/RMET-4216).
+
 ## 1.3.0
 
 #### Features

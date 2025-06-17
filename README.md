@@ -111,6 +111,7 @@ The action is composed of the following parameters:
 		- **surpressIncrementalRendering**: A boolean that, if set to true, waits until all new view content is received before being rendered.
 		- **viewStyle**: An `iOSViewstyle` enumerator that sets the presentation style of the Web View.
 		- **animationEffect**: An `iOSAnimation` enumerator that sets the transition style of the Web View.
+		- **allowsBackForwardNavigationGestures**:  A boolean that, if set to true, enables back and forward swipe gestures in the Web View.
 - **successCallback**: A structure indicating that the action was successful.
 - **errorCallback**: A structure indicating that the action was not successful. It returns an "error" structure, composed of:
 	- **code**: A text containing the error code.

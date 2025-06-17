@@ -28,7 +28,7 @@ export enum AndroidAnimation {
   FADE_IN,
   FADE_OUT,
   SLIDE_IN_LEFT,
-  SLIDE_OUT_RIGHT  
+  SLIDE_OUT_RIGHT
 }
 
 export type PluginError = {
@@ -43,13 +43,13 @@ export interface WebViewOptions {
   clearCache: boolean;
   clearSessionCache: boolean;
   mediaPlaybackRequiresUserAction: boolean;
-  
+
   closeButtonText: string;
   toolbarPosition: ToolbarPosition;
-  
+
   showNavigationButtons: boolean;
   leftToRight: boolean;
-  
+
   customWebViewUserAgent: String | null;
 
   android: AndroidWebViewOptions,
@@ -65,6 +65,7 @@ export interface iOSWebViewOptions {
 
   viewStyle: iOSViewStyle;
   animationEffect: iOSAnimation;
+  allowsBackForwardNavigationGestures: boolean;
 }
 
 export interface AndroidWebViewOptions {
@@ -103,7 +104,7 @@ export interface AndroidSystemBrowserOptions {
 
   hideToolbarOnScroll: boolean;
   viewStyle: AndroidViewStyle;
-  
+
   bottomSheetOptions?: AndroidBottomSheetOptions;
 
   startAnimation: AndroidAnimation;
@@ -121,9 +122,9 @@ export enum CallbackEventType {
   PAGE_CLOSED = 2,
   PAGE_LOAD_COMPLETED = 3,
   PAGE_NAVIGATION_COMPLETED = 4
-} 
+}
 
 export interface CallbackEvent {
-  eventType: CallbackEventType, 
+  eventType: CallbackEventType,
   data: any
-} 
+}
