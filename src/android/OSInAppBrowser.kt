@@ -146,12 +146,25 @@ class OSInAppBrowser: CordovaPlugin() {
     private fun openInWebView(args: JSONArray, callbackContext: CallbackContext) {
         val url: String?
         val webViewOptions: OSIABWebViewOptions?
+        var customHeaders: Map<String, String>? = null
 
         try {
             val argumentsDictionary = args.getJSONObject(0)
             url = argumentsDictionary.getString("url")
             if(url.isNullOrEmpty()) throw IllegalArgumentException()
             webViewOptions = buildWebViewOptions(argumentsDictionary.optString("options", "{}"))
+            if (argumentsDictionary.has("customHeaders")) {
+                customHeaders = argumentsDictionary.getJSONObject("customHeaders").let { jsObject ->
+                    val result = mutableMapOf<String, String>()
+                    jsObject.keys().forEach { key ->
+                        when (val value = jsObject.opt(key)) {
+                            is String -> result[key] = value
+                            is Number -> result[key] = value.toString()
+                        }
+                    }
+                    result
+                }
+            }
         }
         catch (e: Exception) {
             sendError(callbackContext, OSInAppBrowserError.InputArgumentsIssue(OSInAppBrowserTarget.WEB_VIEW))
@@ -164,6 +177,7 @@ class OSInAppBrowser: CordovaPlugin() {
                     context = cordova.context,
                     lifecycleScope = cordova.activity.lifecycleScope,
                     options = webViewOptions,
+                    customHeaders = customHeaders,
                     flowHelper = OSIABFlowHelper(),
                     onBrowserPageLoaded = {
                         sendSuccess(callbackContext, OSIABEventType.BROWSER_PAGE_LOADED)

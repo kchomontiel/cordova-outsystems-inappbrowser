@@ -27,7 +27,7 @@ function trigger(type: CallbackEventType, success: () => void, data?: any, onbro
   }
 }
 
-function openInWebView(url: string, options: WebViewOptions,  success: () => void, error: (error: PluginError) => void,  browserCallbacks?: BrowserCallbacks): void {
+function openInWebView(url: string, options: WebViewOptions, success: () => void, error: (error: PluginError) => void, browserCallbacks?: BrowserCallbacks, customHeaders?: { [key: string]: string } | null): void {
   options = options || DefaultWebViewOptions;
   
   let triggerCorrectCallback = function (result: string) {
@@ -41,7 +41,7 @@ function openInWebView(url: string, options: WebViewOptions,  success: () => voi
     }
   };
 
-  exec(triggerCorrectCallback, error, 'OSInAppBrowser', 'openInWebView', [{url, options}]);
+  exec(triggerCorrectCallback, error, 'OSInAppBrowser', 'openInWebView', [{url, options, customHeaders}]);
 }
 
 function openInSystemBrowser(url: string, options: SystemBrowserOptions, success: () => void, error: (error: PluginError) => void, browserCallbacks?: BrowserCallbacks): void {

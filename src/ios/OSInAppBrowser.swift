@@ -62,11 +62,12 @@ class OSInAppBrowser: CDVPlugin {
     func openInWebView(command: CDVInvokedUrlCommand) {
         let target = OSInAppBrowserTarget.webView
         
-        func delegateWebView(_ url: URL, _ options: OSIABWebViewOptions) {
+        func delegateWebView(url: URL, options: OSIABWebViewOptions, customHeaders: [String: String]? = nil) {
             DispatchQueue.main.async {
                 self.plugin?.openWebView(
-                    url,
-                    options,
+                    url: url,
+                    options: options,
+                    customHeaders: customHeaders,
                     onDelegateClose: { [weak self] in
                         self?.viewController.dismiss(animated: true)
                     },
@@ -75,7 +76,7 @@ class OSInAppBrowser: CDVPlugin {
                     },
                     onDelegateAlertController: { [weak self] alert in
                         self?.viewController.presentedViewController?.show(alert, sender: nil)
-                    }, { [weak self] event, viewControllerToOpen, data  in
+                    }, completionHandler: { [weak self] event, viewControllerToOpen, data  in
                         self?.handleResult(event, for: command.callbackId, checking: viewControllerToOpen, data: data, error: .failedToOpen(url: url.absoluteString, onTarget: target))
                     }
                 )
@@ -92,7 +93,7 @@ class OSInAppBrowser: CDVPlugin {
                 return self.send(error: .inputArgumentsIssue(target: target), for: command.callbackId)
             }
 
-            delegateWebView(url, argumentsModel.toWebViewOptions())
+            delegateWebView(url: url, options: argumentsModel.toWebViewOptions(), customHeaders: argumentsModel.customHeaders)
         }
     }
     
@@ -216,12 +217,13 @@ private extension OSInAppBrowserEngine {
     }
     
     func openWebView(
-        _ url: URL,
-        _ options: OSIABWebViewOptions,
+        url: URL,
+        options: OSIABWebViewOptions,
+        customHeaders: [String: String]? = nil,
         onDelegateClose: @escaping () -> Void,
         onDelegateURL: @escaping (URL) -> Void,
         onDelegateAlertController: @escaping (UIAlertController) -> Void,
-        _ completionHandler: @escaping (OSIABEventType, UIViewController?, String?) -> Void
+        completionHandler: @escaping (OSIABEventType, UIViewController?, String?) -> Void
     ) {
         let callbackHandler = OSIABWebViewCallbackHandler(
             onDelegateURL: onDelegateURL,
@@ -236,7 +238,12 @@ private extension OSInAppBrowserEngine {
                 completionHandler(.pageNavigationCompleted, nil, url)
             }
         )
-        let router = OSIABWebViewRouterAdapter(options, cacheManager: OSIABBrowserCacheManager(dataStore: .default()), callbackHandler: callbackHandler)
+        let router = OSIABWebViewRouterAdapter(
+            options: options,
+            customHeaders: customHeaders,
+            cacheManager: OSIABBrowserCacheManager(dataStore: .default()),
+            callbackHandler: callbackHandler
+        )
         self.openWebView(url, routerDelegate: router) { completionHandler(.success, $0, nil) }
     }
 }

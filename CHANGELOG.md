@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 The changes documented here do not include those from the original repository.
 
+## [Unreleased]
+
+#### Features
+
+- Add support for passing custom headers to web view (only for the OpenInWebView option). [RMET-4287](https://outsystemsrd.atlassian.net/browse/RMET-4287).
+
 ## 1.3.1
 
 ### iOS
