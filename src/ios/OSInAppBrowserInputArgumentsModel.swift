@@ -35,14 +35,17 @@ class OSInAppBrowserInputArgumentsComplexModel: OSInAppBrowserInputArgumentsSimp
     }
     
     let options: Options
-    
+    let customHeaders: [String: String]?
+
     enum CodingKeys: CodingKey {
         case options
+        case customHeaders
     }
     
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.options = try container.decode(Options.self, forKey: .options)
+        self.customHeaders = try container.decodeIfPresent([String: String].self, forKey: .customHeaders)
         try super.init(from: decoder)
     }
 }

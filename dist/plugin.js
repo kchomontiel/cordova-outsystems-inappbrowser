@@ -113,7 +113,7 @@
         break;
     }
   }
-  function openInWebView(url, options, success, error, browserCallbacks) {
+  function openInWebView(url, options, success, error, browserCallbacks, customHeaders) {
     options = options || DefaultWebViewOptions;
     let triggerCorrectCallback = function(result) {
       const parsedResult = JSON.parse(result);
@@ -125,7 +125,7 @@
         }
       }
     };
-    exec(triggerCorrectCallback, error, "OSInAppBrowser", "openInWebView", [{ url, options }]);
+    exec(triggerCorrectCallback, error, "OSInAppBrowser", "openInWebView", [{ url, options, customHeaders }]);
   }
   function openInSystemBrowser(url, options, success, error, browserCallbacks) {
     options = options || DefaultSystemBrowserOptions;
