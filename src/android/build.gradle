@@ -10,7 +10,8 @@ buildscript {
 }
 
 dependencies{
-    implementation("io.ionic.libs:ioninappbrowser-android:1.4.0@aar")
+    //implementation("io.ionic.libs:ioninappbrowser-android:1.4.0@aar")
+    implementation files('../../android/app/src/main/libs/OSInAppBrowserLib-debug.aar')
 
     implementation("androidx.browser:browser:1.8.0")
     implementation("com.google.android.gms:play-services-auth:21.2.0")
