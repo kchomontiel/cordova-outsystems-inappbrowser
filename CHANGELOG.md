@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 The changes documented here do not include those from the original repository.
 
+## 1.5.0
+
+### Features
+
+- Android: Add support for PDF files in the WebView via PDF.js (only for the OpenInWebView option) [RMET-2053](https://outsystemsrd.atlassian.net/browse/RMET-2053)
+
+## 1.4.1
+
+### Features
+
+- Added support for predictive back navigation for Android 13+ (https://outsystemsrd.atlassian.net/browse/RMET-4335)
+
 ## 1.4.0
 
 #### Features
