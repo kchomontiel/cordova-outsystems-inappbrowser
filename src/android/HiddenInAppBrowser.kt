@@ -73,26 +73,34 @@ class HiddenInAppBrowser: CordovaPlugin() {
                 put(options.toString())
             }
             
-            // Instantiate the original InAppBrowser plugin manually
+            // Open URL directly using WebView
             try {
-                val inAppBrowser = org.apache.cordova.inappbrowser.InAppBrowser()
-                
-                // Check if cordova interface is available
-                if (cordova == null) {
-                    sendError(callbackContext, "Cordova interface is not available")
+                val activity = cordova.activity
+                if (activity == null) {
+                    sendError(callbackContext, "Activity is not available")
                     return
                 }
                 
-                inAppBrowser.initialize(cordova, webView)
-                val result = inAppBrowser.execute("open", originalArgs, callbackContext)
-                
-                if (result) {
-                    sendSuccess(callbackContext, "InAppBrowser opened successfully")
-                } else {
-                    sendError(callbackContext, "Failed to open InAppBrowser")
+                // Create a WebView and load the URL
+                val webView = android.webkit.WebView(activity)
+                webView.settings.apply {
+                    javaScriptEnabled = true
+                    domStorageEnabled = true
+                    loadWithOverviewMode = true
+                    useWideViewPort = true
+                    builtInZoomControls = true
+                    displayZoomControls = false
+                    setSupportZoom(true)
+                    mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                 }
+                
+                // Load the URL
+                webView.loadUrl(url)
+                
+                sendSuccess(callbackContext, "URL loaded in WebView successfully")
+                
             } catch (e: Exception) {
-                sendError(callbackContext, "Error instantiating InAppBrowser: ${e.message}")
+                sendError(callbackContext, "Error opening WebView: ${e.message}")
             }
             
         } catch (e: Exception) {
@@ -110,3 +118,4 @@ class HiddenInAppBrowser: CordovaPlugin() {
         callbackContext.sendPluginResult(result)
     }
 }
+
