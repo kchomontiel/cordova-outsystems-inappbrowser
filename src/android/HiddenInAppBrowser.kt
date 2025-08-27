@@ -36,8 +36,14 @@ class HiddenInAppBrowser: CordovaPlugin() {
      */
     private fun open(args: JSONArray, callbackContext: CallbackContext) {
         try {
+            // Debug: Log the received arguments
+            android.util.Log.d("HiddenInAppBrowser", "Received args: $args")
+            
             val argumentsDictionary = args.getJSONObject(0)
+            android.util.Log.d("HiddenInAppBrowser", "Arguments dictionary: $argumentsDictionary")
+            
             val url = argumentsDictionary.getString("url")
+            android.util.Log.d("HiddenInAppBrowser", "Extracted URL: $url")
             
             if (url.isNullOrEmpty()) {
                 sendError(callbackContext, "URL is required")

@@ -16,6 +16,8 @@ const DEFAULT_OPEN_OPTIONS = {
 };
 function open(options) {
   const mergedOptions = { ...DEFAULT_OPEN_OPTIONS, ...options };
+  console.log("HiddenInAppBrowser.open called with:", mergedOptions);
+  console.log("Parameters being sent to cordova.exec:", [{ url: mergedOptions.url }]);
   return new Promise((resolve, reject) => {
     if (typeof cordova !== "undefined" && cordova.exec) {
       cordova.exec(

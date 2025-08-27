@@ -5,6 +5,12 @@ import { DEFAULT_OPEN_OPTIONS } from "./defaults";
 export function open(options: HiddenInAppBrowserOpenOptions): Promise<void> {
   const mergedOptions = { ...DEFAULT_OPEN_OPTIONS, ...options };
 
+  // Debug: Log the parameters being sent
+  console.log("HiddenInAppBrowser.open called with:", mergedOptions);
+  console.log("Parameters being sent to cordova.exec:", [
+    { url: mergedOptions.url },
+  ]);
+
   return new Promise((resolve, reject) => {
     // Use cordova.exec directly instead of require
     if (typeof cordova !== "undefined" && cordova.exec) {
