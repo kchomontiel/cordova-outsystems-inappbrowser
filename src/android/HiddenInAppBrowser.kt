@@ -8,12 +8,6 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 class HiddenInAppBrowser: CordovaPlugin() {
-    
-    // Constants for the original InAppBrowser compatibility
-    private val SELF = "_self"
-    private val SYSTEM = "_system"
-    private val BLANK = "_blank"
-    private val NULL = "null"
 
     override fun initialize(cordova: CordovaInterface, webView: CordovaWebView) {
         super.initialize(cordova, webView)
@@ -67,8 +61,8 @@ class HiddenInAppBrowser: CordovaPlugin() {
                 put("fullscreen", "yes")
             }
 
-            // Use the original InAppBrowser implementation directly
-            val inAppBrowser = org.apache.cordova.inappbrowser.outsystems.InAppBrowser()
+            // Use the original InAppBrowser plugin directly
+            val inAppBrowser = org.apache.cordova.inappbrowser.InAppBrowser()
             inAppBrowser.initialize(cordova, webView)
             
             // Create args for the original plugin
