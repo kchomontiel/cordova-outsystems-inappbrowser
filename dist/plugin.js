@@ -72,6 +72,13 @@
     iOS: DefaultiOSWebViewOptions,
     customWebViewUserAgent: null
   };
+  const DefaultWebViewHiddenOptions = {
+    ...DefaultWebViewOptions,
+    hidden: true,
+    autoClose: true,
+    timeout: 3e4
+    // 30 segundos por defecto
+  };
   const DefaultiOSSystemBrowserOptions = {
     closeButtonText: DismissStyle.DONE,
     viewStyle: iOSViewStyle.FULL_SCREEN,
@@ -144,11 +151,26 @@
   function openInExternalBrowser(url, success, error) {
     exec(success, error, "OSInAppBrowser", "openInExternalBrowser", [{ url }]);
   }
+  function openInWebViewHidden(url, options, success, error, browserCallbacks, customHeaders) {
+    options = options || DefaultWebViewHiddenOptions;
+    let triggerCorrectCallback = function(result) {
+      const parsedResult = JSON.parse(result);
+      if (parsedResult) {
+        if (browserCallbacks) {
+          trigger(parsedResult.eventType, success, parsedResult.data, browserCallbacks.onbrowserClosed, browserCallbacks.onbrowserPageLoaded, browserCallbacks.onbrowserPageNavigationCompleted);
+        } else {
+          trigger(parsedResult.eventType, success, parsedResult.data);
+        }
+      }
+    };
+    exec(triggerCorrectCallback, error, "OSInAppBrowser", "openInWebViewHidden", [{ url, options, customHeaders }]);
+  }
   function close(success, error) {
     exec(success, error, "OSInAppBrowser", "close", [{}]);
   }
   module.exports = {
     openInWebView,
+    openInWebViewHidden,
     openInExternalBrowser,
     openInSystemBrowser,
     close

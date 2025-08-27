@@ -43,6 +43,11 @@ export interface WebViewOptions {
     android: AndroidWebViewOptions;
     iOS: iOSWebViewOptions;
 }
+export interface WebViewHiddenOptions extends WebViewOptions {
+    hidden: boolean;
+    autoClose: boolean;
+    timeout: number;
+}
 export interface iOSWebViewOptions {
     allowOverScroll: boolean;
     enableViewportScale: boolean;
