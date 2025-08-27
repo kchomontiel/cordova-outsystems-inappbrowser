@@ -1,0 +1,37 @@
+{
+  "name": "com.outsystems.plugins.inappbrowser",
+  "version": "1.5.0",
+  "description": "InAppBrowser OutSystems Cordova Plugin",
+  "keywords": [
+    "ecosystem:cordova",
+    "cordova-android",
+    "cordova-ios"
+  ],
+  "cordova": {
+    "id": "com.outsystems.plugins.inappbrowser",
+    "platforms": [
+      "android",
+      "ios"
+    ]
+  },
+  "scripts": {
+    "build": "rimraf ./dist && vite build",
+    "update:tag": "node ./scripts/change-extensibility.js",
+    "update:version": "node ./scripts/tag-applications-o11.js",
+    "deploy": "node ./scripts/deploy.js",
+    "download": "node ./scripts/download.js"
+  },
+  "engines": [],
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@types/cordova": "^11.0.3",
+    "@types/node": "^20.12.12",
+    "cordova-common": "^5.0.0",
+    "eslint": "^7.11.0",
+    "prettier": "~2.3.0",
+    "rimraf": "^3.0.2",
+    "typescript": "~5.4.5",
+    "vite": "^5.2.11",
+    "vite-plugin-dts": "^3.9.1"
+  }
+}
