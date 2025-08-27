@@ -1,9 +1,12 @@
-import { HiddenInAppBrowser, HiddenInAppBrowserOpenOptions } from "./definitions";
+import {
+  HiddenInAppBrowser,
+  HiddenInAppBrowserOpenOptions,
+} from "./definitions";
 import { DEFAULT_OPEN_OPTIONS } from "./defaults";
 
 const { exec } = require("cordova/exec");
 
-export class HiddenInAppBrowserPlugin implements HiddenInAppBrowser {
+class HiddenInAppBrowserPlugin implements HiddenInAppBrowser {
   async open(options: HiddenInAppBrowserOpenOptions): Promise<void> {
     const mergedOptions = { ...DEFAULT_OPEN_OPTIONS, ...options };
 
@@ -19,8 +22,9 @@ export class HiddenInAppBrowserPlugin implements HiddenInAppBrowser {
   }
 }
 
-// Export the plugin instance
-export const HiddenInAppBrowserInstance = new HiddenInAppBrowserPlugin();
+// Create the plugin instance
+const HiddenInAppBrowserInstance = new HiddenInAppBrowserPlugin();
 
-// Export types for consumers
+// Export for module systems
+export { HiddenInAppBrowserInstance, HiddenInAppBrowserPlugin };
 export type { HiddenInAppBrowserOpenOptions } from "./definitions";
