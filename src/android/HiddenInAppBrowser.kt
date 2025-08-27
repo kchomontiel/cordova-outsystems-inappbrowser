@@ -73,7 +73,7 @@ class HiddenInAppBrowser: CordovaPlugin() {
                 put(options.toString())
             }
             
-            // Open URL directly using WebView
+            // Open URL in external browser
             try {
                 val activity = cordova.activity
                 if (activity == null) {
@@ -81,26 +81,19 @@ class HiddenInAppBrowser: CordovaPlugin() {
                     return
                 }
                 
-                // Create a WebView and load the URL
-                val webView = android.webkit.WebView(activity)
-                webView.settings.apply {
-                    javaScriptEnabled = true
-                    domStorageEnabled = true
-                    loadWithOverviewMode = true
-                    useWideViewPort = true
-                    builtInZoomControls = true
-                    displayZoomControls = false
-                    setSupportZoom(true)
-                    mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                // Create intent to open URL in external browser
+                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                
+                // Check if there's an app to handle this intent
+                if (intent.resolveActivity(activity.packageManager) != null) {
+                    activity.startActivity(intent)
+                    sendSuccess(callbackContext, "URL opened in external browser successfully")
+                } else {
+                    sendError(callbackContext, "No app found to handle this URL")
                 }
                 
-                // Load the URL
-                webView.loadUrl(url)
-                
-                sendSuccess(callbackContext, "URL loaded in WebView successfully")
-                
             } catch (e: Exception) {
-                sendError(callbackContext, "Error opening WebView: ${e.message}")
+                sendError(callbackContext, "Error opening URL: ${e.message}")
             }
             
         } catch (e: Exception) {
