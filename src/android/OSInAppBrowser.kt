@@ -547,19 +547,19 @@ class OSInAppBrowser: CordovaPlugin() {
 
         // Convert features to our WebView options format
         val webViewOptions = OSIABWebViewOptions(
-            showURL = showLocationBar && !hideUrlBar,
-            showToolbar = showLocationBar,
-            clearCache = clearAllCache,
-            clearSessionCache = clearSessionCache,
-            mediaPlaybackRequiresUserAction = mediaPlaybackRequiresUserAction,
-            closeButtonText = closeButtonCaption.ifEmpty { "Close" },
-            toolbarPosition = OSIABToolbarPosition.TOP,
-            leftToRight = leftToRight,
-            showNavigationButtons = showLocationBar && !hideNavigationButtons,
-            allowZoom = showZoomControls,
-            hardwareBack = hardwareBack,
-            pauseMedia = true,
-            customWebViewUserAgent = null
+            showLocationBar && !hideUrlBar,  // showURL
+            showLocationBar,  // showToolbar
+            clearAllCache,  // clearCache
+            clearSessionCache,  // clearSessionCache
+            mediaPlaybackRequiresUserAction,  // mediaPlaybackRequiresUserAction
+            closeButtonCaption.ifEmpty { "Close" },  // closeButtonText
+            OSIABToolbarPosition.TOP,  // toolbarPosition
+            leftToRight,  // leftToRight
+            showLocationBar && !hideNavigationButtons,  // showNavigationButtons
+            showZoomControls,  // allowZoom
+            hardwareBack,  // hardwareBack
+            true,  // pauseMedia
+            ""  // customWebViewUserAgent - empty string instead of null
         )
 
         try {
