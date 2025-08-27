@@ -81,7 +81,7 @@ function openInWebViewHidden(url: string, options: WebViewHiddenOptions, success
 
   exec(triggerCorrectCallback, error, 'OSInAppBrowser', 'openInWebViewHidden', [{url, options, customHeaders}]);
 }
-
+>>>>>>> b38b391a03eed0314f62fc51f1de1dbb49f52900
 function close(success: () => void, error: (error: PluginError) => void): void {
   exec(success, error, 'OSInAppBrowser', 'close', [{}])  
 }

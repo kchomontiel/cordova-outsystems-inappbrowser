@@ -13,7 +13,6 @@ The changes documented here do not include those from the original repository.
 - Add new `openInWebViewHidden` method that allows opening WebView in hidden state for background operations
 - Support for hidden WebView with configurable timeout and auto-close functionality
 - Enhanced WebView options with hidden-specific configurations
-
 ## 1.5.0
 
 ### Features

@@ -43,7 +43,6 @@ export const DefaultWebViewHiddenOptions: WebViewHiddenOptions = {
     autoClose: true,
     timeout: 30000 // 30 segundos por defecto
 }
-
 export const DefaultiOSSystemBrowserOptions: iOSSystemBrowserOptions = {
     closeButtonText: DismissStyle.DONE,
     viewStyle: iOSViewStyle.FULL_SCREEN,

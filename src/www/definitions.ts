@@ -62,7 +62,6 @@ export interface WebViewHiddenOptions extends WebViewOptions {
   autoClose: boolean;                  // Cerrar automáticamente después de completar
   timeout: number;                     // Timeout en milisegundos (0 = sin timeout)
 }
-
 export interface iOSWebViewOptions {
   allowOverScroll: boolean;
 

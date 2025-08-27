@@ -119,6 +119,7 @@ The action is composed of the following parameters:
 	- **message**: A text containing the error message.
 - **browserCallbacks**: A `BrowserCallbacks` structure that contains all the callbacks that are triggered when opening a browser. The callbacks are based on the events defined on the `CallbackEvent` enumerator: `PAGE_CLOSED` and `PAGE_LOAD_COMPLETED`.
 
+<<<<<<< HEAD
 ### Open in Web View Hidden
 
 ```js
@@ -196,6 +197,8 @@ cordova.plugins.OSInAppBrowser.openInWebViewHidden(
 );
 ```
 
+=======
+>>>>>>> b38b391a03eed0314f62fc51f1de1dbb49f52900
 ### Close
 
 ```js
