@@ -1,4 +1,4 @@
 import { HiddenInAppBrowserOpenOptions } from './definitions';
 
-export declare function open(options: HiddenInAppBrowserOpenOptions): Promise<void>;
+export declare function open(options: string | HiddenInAppBrowserOpenOptions): Promise<void>;
 export type { HiddenInAppBrowserOpenOptions } from './definitions';

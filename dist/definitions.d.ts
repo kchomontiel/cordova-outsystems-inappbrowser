@@ -15,5 +15,5 @@ export interface HiddenInAppBrowserOpenOptions {
     fullscreen?: boolean;
 }
 export interface HiddenInAppBrowser {
-    open(options: HiddenInAppBrowserOpenOptions): Promise<void>;
+    open(options: string | HiddenInAppBrowserOpenOptions): Promise<void>;
 }
