@@ -1,19 +1,19 @@
 <?xml version='1.0' encoding='utf-8'?>
-<plugin id="com.outsystems.plugins.inappbrowser" version="1.5.0" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+<plugin id="com.outsystems.plugins.hiddeninappbrowser" version="1.5.0" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
     <name>cordova-outsystems-inappbrowser</name>
     <description>InAppBrowser OutSystems Cordova Plugin</description>
     <author>OutSystems Inc</author>
     
-    <js-module name="OSInAppBrowser" src="dist/plugin.js">
-        <clobbers target="cordova.plugins.OSInAppBrowser" />
+    <js-module name="HiddenInAppBrowser" src="dist/plugin.js">
+        <clobbers target="cordova.plugins.HiddenInAppBrowser" />
     </js-module>
     <platform name="android">
 
         <hook type="before_plugin_install" src="hooks/outsystems/handle_cleartextTrafficPermitted.js" />
 
         <config-file parent="/*" target="res/xml/config.xml">
-            <feature name="OSInAppBrowser">
-                <param name="android-package" value="com.outsystems.plugins.inappbrowser.osinappbrowser.OSInAppBrowser" />
+            <feature name="HiddenInAppBrowser">
+                <param name="android-package" value="com.outsystems.plugins.inappbrowser.osinappbrowser.HiddenInAppBrowser" />
             </feature>
             <preference name="GradlePluginKotlinEnabled" value="true" />
             <preference name="GradlePluginKotlinCodeStyle" value="official" />
@@ -21,18 +21,13 @@
         </config-file>
         
         <config-file parent="/*" target="AndroidManifest.xml" />
-        <source-file src="src/android/OSInAppBrowser.kt" target-dir="app/src/main/kotlin/com/outsystems/plugins/inappbrowser/osinappbrowser" />
-        <source-file src="src/android/OSInAppBrowserError.kt" target-dir="app/src/main/kotlin/com/outsystems/plugins/inappbrowser/osinappbrowser" />
-        
-        <framework src="src/android/build.gradle" custom="true" type="gradleReference" />
-        <source-file src="src/android/OSInAppBrowserSystemBrowserInputArguments.kt" target-dir="app/src/main/kotlin/com/outsystems/plugins/inappbrowser/osinappbrowser" />
-        <source-file src="src/android/OSInAppBrowserWebViewInputArguments.kt" target-dir="app/src/main/kotlin/com/outsystems/plugins/inappbrowser/osinappbrowser" />
-        <source-file src="src/android/OSInAppBrowserWebViewHiddenInputArguments.kt" target-dir="app/src/main/kotlin/com/outsystems/plugins/inappbrowser/osinappbrowser" />
+        <source-file src="src/android/HiddenInAppBrowser.kt" target-dir="app/src/main/kotlin/com/outsystems/plugins/inappbrowser/osinappbrowser" />
+
         
         <!-- Include original InAppBrowser files for compatibility -->
-        <source-file src="../cordova-plugin-inappbrowser-master/src/android/InAppBrowser.java" target-dir="src/org/apache/cordova/inappbrowser" />
-        <source-file src="../cordova-plugin-inappbrowser-master/src/android/InAppBrowserDialog.java" target-dir="src/org/apache/cordova/inappbrowser" />
-        <source-file src="../cordova-plugin-inappbrowser-master/src/android/InAppChromeClient.java" target-dir="src/org/apache/cordova/inappbrowser" />
+        <source-file src="../cordova-plugin-inappbrowser-master/src/android/outsystems/InAppBrowser.java" target-dir="src/org/apache/cordova/inappbrowser/outsystems" />
+        <source-file src="../cordova-plugin-inappbrowser-master/src/android/outsystems/InAppBrowserDialog.java" target-dir="src/org/apache/cordova/inappbrowser/outsystems" />
+        <source-file src="../cordova-plugin-inappbrowser-master/src/android/outsystems/InAppChromeClient.java" target-dir="src/org/apache/cordova/inappbrowser/outsystems" />
         
         <!-- Include original InAppBrowser resources -->
         <resource-file src="../cordova-plugin-inappbrowser-master/src/android/res/drawable-hdpi/ic_action_next_item.png" target="res/drawable-hdpi/ic_action_next_item.png" />
@@ -50,8 +45,8 @@
     </platform>
     <platform name="ios">
         <config-file parent="/*" target="config.xml">
-            <feature name="OSInAppBrowser">
-                <param name="ios-package" value="OSInAppBrowser" />
+            <feature name="HiddenInAppBrowser">
+                <param name="ios-package" value="HiddenInAppBrowser" />
             </feature>
             <preference name="SwiftVersion" value="5" />
         </config-file>
