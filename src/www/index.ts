@@ -1,20 +1,23 @@
 import { HiddenInAppBrowserOpenOptions } from "./definitions";
 import { DEFAULT_OPEN_OPTIONS } from "./defaults";
 
-const { exec } = require("cordova/exec");
-
 // Export the open function directly for Cordova
 export function open(options: HiddenInAppBrowserOpenOptions): Promise<void> {
   const mergedOptions = { ...DEFAULT_OPEN_OPTIONS, ...options };
 
   return new Promise((resolve, reject) => {
-    exec(
-      () => resolve(),
-      (error: string) => reject(new Error(error)),
-      "HiddenInAppBrowser",
-      "open",
-      [{ url: mergedOptions.url }]
-    );
+    // Use cordova.exec directly instead of require
+    if (typeof cordova !== "undefined" && cordova.exec) {
+      cordova.exec(
+        () => resolve(),
+        (error: string) => reject(new Error(error)),
+        "HiddenInAppBrowser",
+        "open",
+        [{ url: mergedOptions.url }]
+      );
+    } else {
+      reject(new Error("Cordova is not available"));
+    }
   });
 }
 

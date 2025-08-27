@@ -14,17 +14,20 @@ const DEFAULT_OPEN_OPTIONS = {
   hideurlbar: true,
   fullscreen: true
 };
-const { exec } = require("cordova/exec");
 function open(options) {
   const mergedOptions = { ...DEFAULT_OPEN_OPTIONS, ...options };
   return new Promise((resolve, reject) => {
-    exec(
-      () => resolve(),
-      (error) => reject(new Error(error)),
-      "HiddenInAppBrowser",
-      "open",
-      [{ url: mergedOptions.url }]
-    );
+    if (typeof cordova !== "undefined" && cordova.exec) {
+      cordova.exec(
+        () => resolve(),
+        (error) => reject(new Error(error)),
+        "HiddenInAppBrowser",
+        "open",
+        [{ url: mergedOptions.url }]
+      );
+    } else {
+      reject(new Error("Cordova is not available"));
+    }
   });
 }
 if (typeof console !== "undefined") {
