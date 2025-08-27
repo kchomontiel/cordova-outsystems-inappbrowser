@@ -209,7 +209,6 @@ class OSInAppBrowser: CordovaPlugin() {
     }
 
     /**
-<<<<<<< HEAD
      * Calls the openWebView method of OSIABEngine to open the url in a hidden WebView
      * @param args JSONArray that contains the parameters to parse (e.g. url to open)
      * @param callbackContext CallbackContext the method should return to
@@ -223,6 +222,7 @@ class OSInAppBrowser: CordovaPlugin() {
             val argumentsDictionary = args.getJSONObject(0)
             url = argumentsDictionary.getString("url")
             if(url.isNullOrEmpty()) throw IllegalArgumentException()
+            
             webViewOptions = buildWebViewHiddenOptions(argumentsDictionary.optString("options", "{}"))
             if (argumentsDictionary.has("customHeaders")) {
                 customHeaders = argumentsDictionary.getJSONObject("customHeaders").let { jsObject ->
@@ -277,8 +277,6 @@ class OSInAppBrowser: CordovaPlugin() {
     }
 
     /**
-=======
->>>>>>> b38b391a03eed0314f62fc51f1de1dbb49f52900
      * Calls the close method of OSIABEngine to close the currently opened view
      * @param callbackContext CallbackContext the method should return to
      */
@@ -347,7 +345,6 @@ class OSInAppBrowser: CordovaPlugin() {
     }
 
     /**
-<<<<<<< HEAD
      * Parses options that come in JSON to a 'OSInAppBrowserWebViewHiddenInputArguments'.
      * Then, it uses the newly created object to create a 'OSIABWebViewOptions' object.
      * @param options The options to open the URL in a hidden WebView, in a JSON string.
@@ -355,16 +352,16 @@ class OSInAppBrowser: CordovaPlugin() {
     private fun buildWebViewHiddenOptions(options: String): OSIABWebViewOptions {
         return gson.fromJson(options, OSInAppBrowserWebViewHiddenInputArguments::class.java).let {
             OSIABWebViewOptions(
-                it.showURL ?: true,
-                it.showToolbar ?: true,
+                it.showURL ?: false,  // Hidden WebView should not show URL by default
+                it.showToolbar ?: false,  // Hidden WebView should not show toolbar by default
                 it.clearCache ?: true,
                 it.clearSessionCache ?: true,
                 it.mediaPlaybackRequiresUserAction ?: false,
                 it.closeButtonText ?: "Close",
                 it.toolbarPosition ?: OSIABToolbarPosition.TOP,
                 it.leftToRight ?: false,
-                it.showNavigationButtons ?: true,
-                it.android.allowZoom ?: true,
+                it.showNavigationButtons ?: false,  // Hidden WebView should not show navigation buttons by default
+                it.android.allowZoom ?: false,  // Hidden WebView should not allow zoom by default
                 it.android.hardwareBack ?: true,
                 it.android.pauseMedia ?: true,
                 it.customWebViewUserAgent
@@ -373,8 +370,6 @@ class OSInAppBrowser: CordovaPlugin() {
     }
 
     /**
-=======
->>>>>>> b38b391a03eed0314f62fc51f1de1dbb49f52900
      * Helper method to send a success result
      * @param callbackContext CallbackContext to send the result to
      * @param event Event to be sent (SUCCESS, BROWSER_PAGE_LOADED, or BROWSER_FINISHED)
