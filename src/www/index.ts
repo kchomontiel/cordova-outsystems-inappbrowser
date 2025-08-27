@@ -1,30 +1,27 @@
-import {
-  HiddenInAppBrowser,
-  HiddenInAppBrowserOpenOptions,
-} from "./definitions";
+import { HiddenInAppBrowserOpenOptions } from "./definitions";
 import { DEFAULT_OPEN_OPTIONS } from "./defaults";
 
 const { exec } = require("cordova/exec");
 
-class HiddenInAppBrowserPlugin implements HiddenInAppBrowser {
-  async open(options: HiddenInAppBrowserOpenOptions): Promise<void> {
-    const mergedOptions = { ...DEFAULT_OPEN_OPTIONS, ...options };
+// Export the open function directly for Cordova
+export function open(options: HiddenInAppBrowserOpenOptions): Promise<void> {
+  const mergedOptions = { ...DEFAULT_OPEN_OPTIONS, ...options };
 
-    return new Promise((resolve, reject) => {
-      exec(
-        () => resolve(),
-        (error: string) => reject(new Error(error)),
-        "HiddenInAppBrowser",
-        "open",
-        [{ url: mergedOptions.url }]
-      );
-    });
-  }
+  return new Promise((resolve, reject) => {
+    exec(
+      () => resolve(),
+      (error: string) => reject(new Error(error)),
+      "HiddenInAppBrowser",
+      "open",
+      [{ url: mergedOptions.url }]
+    );
+  });
 }
 
-// Create the plugin instance
-const HiddenInAppBrowserInstance = new HiddenInAppBrowserPlugin();
+// Debug: Log to console to verify plugin is loaded
+if (typeof console !== "undefined") {
+  console.log("HiddenInAppBrowser plugin loaded with open function:", open);
+}
 
-// Export for module systems
-export { HiddenInAppBrowserInstance, HiddenInAppBrowserPlugin };
+// Export types for consumers
 export type { HiddenInAppBrowserOpenOptions } from "./definitions";

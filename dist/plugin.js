@@ -19,22 +19,21 @@
     fullscreen: true
   };
   const { exec } = require("cordova/exec");
-  class HiddenInAppBrowserPlugin {
-    async open(options) {
-      const mergedOptions = { ...DEFAULT_OPEN_OPTIONS, ...options };
-      return new Promise((resolve, reject) => {
-        exec(
-          () => resolve(),
-          (error) => reject(new Error(error)),
-          "HiddenInAppBrowser",
-          "open",
-          [{ url: mergedOptions.url }]
-        );
-      });
-    }
+  function open(options) {
+    const mergedOptions = { ...DEFAULT_OPEN_OPTIONS, ...options };
+    return new Promise((resolve, reject) => {
+      exec(
+        () => resolve(),
+        (error) => reject(new Error(error)),
+        "HiddenInAppBrowser",
+        "open",
+        [{ url: mergedOptions.url }]
+      );
+    });
   }
-  const HiddenInAppBrowserInstance = new HiddenInAppBrowserPlugin();
-  exports2.HiddenInAppBrowserInstance = HiddenInAppBrowserInstance;
-  exports2.HiddenInAppBrowserPlugin = HiddenInAppBrowserPlugin;
+  if (typeof console !== "undefined") {
+    console.log("HiddenInAppBrowser plugin loaded with open function:", open);
+  }
+  exports2.open = open;
   Object.defineProperty(exports2, Symbol.toStringTag, { value: "Module" });
 });

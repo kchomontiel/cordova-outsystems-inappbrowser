@@ -1,8 +1,4 @@
-import { HiddenInAppBrowser, HiddenInAppBrowserOpenOptions } from './definitions';
+import { HiddenInAppBrowserOpenOptions } from './definitions';
 
-declare class HiddenInAppBrowserPlugin implements HiddenInAppBrowser {
-    open(options: HiddenInAppBrowserOpenOptions): Promise<void>;
-}
-declare const HiddenInAppBrowserInstance: HiddenInAppBrowserPlugin;
-export { HiddenInAppBrowserInstance, HiddenInAppBrowserPlugin };
+export declare function open(options: HiddenInAppBrowserOpenOptions): Promise<void>;
 export type { HiddenInAppBrowserOpenOptions } from './definitions';

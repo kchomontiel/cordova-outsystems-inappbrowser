@@ -17,20 +17,19 @@ const DEFAULT_OPEN_OPTIONS = {
   fullscreen: true
 };
 const { exec } = require("cordova/exec");
-class HiddenInAppBrowserPlugin {
-  async open(options) {
-    const mergedOptions = { ...DEFAULT_OPEN_OPTIONS, ...options };
-    return new Promise((resolve, reject) => {
-      exec(
-        () => resolve(),
-        (error) => reject(new Error(error)),
-        "HiddenInAppBrowser",
-        "open",
-        [{ url: mergedOptions.url }]
-      );
-    });
-  }
+function open(options) {
+  const mergedOptions = { ...DEFAULT_OPEN_OPTIONS, ...options };
+  return new Promise((resolve, reject) => {
+    exec(
+      () => resolve(),
+      (error) => reject(new Error(error)),
+      "HiddenInAppBrowser",
+      "open",
+      [{ url: mergedOptions.url }]
+    );
+  });
 }
-const HiddenInAppBrowserInstance = new HiddenInAppBrowserPlugin();
-exports.HiddenInAppBrowserInstance = HiddenInAppBrowserInstance;
-exports.HiddenInAppBrowserPlugin = HiddenInAppBrowserPlugin;
+if (typeof console !== "undefined") {
+  console.log("HiddenInAppBrowser plugin loaded with open function:", open);
+}
+exports.open = open;
