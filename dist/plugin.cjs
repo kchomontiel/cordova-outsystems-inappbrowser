@@ -17,9 +17,43 @@ const DEFAULT_OPEN_OPTIONS = {
   fullscreen: true
 };
 function open(options) {
-  const mergedOptions = { ...DEFAULT_OPEN_OPTIONS, ...options };
-  console.log("HiddenInAppBrowser.open called with:", mergedOptions);
-  console.log("Parameters being sent to cordova.exec:", [{ url: mergedOptions.url }]);
+  console.log("HiddenInAppBrowser.open - Raw options received:", options);
+  console.log("HiddenInAppBrowser.open - Options type:", typeof options);
+  console.log("HiddenInAppBrowser.open - Options.url:", options.url);
+  console.log(
+    "HiddenInAppBrowser.open - Options.url type:",
+    typeof options.url
+  );
+  console.log("HiddenInAppBrowser.open - Options.url constructor:", options.url?.constructor?.name);
+  console.log("HiddenInAppBrowser.open - Options.url keys:", Object.keys(options.url || {}));
+  let url = options.url;
+  console.log("HiddenInAppBrowser.open - Converting URL from:", url);
+  console.log("HiddenInAppBrowser.open - URL type:", typeof url);
+  if (typeof url !== "string") {
+    console.log("HiddenInAppBrowser.open - URL is not a string, attempting conversion...");
+    if (Array.isArray(url)) {
+      console.log("HiddenInAppBrowser.open - URL is an array, joining...");
+      url = url.join("");
+    } else if (typeof url === "object" && url !== null) {
+      console.log("HiddenInAppBrowser.open - URL is an object, reconstructing...");
+      const keys = Object.keys(url).filter((key) => !isNaN(Number(key))).sort((a, b) => Number(a) - Number(b));
+      console.log("HiddenInAppBrowser.open - Found keys:", keys);
+      if (keys.length > 0) {
+        url = keys.map((key) => url[key]).join("");
+      }
+    }
+    console.log("HiddenInAppBrowser.open - Converted URL to:", url);
+  }
+  const correctedOptions = { ...options, url };
+  const mergedOptions = { ...DEFAULT_OPEN_OPTIONS, ...correctedOptions };
+  console.log("HiddenInAppBrowser.open - Merged options:", mergedOptions);
+  console.log(
+    "HiddenInAppBrowser.open - Merged options.url:",
+    mergedOptions.url
+  );
+  console.log("Parameters being sent to cordova.exec:", [
+    { url: mergedOptions.url }
+  ]);
   return new Promise((resolve, reject) => {
     if (typeof cordova !== "undefined" && cordova.exec) {
       cordova.exec(
