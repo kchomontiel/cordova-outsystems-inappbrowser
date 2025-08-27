@@ -67,23 +67,38 @@ class HiddenInAppBrowser: CordovaPlugin() {
                 put("fullscreen", "yes")
             }
 
-            // Use the original InAppBrowser plugin directly
-            val inAppBrowser = org.apache.cordova.inappbrowser.InAppBrowser()
-            inAppBrowser.initialize(cordova, webView)
-            
             // Create args for the original plugin
             val originalArgs = JSONArray().apply {
                 put(url)
                 put(options.toString())
             }
             
-            // Call the original open method
-            val result = inAppBrowser.execute("open", originalArgs, callbackContext)
+            // Try to get the original InAppBrowser plugin from the plugin manager
+            val pluginManager = cordova.pluginManager
+            val originalInAppBrowser = pluginManager.getPlugin("InAppBrowser")
             
-            if (result) {
-                sendSuccess(callbackContext, "InAppBrowser opened successfully")
+            if (originalInAppBrowser != null) {
+                // Call the original plugin directly
+                val result = originalInAppBrowser.execute("open", originalArgs, callbackContext)
+                if (result) {
+                    sendSuccess(callbackContext, "InAppBrowser opened successfully")
+                } else {
+                    sendError(callbackContext, "Failed to open InAppBrowser")
+                }
             } else {
-                sendError(callbackContext, "Failed to open InAppBrowser")
+                // Fallback: try to instantiate manually
+                try {
+                    val inAppBrowser = org.apache.cordova.inappbrowser.InAppBrowser()
+                    inAppBrowser.initialize(cordova, webView)
+                    val result = inAppBrowser.execute("open", originalArgs, callbackContext)
+                    if (result) {
+                        sendSuccess(callbackContext, "InAppBrowser opened successfully")
+                    } else {
+                        sendError(callbackContext, "Failed to open InAppBrowser")
+                    }
+                } catch (e: Exception) {
+                    sendError(callbackContext, "Error instantiating InAppBrowser: ${e.message}")
+                }
             }
             
         } catch (e: Exception) {
