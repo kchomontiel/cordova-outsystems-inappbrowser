@@ -73,27 +73,66 @@ class HiddenInAppBrowser: CordovaPlugin() {
                 put(options.toString())
             }
             
-            // Open URL in external browser
-            try {
-                val activity = cordova.activity
-                if (activity == null) {
-                    sendError(callbackContext, "Activity is not available")
-                    return
+            // Check if hidden mode is requested
+            val isHidden = options.optString("hidden", "no") == "yes"
+            
+            if (isHidden) {
+                // Hidden mode: Load URL in background WebView
+                try {
+                    val activity = cordova.activity
+                    if (activity == null) {
+                        sendError(callbackContext, "Activity is not available")
+                        return
+                    }
+                    
+                    // Create a background WebView (invisible)
+                    val webView = android.webkit.WebView(activity)
+                    webView.settings.apply {
+                        javaScriptEnabled = true
+                        domStorageEnabled = true
+                        loadWithOverviewMode = true
+                        useWideViewPort = true
+                        builtInZoomControls = true
+                        displayZoomControls = false
+                        setSupportZoom(true)
+                        mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                    }
+                    
+                    // Set WebView to be invisible
+                    webView.alpha = 0f
+                    webView.visibility = android.view.View.GONE
+                    
+                    // Load the URL in background
+                    webView.loadUrl(url)
+                    
+                    sendSuccess(callbackContext, "URL loaded in hidden WebView successfully")
+                    
+                } catch (e: Exception) {
+                    sendError(callbackContext, "Error loading URL in hidden mode: ${e.message}")
                 }
-                
-                // Create intent to open URL in external browser
-                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
-                
-                // Check if there's an app to handle this intent
-                if (intent.resolveActivity(activity.packageManager) != null) {
-                    activity.startActivity(intent)
-                    sendSuccess(callbackContext, "URL opened in external browser successfully")
-                } else {
-                    sendError(callbackContext, "No app found to handle this URL")
+            } else {
+                // Visible mode: Open in external browser
+                try {
+                    val activity = cordova.activity
+                    if (activity == null) {
+                        sendError(callbackContext, "Activity is not available")
+                        return
+                    }
+                    
+                    // Create intent to open URL in external browser
+                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                    
+                    // Check if there's an app to handle this intent
+                    if (intent.resolveActivity(activity.packageManager) != null) {
+                        activity.startActivity(intent)
+                        sendSuccess(callbackContext, "URL opened in external browser successfully")
+                    } else {
+                        sendError(callbackContext, "No app found to handle this URL")
+                    }
+                    
+                } catch (e: Exception) {
+                    sendError(callbackContext, "Error opening URL: ${e.message}")
                 }
-                
-            } catch (e: Exception) {
-                sendError(callbackContext, "Error opening URL: ${e.message}")
             }
             
         } catch (e: Exception) {
