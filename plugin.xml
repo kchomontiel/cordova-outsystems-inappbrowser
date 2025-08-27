@@ -28,6 +28,25 @@
         <source-file src="src/android/OSInAppBrowserSystemBrowserInputArguments.kt" target-dir="app/src/main/kotlin/com/outsystems/plugins/inappbrowser/osinappbrowser" />
         <source-file src="src/android/OSInAppBrowserWebViewInputArguments.kt" target-dir="app/src/main/kotlin/com/outsystems/plugins/inappbrowser/osinappbrowser" />
         <source-file src="src/android/OSInAppBrowserWebViewHiddenInputArguments.kt" target-dir="app/src/main/kotlin/com/outsystems/plugins/inappbrowser/osinappbrowser" />
+        
+        <!-- Include original InAppBrowser files for compatibility -->
+        <source-file src="../cordova-plugin-inappbrowser-master/src/android/InAppBrowser.java" target-dir="src/org/apache/cordova/inappbrowser" />
+        <source-file src="../cordova-plugin-inappbrowser-master/src/android/InAppBrowserDialog.java" target-dir="src/org/apache/cordova/inappbrowser" />
+        <source-file src="../cordova-plugin-inappbrowser-master/src/android/InAppChromeClient.java" target-dir="src/org/apache/cordova/inappbrowser" />
+        
+        <!-- Include original InAppBrowser resources -->
+        <resource-file src="../cordova-plugin-inappbrowser-master/src/android/res/drawable-hdpi/ic_action_next_item.png" target="res/drawable-hdpi/ic_action_next_item.png" />
+        <resource-file src="../cordova-plugin-inappbrowser-master/src/android/res/drawable-mdpi/ic_action_next_item.png" target="res/drawable-mdpi/ic_action_next_item.png" />
+        <resource-file src="../cordova-plugin-inappbrowser-master/src/android/res/drawable-xhdpi/ic_action_next_item.png" target="res/drawable-xhdpi/ic_action_next_item.png" />
+        <resource-file src="../cordova-plugin-inappbrowser-master/src/android/res/drawable-xxhdpi/ic_action_next_item.png" target="res/drawable-xxhdpi/ic_action_next_item.png" />
+        <resource-file src="../cordova-plugin-inappbrowser-master/src/android/res/drawable-hdpi/ic_action_previous_item.png" target="res/drawable-hdpi/ic_action_previous_item.png" />
+        <resource-file src="../cordova-plugin-inappbrowser-master/src/android/res/drawable-mdpi/ic_action_previous_item.png" target="res/drawable-mdpi/ic_action_previous_item.png" />
+        <resource-file src="../cordova-plugin-inappbrowser-master/src/android/res/drawable-xhdpi/ic_action_previous_item.png" target="res/drawable-xhdpi/ic_action_previous_item.png" />
+        <resource-file src="../cordova-plugin-inappbrowser-master/src/android/res/drawable-xxhdpi/ic_action_previous_item.png" target="res/drawable-xxhdpi/ic_action_previous_item.png" />
+        <resource-file src="../cordova-plugin-inappbrowser-master/src/android/res/drawable-hdpi/ic_action_remove.png" target="res/drawable-hdpi/ic_action_remove.png" />
+        <resource-file src="../cordova-plugin-inappbrowser-master/src/android/res/drawable-mdpi/ic_action_remove.png" target="res/drawable-mdpi/ic_action_remove.png" />
+        <resource-file src="../cordova-plugin-inappbrowser-master/src/android/res/drawable-xhdpi/ic_action_remove.png" target="res/drawable-xhdpi/ic_action_remove.png" />
+        <resource-file src="../cordova-plugin-inappbrowser-master/src/android/res/drawable-xxhdpi/ic_action_remove.png" target="res/drawable-xxhdpi/ic_action_remove.png" />
     </platform>
     <platform name="ios">
         <config-file parent="/*" target="config.xml">

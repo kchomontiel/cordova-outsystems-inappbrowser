@@ -111,38 +111,18 @@ class OSInAppBrowser: CordovaPlugin() {
      */
     private fun open(args: JSONArray, callbackContext: CallbackContext) {
         try {
-            val url = args.getString(0)
-            var target = args.optString(1)
-            if (target.isNullOrEmpty() || target == NULL) {
-                target = SELF
-            }
-            val features = parseFeature(args.optString(2))
-
-            cordova.activity.runOnUiThread {
-                var result = ""
-                
-                when (target) {
-                    SELF -> {
-                        // Load in the main WebView
-                        webView.loadUrl(url)
-                        result = ""
-                    }
-                    SYSTEM -> {
-                        // Open in external browser
-                        result = openExternal(url)
-                    }
-                    else -> {
-                        // BLANK or anything else - open in InAppBrowser
-                        result = showWebPage(url, features)
-                    }
-                }
-
-                val pluginResult = PluginResult(PluginResult.Status.OK, result)
-                pluginResult.keepCallback = true
-                callbackContext.sendPluginResult(pluginResult)
+            // Use the original InAppBrowser implementation directly
+            val inAppBrowser = org.apache.cordova.inappbrowser.InAppBrowser()
+            inAppBrowser.initialize(cordova, webView)
+            
+            // Call the original InAppBrowser open method
+            val result = inAppBrowser.execute("open", args, callbackContext)
+            
+            if (!result) {
+                sendError(callbackContext, OSInAppBrowserError.OpenFailed(args.getString(0), OSInAppBrowserTarget.WEB_VIEW))
             }
         } catch (e: Exception) {
-            sendError(callbackContext, OSInAppBrowserError.InputArgumentsIssue(OSInAppBrowserTarget.WEB_VIEW))
+            sendError(callbackContext, OSInAppBrowserError.OpenFailed(args.getString(0), OSInAppBrowserTarget.WEB_VIEW))
         }
     }
 
