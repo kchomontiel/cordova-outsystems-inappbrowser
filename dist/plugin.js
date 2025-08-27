@@ -126,13 +126,22 @@
       const parsedResult = JSON.parse(result);
       if (parsedResult) {
         if (browserCallbacks) {
-          trigger(parsedResult.eventType, success, parsedResult.data, browserCallbacks.onbrowserClosed, browserCallbacks.onbrowserPageLoaded, browserCallbacks.onbrowserPageNavigationCompleted);
+          trigger(
+            parsedResult.eventType,
+            success,
+            parsedResult.data,
+            browserCallbacks.onbrowserClosed,
+            browserCallbacks.onbrowserPageLoaded,
+            browserCallbacks.onbrowserPageNavigationCompleted
+          );
         } else {
           trigger(parsedResult.eventType, success, parsedResult.data);
         }
       }
     };
-    exec(triggerCorrectCallback, error, "OSInAppBrowser", "openInWebView", [{ url, options, customHeaders }]);
+    exec(triggerCorrectCallback, error, "OSInAppBrowser", "openInWebView", [
+      { url, options, customHeaders }
+    ]);
   }
   function openInSystemBrowser(url, options, success, error, browserCallbacks) {
     options = options || DefaultSystemBrowserOptions;
@@ -140,16 +149,29 @@
       const parsedResult = JSON.parse(result);
       if (parsedResult) {
         if (browserCallbacks) {
-          trigger(parsedResult.eventType, success, parsedResult.data, browserCallbacks.onbrowserClosed, browserCallbacks.onbrowserPageLoaded);
+          trigger(
+            parsedResult.eventType,
+            success,
+            parsedResult.data,
+            browserCallbacks.onbrowserClosed,
+            browserCallbacks.onbrowserPageLoaded
+          );
         } else {
           trigger(parsedResult.eventType, success);
         }
       }
     };
-    exec(triggerCorrectCallback, error, "OSInAppBrowser", "openInSystemBrowser", [{ url, options }]);
+    exec(triggerCorrectCallback, error, "OSInAppBrowser", "openInSystemBrowser", [
+      { url, options }
+    ]);
   }
   function openInExternalBrowser(url, success, error) {
     exec(success, error, "OSInAppBrowser", "openInExternalBrowser", [{ url }]);
+  }
+  function open(url, target, options, success, error) {
+    target = target || "_blank";
+    options = options || "";
+    exec(success, error, "OSInAppBrowser", "open", [url, target, options]);
   }
   function openInWebViewHidden(url, options, success, error, browserCallbacks, customHeaders) {
     options = options || DefaultWebViewHiddenOptions;
@@ -157,18 +179,28 @@
       const parsedResult = JSON.parse(result);
       if (parsedResult) {
         if (browserCallbacks) {
-          trigger(parsedResult.eventType, success, parsedResult.data, browserCallbacks.onbrowserClosed, browserCallbacks.onbrowserPageLoaded, browserCallbacks.onbrowserPageNavigationCompleted);
+          trigger(
+            parsedResult.eventType,
+            success,
+            parsedResult.data,
+            browserCallbacks.onbrowserClosed,
+            browserCallbacks.onbrowserPageLoaded,
+            browserCallbacks.onbrowserPageNavigationCompleted
+          );
         } else {
           trigger(parsedResult.eventType, success, parsedResult.data);
         }
       }
     };
-    exec(triggerCorrectCallback, error, "OSInAppBrowser", "openInWebViewHidden", [{ url, options, customHeaders }]);
+    exec(triggerCorrectCallback, error, "OSInAppBrowser", "openInWebViewHidden", [
+      { url, options, customHeaders }
+    ]);
   }
   function close(success, error) {
     exec(success, error, "OSInAppBrowser", "close", [{}]);
   }
   module.exports = {
+    open,
     openInWebView,
     openInWebViewHidden,
     openInExternalBrowser,

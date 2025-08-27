@@ -14,6 +14,9 @@ import com.outsystems.plugins.inappbrowser.osinappbrowserlib.models.OSIABWebView
 import com.outsystems.plugins.inappbrowser.osinappbrowserlib.routeradapters.OSIABCustomTabsRouterAdapter
 import com.outsystems.plugins.inappbrowser.osinappbrowserlib.routeradapters.OSIABExternalBrowserRouterAdapter
 import com.outsystems.plugins.inappbrowser.osinappbrowserlib.routeradapters.OSIABWebViewRouterAdapter
+import android.content.Intent
+import android.net.Uri
+import android.provider.Browser
 import org.apache.cordova.CallbackContext
 import org.apache.cordova.CordovaInterface
 import org.apache.cordova.CordovaPlugin
@@ -21,11 +24,18 @@ import org.apache.cordova.CordovaWebView
 import org.apache.cordova.PluginResult
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.StringTokenizer
 
 class OSInAppBrowser: CordovaPlugin() {
     private var engine: OSIABEngine? = null
     private var activeRouter: OSIABRouter<Boolean>? = null
     private val gson by lazy { Gson() }
+    
+    // Constants for the original InAppBrowser compatibility
+    private val SELF = "_self"
+    private val SYSTEM = "_system"
+    private val BLANK = "_blank"
+    private val NULL = "null"
 
     override fun initialize(cordova: CordovaInterface, webView: CordovaWebView) {
         super.initialize(cordova, webView)
@@ -38,6 +48,9 @@ class OSInAppBrowser: CordovaPlugin() {
         callbackContext: CallbackContext
     ): Boolean {
         when(action) {
+            "open" -> {
+                open(args, callbackContext)
+            }
             "openInExternalBrowser" -> {
                 openInExternalBrowser(args, callbackContext)
             }
@@ -88,6 +101,48 @@ class OSInAppBrowser: CordovaPlugin() {
         }
         catch (e: Exception) {
             sendError(callbackContext, OSInAppBrowserError.OpenFailed(url, OSInAppBrowserTarget.EXTERNAL_BROWSER))
+        }
+    }
+
+    /**
+     * Original InAppBrowser open method for compatibility
+     * @param args JSONArray containing [url, target, features]
+     * @param callbackContext CallbackContext the method should return to
+     */
+    private fun open(args: JSONArray, callbackContext: CallbackContext) {
+        try {
+            val url = args.getString(0)
+            var target = args.optString(1)
+            if (target.isNullOrEmpty() || target == NULL) {
+                target = SELF
+            }
+            val features = parseFeature(args.optString(2))
+
+            cordova.activity.runOnUiThread {
+                var result = ""
+                
+                when (target) {
+                    SELF -> {
+                        // Load in the main WebView
+                        webView.loadUrl(url)
+                        result = ""
+                    }
+                    SYSTEM -> {
+                        // Open in external browser
+                        result = openExternal(url)
+                    }
+                    else -> {
+                        // BLANK or anything else - open in InAppBrowser
+                        result = showWebPage(url, features)
+                    }
+                }
+
+                val pluginResult = PluginResult(PluginResult.Status.OK, result)
+                pluginResult.keepCallback = true
+                callbackContext.sendPluginResult(pluginResult)
+            }
+        } catch (e: Exception) {
+            sendError(callbackContext, OSInAppBrowserError.InputArgumentsIssue(OSInAppBrowserTarget.WEB_VIEW))
         }
     }
 
@@ -382,6 +437,177 @@ class OSInAppBrowser: CordovaPlugin() {
         pluginResult.keepCallback = true
         callbackContext.sendPluginResult(pluginResult)
     }
+
+    /**
+     * Parse features string into HashMap (from original InAppBrowser)
+     * @param optString Features string in format "key1=value1,key2=value2"
+     * @return HashMap with parsed features
+     */
+    private fun parseFeature(optString: String): HashMap<String, String>? {
+        return if (optString == NULL) {
+            null
+        } else {
+            val map = HashMap<String, String>()
+            val features = StringTokenizer(optString, ",")
+            while (features.hasMoreElements()) {
+                val option = StringTokenizer(features.nextToken(), "=")
+                if (option.hasMoreElements()) {
+                    val key = option.nextToken()
+                    var value = option.nextToken()
+                    // For boolean options, default to "yes" if not "yes" or "no"
+                    if (!customizableOptions.contains(key)) {
+                        value = if (value == "yes" || value == "no") value else "yes"
+                    }
+                    map[key] = value
+                }
+            }
+            map
+        }
+    }
+
+    /**
+     * Open URL in external browser (from original InAppBrowser)
+     * @param url URL to open
+     * @return Empty string if successful, error message otherwise
+     */
+    private fun openExternal(url: String): String {
+        return try {
+            val intent = Intent(Intent.ACTION_VIEW)
+            val uri = Uri.parse(url)
+            if ("file" == uri.scheme) {
+                intent.setDataAndType(uri, webView.resourceApi.getMimeType(uri))
+            } else {
+                intent.data = uri
+            }
+            intent.putExtra(Browser.EXTRA_APPLICATION_ID, cordova.activity.packageName)
+            openExternalExcludeCurrentApp(intent)
+            ""
+        } catch (e: RuntimeException) {
+            e.toString()
+        }
+    }
+
+    /**
+     * Open external intent excluding current app (from original InAppBrowser)
+     * @param intent Intent to open
+     */
+    private fun openExternalExcludeCurrentApp(intent: Intent) {
+        val currentPackage = cordova.activity.packageName
+        var hasCurrentPackage = false
+
+        val pm = cordova.activity.packageManager
+        val activities = pm.queryIntentActivities(intent, 0)
+        val targetIntents = ArrayList<Intent>()
+
+        for (ri in activities) {
+            if (currentPackage != ri.activityInfo.packageName) {
+                val targetIntent = intent.clone() as Intent
+                targetIntent.setPackage(ri.activityInfo.packageName)
+                targetIntents.add(targetIntent)
+            } else {
+                hasCurrentPackage = true
+            }
+        }
+
+        when {
+            !hasCurrentPackage || targetIntents.isEmpty() -> {
+                cordova.activity.startActivity(intent)
+            }
+            targetIntents.size == 1 -> {
+                cordova.activity.startActivity(targetIntents[0])
+            }
+            targetIntents.isNotEmpty() -> {
+                val chooser = Intent.createChooser(targetIntents.removeAt(targetIntents.size - 1), null)
+                chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, targetIntents.toTypedArray())
+                cordova.activity.startActivity(chooser)
+            }
+        }
+    }
+
+    /**
+     * Show web page with features (from original InAppBrowser)
+     * @param url URL to load
+     * @param features Features HashMap
+     * @return Empty string if successful, error message otherwise
+     */
+    private fun showWebPage(url: String, features: HashMap<String, String>?): String {
+        // Parse features to determine behavior
+        val showLocationBar = features?.get("location")?.equals("yes") ?: true
+        val showZoomControls = features?.get("zoom")?.equals("yes") ?: true
+        val openWindowHidden = features?.get("hidden")?.equals("yes") ?: false
+        val hardwareBack = features?.get("hardwareback")?.equals("yes") ?: true
+        val mediaPlaybackRequiresUserAction = features?.get("mediaPlaybackRequiresUserAction")?.equals("yes") ?: false
+        val clearAllCache = features?.get("clearcache")?.equals("yes") ?: false
+        val clearSessionCache = features?.get("clearsessioncache")?.equals("yes") ?: false
+        val closeButtonCaption = features?.get("closebuttoncaption") ?: ""
+        val leftToRight = features?.get("lefttoright")?.equals("yes") ?: false
+        val hideNavigationButtons = features?.get("hidenavigationbuttons")?.equals("yes") ?: false
+        val hideUrlBar = features?.get("hideurlbar")?.equals("yes") ?: false
+        val fullscreen = features?.get("fullscreen")?.equals("yes") ?: true
+
+        // Convert features to our WebView options format
+        val webViewOptions = OSIABWebViewOptions(
+            showURL = showLocationBar && !hideUrlBar,
+            showToolbar = showLocationBar,
+            clearCache = clearAllCache,
+            clearSessionCache = clearSessionCache,
+            mediaPlaybackRequiresUserAction = mediaPlaybackRequiresUserAction,
+            closeButtonText = closeButtonCaption.ifEmpty { "Close" },
+            toolbarPosition = OSIABToolbarPosition.TOP,
+            leftToRight = leftToRight,
+            showNavigationButtons = showLocationBar && !hideNavigationButtons,
+            allowZoom = showZoomControls,
+            hardwareBack = hardwareBack,
+            pauseMedia = true,
+            customWebViewUserAgent = null
+        )
+
+        try {
+            close {
+                val webViewRouter = OSIABWebViewRouterAdapter(
+                    context = cordova.context,
+                    lifecycleScope = cordova.activity.lifecycleScope,
+                    options = webViewOptions,
+                    customHeaders = null,
+                    flowHelper = OSIABFlowHelper(),
+                    onBrowserPageLoaded = {
+                        // Handle page loaded event
+                    },
+                    onBrowserFinished = {
+                        // Handle browser finished event
+                    },
+                    onBrowserPageNavigationCompleted = { data ->
+                        // Handle navigation completed event
+                    }
+                )
+
+                engine?.openWebView(webViewRouter, url) { success ->
+                    if (success) {
+                        activeRouter = webViewRouter
+                        
+                        // If hidden is true, hide the dialog after opening
+                        if (openWindowHidden) {
+                            cordova.activity.runOnUiThread {
+                                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                    // Hide the dialog but keep it active
+                                    // Note: This would need to be implemented in the router adapter
+                                }, 100)
+                            }
+                        }
+                    }
+                }
+            }
+            return ""
+        } catch (e: Exception) {
+            return e.toString()
+        }
+    }
+
+    // List of customizable options (from original InAppBrowser)
+    private val customizableOptions = listOf(
+        "closebuttoncaption", "toolbarcolor", "navigationbuttoncolor", 
+        "closebuttoncolor", "footercolor"
+    )
 
     /**
      * Helper method to send an error result
