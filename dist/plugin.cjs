@@ -16,8 +16,46 @@ const DEFAULT_OPEN_OPTIONS = {
   hideurlbar: true,
   fullscreen: true
 };
+const DEFAULT_EXTERNAL_BROWSER_OPTIONS = {
+  url: "",
+  hidden: false,
+  location: true,
+  toolbar: true,
+  zoom: true,
+  hardwareback: true,
+  mediaPlaybackRequiresUserAction: false,
+  shouldPauseOnSuspend: false,
+  clearsessioncache: false,
+  cache: true,
+  disallowoverscroll: false,
+  hidenavigationbuttons: false,
+  hideurlbar: false,
+  fullscreen: false
+};
+const DEFAULT_WEBVIEW_OPTIONS = {
+  url: "",
+  hidden: false,
+  location: true,
+  toolbar: true,
+  zoom: true,
+  hardwareback: true,
+  mediaPlaybackRequiresUserAction: false,
+  shouldPauseOnSuspend: false,
+  clearsessioncache: false,
+  cache: true,
+  disallowoverscroll: false,
+  hidenavigationbuttons: false,
+  hideurlbar: false,
+  fullscreen: false
+};
 function open(urlOrOptions, target, optionsString, onSuccess, onError) {
-  console.log("HiddenInAppBrowser.open - Raw parameters received:", { urlOrOptions, target, optionsString, onSuccess, onError });
+  console.log("HiddenInAppBrowser.open - Raw parameters received:", {
+    urlOrOptions,
+    target,
+    optionsString,
+    onSuccess,
+    onError
+  });
   console.log("HiddenInAppBrowser.open - Parameters types:", {
     urlOrOptions: typeof urlOrOptions,
     target: typeof target,
@@ -30,7 +68,10 @@ function open(urlOrOptions, target, optionsString, onSuccess, onError) {
     url = urlOrOptions;
     let parsedOptions = {};
     if (optionsString) {
-      console.log("HiddenInAppBrowser.open - Parsing options string:", optionsString);
+      console.log(
+        "HiddenInAppBrowser.open - Parsing options string:",
+        optionsString
+      );
       const optionsArray = optionsString.split(",");
       optionsArray.forEach((option) => {
         const [key, value] = option.split("=");
@@ -70,7 +111,9 @@ function open(urlOrOptions, target, optionsString, onSuccess, onError) {
   } else {
     console.log("HiddenInAppBrowser.open - Using modern API format");
     if (typeof urlOrOptions === "string") {
-      console.log("HiddenInAppBrowser.open - Options is a string, using as URL");
+      console.log(
+        "HiddenInAppBrowser.open - Options is a string, using as URL"
+      );
       url = urlOrOptions;
       finalOptions = { ...DEFAULT_OPEN_OPTIONS, url };
     } else {
@@ -139,7 +182,136 @@ function open(urlOrOptions, target, optionsString, onSuccess, onError) {
     }
   });
 }
+function processOptionsAndExecute(urlOrOptions, target, optionsString, onSuccess, onError, defaultOptions, methodName) {
+  console.log(`${methodName} - Raw parameters received:`, {
+    urlOrOptions,
+    target,
+    optionsString,
+    onSuccess,
+    onError
+  });
+  let url;
+  let finalOptions;
+  if (typeof urlOrOptions === "string" && target !== void 0) {
+    console.log(`${methodName} - Using legacy API format`);
+    url = urlOrOptions;
+    let parsedOptions = {};
+    if (optionsString) {
+      console.log(`${methodName} - Parsing options string:`, optionsString);
+      const optionsArray = optionsString.split(",");
+      optionsArray.forEach((option) => {
+        const [key, value] = option.split("=");
+        if (key && value) {
+          parsedOptions[key.trim()] = value.trim();
+        }
+      });
+      console.log(`${methodName} - Parsed options:`, parsedOptions);
+    }
+    finalOptions = { ...defaultOptions, ...parsedOptions, url };
+    if (onSuccess || onError) {
+      console.log(`${methodName} - Using callback mode`);
+      return new Promise((resolve, reject) => {
+        if (typeof cordova !== "undefined" && cordova.exec) {
+          cordova.exec(
+            () => {
+              console.log(`${methodName} - Success callback`);
+              if (onSuccess) onSuccess();
+              resolve();
+            },
+            (error) => {
+              console.log(`${methodName} - Error callback:`, error);
+              if (onError) onError({ code: -1, message: error });
+              reject(new Error(error));
+            },
+            "HiddenInAppBrowser",
+            methodName,
+            [{ url: finalOptions.url }]
+          );
+        } else {
+          const error = "Cordova is not available";
+          if (onError) onError({ code: -1, message: error });
+          reject(new Error(error));
+        }
+      });
+    }
+  } else {
+    console.log(`${methodName} - Using modern API format`);
+    if (typeof urlOrOptions === "string") {
+      console.log(`${methodName} - Options is a string, using as URL`);
+      url = urlOrOptions;
+      finalOptions = { ...defaultOptions, url };
+    } else {
+      console.log(`${methodName} - Options is an object`);
+      console.log(`${methodName} - Options.url:`, urlOrOptions.url);
+      console.log(`${methodName} - Options.url type:`, typeof urlOrOptions.url);
+      let urlFromOptions = urlOrOptions.url;
+      if (typeof urlFromOptions !== "string") {
+        console.log(`${methodName} - URL is not a string, attempting conversion...`);
+        if (Array.isArray(urlFromOptions)) {
+          console.log(`${methodName} - URL is an array, joining...`);
+          urlFromOptions = urlFromOptions.join("");
+        } else if (typeof urlFromOptions === "object" && urlFromOptions !== null) {
+          console.log(`${methodName} - URL is an object, reconstructing...`);
+          const keys = Object.keys(urlFromOptions).filter((key) => !isNaN(Number(key))).sort((a, b) => Number(a) - Number(b));
+          console.log(`${methodName} - Found keys:`, keys);
+          if (keys.length > 0) {
+            urlFromOptions = keys.map((key) => urlFromOptions[key]).join("");
+          }
+        }
+        console.log(`${methodName} - Converted URL to:`, urlFromOptions);
+      }
+      const correctedOptions = { ...urlOrOptions, url: urlFromOptions };
+      finalOptions = { ...defaultOptions, ...correctedOptions };
+    }
+  }
+  console.log(`${methodName} - Final options:`, finalOptions);
+  console.log(`${methodName} - Final options.url:`, finalOptions.url);
+  console.log(`Parameters being sent to cordova.exec:`, [
+    { url: finalOptions.url }
+  ]);
+  return new Promise((resolve, reject) => {
+    if (typeof cordova !== "undefined" && cordova.exec) {
+      cordova.exec(
+        () => resolve(),
+        (error) => reject(new Error(error)),
+        "HiddenInAppBrowser",
+        methodName,
+        [{ url: finalOptions.url }]
+      );
+    } else {
+      reject(new Error("Cordova is not available"));
+    }
+  });
+}
+function openInExternalBrowser(urlOrOptions, target, optionsString, onSuccess, onError) {
+  return processOptionsAndExecute(
+    urlOrOptions,
+    target,
+    optionsString,
+    onSuccess,
+    onError,
+    DEFAULT_EXTERNAL_BROWSER_OPTIONS,
+    "openInExternalBrowser"
+  );
+}
+function openInWebView(urlOrOptions, target, optionsString, onSuccess, onError) {
+  return processOptionsAndExecute(
+    urlOrOptions,
+    target,
+    optionsString,
+    onSuccess,
+    onError,
+    DEFAULT_WEBVIEW_OPTIONS,
+    "openInWebView"
+  );
+}
 if (typeof console !== "undefined") {
-  console.log("HiddenInAppBrowser plugin loaded with open function:", open);
+  console.log("HiddenInAppBrowser plugin loaded with functions:", {
+    open,
+    openInExternalBrowser,
+    openInWebView
+  });
 }
 exports.open = open;
+exports.openInExternalBrowser = openInExternalBrowser;
+exports.openInWebView = openInWebView;

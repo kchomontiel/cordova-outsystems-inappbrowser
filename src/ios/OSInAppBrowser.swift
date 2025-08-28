@@ -14,6 +14,45 @@ class OSInAppBrowser: CDVPlugin {
         self.plugin = .init()
     }
     
+    @objc(open:)
+    func open(command: CDVInvokedUrlCommand) {
+        let target = OSInAppBrowserTarget.webView
+        
+        func delegateWebViewHidden(url: URL, options: OSIABWebViewOptions, customHeaders: [String: String]? = nil) {
+            DispatchQueue.main.async {
+                self.plugin?.openWebView(
+                    url: url,
+                    options: options,
+                    customHeaders: customHeaders,
+                    onDelegateClose: { [weak self] in
+                        self?.viewController.dismiss(animated: true)
+                    },
+                    onDelegateURL: { [weak self] url in
+                        self?.delegateExternalBrowser(url, command.callbackId)
+                    },
+                    onDelegateAlertController: { [weak self] alert in
+                        self?.viewController.presentedViewController?.show(alert, sender: nil)
+                    }, completionHandler: { [weak self] event, viewControllerToOpen, data  in
+                        self?.handleResult(event, for: command.callbackId, checking: viewControllerToOpen, data: data, error: .failedToOpen(url: url.absoluteString, onTarget: target))
+                    }
+                )
+            }
+        }
+        
+        self.commandDelegate.run { [weak self] in
+            guard let self else { return }
+            
+            guard
+                let argumentsModel: OSInAppBrowserInputArgumentsComplexModel = self.createModel(for: command.argument(at: 0)),
+                let url = URL(string: argumentsModel.url)
+            else {
+                return self.send(error: .inputArgumentsIssue(target: target), for: command.callbackId)
+            }
+
+            delegateWebViewHidden(url: url, options: argumentsModel.toWebViewHiddenOptions(), customHeaders: argumentsModel.customHeaders)
+        }
+    }
+    
     @objc(openInExternalBrowser:)
     func openInExternalBrowser(command: CDVInvokedUrlCommand) {
         let target = OSInAppBrowserTarget.externalBrowser

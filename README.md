@@ -1,113 +1,275 @@
-# HiddenInAppBrowser Plugin
+# Cordova OutSystems InAppBrowser Plugin
 
-A simplified Cordova plugin that provides a hidden in-app browser functionality, specifically designed for OutSystems applications. This plugin allows you to open URLs in a hidden WebView without interrupting the user experience.
+This plugin provides three different ways to open URLs in your Cordova application:
 
-## Overview
-
-This plugin is a simplified version of the original InAppBrowser plugin, focused specifically on the `hidden` functionality. It's designed to work seamlessly with OutSystems applications and provides a clean, minimal API.
-
-## Features
-
-- **Hidden Mode**: Open URLs in a background WebView without showing any UI
-- **External Browser Mode**: Open URLs in the device's default browser
-- **OutSystems Compatibility**: Designed to work with OutSystems mobile applications
-- **Cross-Platform**: Supports both Android and iOS
-- **Dual API Support**: Compatible with both legacy and modern API formats
+1. **Hidden Mode** (`open`) - Opens URLs in a hidden WebView for background processing
+2. **External Browser** (`openInExternalBrowser`) - Opens URLs in the device's default browser
+3. **WebView Mode** (`openInWebView`) - Opens URLs in a visible WebView within the app
 
 ## Installation
 
-### From GitHub
-
 ```bash
-cordova plugin add https://github.com/kchomontiel/cordova-outsystems-inappbrowser.git
+cordova plugin add cordova-outsystems-inappbrowser
 ```
 
-### From Local Path
+## Usage
 
-```bash
-cordova plugin add <path-to-repo-local-clone>
-```
+### Hidden Mode (Default)
 
-## Supported Platforms
-
-- ✅ Android
-- ✅ iOS
-
-## API Reference
-
-### Open Method
-
-The plugin provides a single `open` method that supports both legacy and modern API formats.
-
-#### Legacy API (OutSystems Compatible)
+Opens a URL in a hidden WebView for background processing:
 
 ```javascript
-cordova.plugins.HiddenInAppBrowser.open(
-  url, // String: The URL to open
-  target, // String: Target (e.g., '_blank')
-  optionsString, // String: Comma-separated options
-  successCallback, // Function: Success callback
-  errorCallback // Function: Error callback
-);
-```
-
-**Example:**
-
-```javascript
-cordova.plugins.HiddenInAppBrowser.open(
-  "https://example.com",
-  "_blank",
-  "hidden=yes,location=no,toolbar=no,hidenavigationbuttons=yes",
-  function () {
-    console.log("Success");
-  },
-  function (error) {
-    console.error("Error:", error);
-  }
-);
-```
-
-#### Modern API
-
-```javascript
-cordova.plugins.HiddenInAppBrowser.open(options);
-```
-
-**Example:**
-
-```javascript
-cordova.plugins.HiddenInAppBrowser.open({
+// Modern API
+HiddenInAppBrowser.open({
   url: "https://example.com",
   hidden: true,
   location: false,
   toolbar: false,
+  zoom: false,
+  hardwareback: true,
+  mediaPlaybackRequiresUserAction: false,
+  shouldPauseOnSuspend: false,
+  clearsessioncache: true,
+  cache: false,
+  disallowoverscroll: true,
+  hidenavigationbuttons: true,
+  hideurlbar: true,
+  fullscreen: true,
 });
+
+// Legacy API
+HiddenInAppBrowser.open(
+  "https://example.com",
+  "_blank",
+  "hidden=yes,location=no,toolbar=no"
+);
+
+// Simple URL
+HiddenInAppBrowser.open("https://example.com");
 ```
 
-### Options
+### External Browser
 
-| Option                            | Type           | Default  | Description                    |
-| --------------------------------- | -------------- | -------- | ------------------------------ |
-| `url`                             | String         | Required | The URL to open                |
-| `hidden`                          | Boolean/String | `true`   | Whether to open in hidden mode |
-| `location`                        | Boolean/String | `false`  | Show/hide location bar         |
-| `toolbar`                         | Boolean/String | `false`  | Show/hide toolbar              |
-| `zoom`                            | Boolean/String | `false`  | Enable/disable zoom            |
-| `hardwareback`                    | Boolean/String | `true`   | Use hardware back button       |
-| `mediaPlaybackRequiresUserAction` | Boolean/String | `false`  | Require user action for media  |
-| `shouldPauseOnSuspend`            | Boolean/String | `false`  | Pause on app suspend           |
-| `clearsessioncache`               | Boolean/String | `true`   | Clear session cache            |
-| `cache`                           | Boolean/String | `false`  | Enable/disable cache           |
-| `disallowoverscroll`              | Boolean/String | `true`   | Disable overscroll             |
-| `hidenavigationbuttons`           | Boolean/String | `true`   | Hide navigation buttons        |
-| `hideurlbar`                      | Boolean/String | `true`   | Hide URL bar                   |
-| `fullscreen`                      | Boolean/String | `true`   | Enable fullscreen              |
-
-## Usage in OutSystems
-
-### JavaScript Action
+Opens a URL in the device's default browser:
 
 ```javascript
+// Modern API
+HiddenInAppBrowser.openInExternalBrowser({
+  url: "https://example.com",
+  hidden: false,
+  location: true,
+  toolbar: true,
+  zoom: true,
+  hardwareback: true,
+  mediaPlaybackRequiresUserAction: false,
+  shouldPauseOnSuspend: false,
+  clearsessioncache: false,
+  cache: true,
+  disallowoverscroll: false,
+  hidenavigationbuttons: false,
+  hideurlbar: false,
+  fullscreen: false,
+});
+
+// Legacy API with different targets
+HiddenInAppBrowser.openInExternalBrowser(
+  "https://example.com",
+  "_blank",
+  "location=yes,toolbar=yes"
+);
+HiddenInAppBrowser.openInExternalBrowser(
+  "https://example.com",
+  "_system",
+  "location=yes,toolbar=yes"
+);
+
+// Simple URL
+HiddenInAppBrowser.openInExternalBrowser("https://example.com");
+```
+
+### WebView Mode
+
+Opens a URL in a visible WebView within the app:
+
+```javascript
+// Modern API
+HiddenInAppBrowser.openInWebView({
+  url: "https://example.com",
+  hidden: false,
+  location: true,
+  toolbar: true,
+  zoom: true,
+  hardwareback: true,
+  mediaPlaybackRequiresUserAction: false,
+  shouldPauseOnSuspend: false,
+  clearsessioncache: false,
+  cache: true,
+  disallowoverscroll: false,
+  hidenavigationbuttons: false,
+  hideurlbar: false,
+  fullscreen: false,
+});
+
+// Legacy API with different targets
+HiddenInAppBrowser.openInWebView(
+  "https://example.com",
+  "_blank",
+  "location=yes,toolbar=yes"
+);
+HiddenInAppBrowser.openInWebView(
+  "https://example.com",
+  "_self",
+  "location=yes,toolbar=yes"
+);
+
+// Simple URL
+HiddenInAppBrowser.openInWebView("https://example.com");
+```
+
+## Targets
+
+The `target` parameter specifies how and where the URL should be opened. All methods support the following targets:
+
+### Available Targets
+
+| Target    | Description                   | Hidden Mode        | External Browser       | WebView Mode               |
+| --------- | ----------------------------- | ------------------ | ---------------------- | -------------------------- |
+| `_blank`  | Opens in a new window/context | ✅ Hidden WebView  | ✅ New external window | ✅ New WebView window      |
+| `_self`   | Opens in the current window   | ✅ Current WebView | ✅ External browser    | ✅ Replace current content |
+| `_system` | Opens in system browser       | ✅ Hidden WebView  | ✅ System browser      | ✅ New WebView window      |
+
+### Target Usage Examples
+
+```javascript
+// _blank - New window (recommended for most cases)
+HiddenInAppBrowser.openInWebView(
+  "https://example.com",
+  "_blank",
+  "location=yes,toolbar=yes"
+);
+
+// _self - Replace current content
+HiddenInAppBrowser.openInWebView(
+  "https://example.com",
+  "_self",
+  "location=yes,toolbar=yes"
+);
+
+// _system - System browser
+HiddenInAppBrowser.openInExternalBrowser(
+  "https://example.com",
+  "_system",
+  "location=yes,toolbar=yes"
+);
+```
+
+### Target Recommendations by Method
+
+#### Hidden Mode (`open`)
+
+```javascript
+// Recommended: _blank for background operations
+HiddenInAppBrowser.open("https://example.com", "_blank", "hidden=yes");
+```
+
+#### External Browser (`openInExternalBrowser`)
+
+```javascript
+// Recommended: _blank or _system for external navigation
+HiddenInAppBrowser.openInExternalBrowser("https://example.com", "_blank");
+HiddenInAppBrowser.openInExternalBrowser("https://example.com", "_system");
+```
+
+#### WebView Mode (`openInWebView`)
+
+```javascript
+// Recommended: _blank for new window, _self to replace content
+HiddenInAppBrowser.openInWebView(
+  "https://example.com",
+  "_blank",
+  "location=yes"
+);
+HiddenInAppBrowser.openInWebView(
+  "https://example.com",
+  "_self",
+  "location=yes"
+);
+```
+
+## Options
+
+All methods support the following options:
+
+| Option                            | Type    | Default (Hidden) | Default (External) | Default (WebView) | Description                            |
+| --------------------------------- | ------- | ---------------- | ------------------ | ----------------- | -------------------------------------- |
+| `url`                             | string  | -                | -                  | -                 | The URL to open                        |
+| `hidden`                          | boolean | true             | false              | false             | Whether to hide the browser            |
+| `location`                        | boolean | false            | true               | true              | Show/hide the location bar             |
+| `toolbar`                         | boolean | false            | true               | true              | Show/hide the toolbar                  |
+| `zoom`                            | boolean | false            | true               | true              | Enable/disable zoom controls           |
+| `hardwareback`                    | boolean | true             | true               | true              | Enable/disable hardware back button    |
+| `mediaPlaybackRequiresUserAction` | boolean | false            | false              | false             | Require user action for media playback |
+| `shouldPauseOnSuspend`            | boolean | false            | false              | false             | Pause on app suspend                   |
+| `clearsessioncache`               | boolean | true             | false              | false             | Clear session cache                    |
+| `cache`                           | boolean | false            | true               | true              | Enable/disable cache                   |
+| `disallowoverscroll`              | boolean | true             | false              | false             | Disable overscroll                     |
+| `hidenavigationbuttons`           | boolean | true             | false              | false             | Hide navigation buttons                |
+| `hideurlbar`                      | boolean | true             | false              | false             | Hide URL bar                           |
+| `fullscreen`                      | boolean | true             | false              | false             | Open in fullscreen mode                |
+
+## Platform Support
+
+- **Android**: All three modes supported
+- **iOS**: All three modes supported
+- **Web**: All three modes supported (uses window.open)
+
+### Platform-Specific Target Behavior
+
+#### Android
+
+- `_blank`: Opens in a new activity/window
+- `_self`: Replaces current content
+- `_system`: Opens in system browser
+
+#### iOS
+
+- `_blank`: Opens in a new view controller
+- `_self`: Replaces current content
+- `_system`: Opens in Safari or default browser
+
+#### Web
+
+- `_blank`: Opens in a new browser tab/window
+- `_self`: Opens in the same tab
+- `_system`: Similar behavior to `_blank`
+
+## Error Handling
+
+All methods return a Promise and support both Promise and callback patterns:
+
+```javascript
+// Promise pattern
+try {
+  await HiddenInAppBrowser.open("https://example.com");
+  console.log("URL opened successfully");
+} catch (error) {
+  console.error("Error opening URL:", error);
+}
+
+// Callback pattern
+HiddenInAppBrowser.open(
+  "https://example.com",
+  "_blank",
+  "hidden=yes",
+  function () {
+    console.log("URL opened successfully");
+  },
+  function (error) {
+    console.error("Error opening URL:", error);
+  }
+);
+
+// OutSystems Integration with different targets
 require(["PluginManager"], function (module) {
   function onSuccess() {
     $parameters.Success = true;
@@ -121,109 +283,37 @@ require(["PluginManager"], function (module) {
     $resolve();
   }
 
-  cordova.plugins.HiddenInAppBrowser.open(
-    $parameters.URL,
-    "_blank",
-    "hidden=yes,location=no,toolbar=no,hidenavigationbuttons=yes",
-    onSuccess,
-    onError
-  );
+  // Choose target based on requirements
+  const target = $parameters.Target || "_blank";
+
+  if ($parameters.Mode === "hidden") {
+    HiddenInAppBrowser.open(
+      $parameters.URL,
+      target,
+      "hidden=yes,location=no,toolbar=no",
+      onSuccess,
+      onError
+    );
+  } else if ($parameters.Mode === "external") {
+    HiddenInAppBrowser.openInExternalBrowser(
+      $parameters.URL,
+      target,
+      "location=yes,toolbar=yes",
+      onSuccess,
+      onError
+    );
+  } else if ($parameters.Mode === "webview") {
+    HiddenInAppBrowser.openInWebView(
+      $parameters.URL,
+      target,
+      "location=yes,toolbar=yes",
+      onSuccess,
+      onError
+    );
+  }
 });
 ```
 
-### Parameters
-
-- **URL**: The URL to open (e.g., `https://www.example.com`)
-- **Success**: Boolean indicating if the operation was successful
-- **ErrorCode**: Error code if the operation failed
-- **ErrorMessage**: Error message if the operation failed
-
-## Behavior
-
-### Hidden Mode (`hidden=yes`)
-
-When `hidden` is set to `yes` or `true`:
-
-- ✅ URL loads in a background WebView
-- ✅ No UI is shown to the user
-- ✅ User remains in the current app
-- ✅ No interruption to user experience
-- ✅ Useful for background operations like authentication
-
-### Visible Mode (`hidden=no`)
-
-When `hidden` is set to `no` or `false`:
-
-- ✅ URL opens in the device's default browser
-- ✅ User sees the browser interface
-- ✅ Traditional browser experience
-
-## Technical Details
-
-### Architecture
-
-- **JavaScript Layer**: Handles API compatibility and parameter parsing
-- **Native Layer**:
-  - **Android**: Uses WebView with UI thread safety
-  - **iOS**: Uses WKWebView for hidden operations
-
-### Thread Safety
-
-The plugin ensures all UI operations are performed on the main UI thread to prevent crashes and threading issues.
-
-### Error Handling
-
-The plugin provides comprehensive error handling:
-
-- Invalid URLs
-- Network connectivity issues
-- Platform-specific errors
-- Threading errors
-
-## Development
-
-### Building
-
-```bash
-npm install
-npm run build
-```
-
-### Project Structure
-
-```
-src/
-├── android/
-│   └── HiddenInAppBrowser.kt    # Android native implementation
-├── ios/
-│   └── HiddenInAppBrowser.swift # iOS native implementation
-└── www/
-    ├── index.ts                 # Main JavaScript entry point
-    ├── definitions.ts           # TypeScript definitions
-    ├── defaults.ts              # Default options
-    └── web.ts                   # Web platform implementation
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **"URL is required" error**: Ensure the URL parameter is properly passed
-2. **Thread errors**: The plugin automatically handles UI thread operations
-3. **Plugin not found**: Ensure the plugin is properly installed in your Cordova project
-
-### Debug Logs
-
-The plugin provides extensive debug logging. Check the browser console for logs starting with `HiddenInAppBrowser.open`.
-
 ## License
 
-This project is licensed under the Apache License 2.0.
-
-## Support
-
-For issues and questions:
-
-1. Check the troubleshooting section
-2. Review the debug logs
-3. Ensure compatibility with your OutSystems version
+This project is licensed under the MIT License.

@@ -10,9 +10,13 @@ The changes documented here do not include those from the original repository.
 
 ### Features
 
-- Add new `openInWebViewHidden` method that allows opening WebView in hidden state for background operations
-- Support for hidden WebView with configurable timeout and auto-close functionality
-- Enhanced WebView options with hidden-specific configurations
+- Add new `openInExternalBrowser` method for opening URLs in the device's default browser
+- Add new `openInWebView` method for opening URLs in a visible WebView within the app
+- Enhanced the existing `open` method to support hidden mode with improved defaults
+- Support for three distinct modes: Hidden, External Browser, and WebView
+- Enhanced WebView options with mode-specific configurations
+- Improved error handling and logging across all methods
+- Added comprehensive examples and documentation for all three methods
 ## 1.5.0
 
 ### Features

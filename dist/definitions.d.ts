@@ -16,4 +16,6 @@ export interface HiddenInAppBrowserOpenOptions {
 }
 export interface HiddenInAppBrowser {
     open(urlOrOptions: string | HiddenInAppBrowserOpenOptions, target?: string, optionsString?: string, onSuccess?: () => void, onError?: (error: any) => void): Promise<void>;
+    openInExternalBrowser(urlOrOptions: string | HiddenInAppBrowserOpenOptions, target?: string, optionsString?: string, onSuccess?: () => void, onError?: (error: any) => void): Promise<void>;
+    openInWebView(urlOrOptions: string | HiddenInAppBrowserOpenOptions, target?: string, optionsString?: string, onSuccess?: () => void, onError?: (error: any) => void): Promise<void>;
 }
