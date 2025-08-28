@@ -229,7 +229,7 @@ class HiddenInAppBrowser: CordovaPlugin() {
             // Run WebView creation on UI thread
             activity.runOnUiThread {
                 try {
-                    // Create a visible WebView
+                    // Create a WebView with proper configuration for visible mode
                     val webView = android.webkit.WebView(activity)
                     webView.settings.apply {
                         javaScriptEnabled = true
@@ -240,23 +240,90 @@ class HiddenInAppBrowser: CordovaPlugin() {
                         displayZoomControls = false
                         setSupportZoom(true)
                         mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                        // Enable location bar and toolbar for visible mode
+                        setSupportMultipleWindows(true)
                     }
                     
-                    // Set WebView to be visible
-                    webView.alpha = 1f
-                    webView.visibility = android.view.View.VISIBLE
+                    // Create a custom WebViewClient to handle navigation
+                    webView.webViewClient = object : android.webkit.WebViewClient() {
+                        override fun shouldOverrideUrlLoading(view: android.webkit.WebView?, url: String?): Boolean {
+                            url?.let { view?.loadUrl(it) }
+                            return true
+                        }
+                        
+                        override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
+                            super.onPageFinished(view, url)
+                            sendSuccess(callbackContext, "URL loaded in WebView successfully")
+                        }
+                        
+                        override fun onReceivedError(view: android.webkit.WebView?, errorCode: Int, description: String?, failingUrl: String?) {
+                            super.onReceivedError(view, errorCode, description, failingUrl)
+                            sendError(callbackContext, "Error loading URL: $description")
+                        }
+                    }
                     
-                    // Create a new activity or dialog to show the WebView
-                    val webViewActivity = android.app.Activity()
-                    webViewActivity.setContentView(webView)
+                    // Create a custom WebChromeClient to handle dialogs and progress
+                    webView.webChromeClient = object : android.webkit.WebChromeClient() {
+                        override fun onProgressChanged(view: android.webkit.WebView?, newProgress: Int) {
+                            super.onProgressChanged(view, newProgress)
+                            // You can add progress handling here if needed
+                        }
+                    }
+                    
+                    // Create a layout for the WebView
+                    val layout = android.widget.LinearLayout(activity).apply {
+                        orientation = android.widget.LinearLayout.VERTICAL
+                        layoutParams = android.view.ViewGroup.LayoutParams(
+                            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                            android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+                    }
+                    
+                    // Add a toolbar with close button
+                    val toolbar = android.widget.LinearLayout(activity).apply {
+                        orientation = android.widget.LinearLayout.HORIZONTAL
+                        setBackgroundColor(android.graphics.Color.parseColor("#F5F5F5"))
+                        layoutParams = android.widget.LinearLayout.LayoutParams(
+                            android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                            android.util.TypedValue.applyDimension(
+                                android.util.TypedValue.COMPLEX_UNIT_DIP,
+                                56f,
+                                resources.displayMetrics
+                            ).toInt()
+                        )
+                    }
+                    
+                    val closeButton = android.widget.Button(activity).apply {
+                        text = "Close"
+                        setOnClickListener {
+                            // Close the WebView
+                            layout.visibility = android.view.View.GONE
+                            sendSuccess(callbackContext, "WebView closed")
+                        }
+                        layoutParams = android.widget.LinearLayout.LayoutParams(
+                            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            gravity = android.view.Gravity.CENTER_VERTICAL
+                            marginStart = 16
+                        }
+                    }
+                    
+                    toolbar.addView(closeButton)
+                    layout.addView(toolbar)
+                    
+                    // Add the WebView to the layout
+                    webView.layoutParams = android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT
+                    )
+                    layout.addView(webView)
+                    
+                    // Add the layout to the activity
+                    activity.setContentView(layout)
                     
                     // Load the URL
                     webView.loadUrl(url)
-                    
-                    // Show the activity
-                    activity.startActivity(android.content.Intent(activity, webViewActivity::class.java))
-                    
-                    sendSuccess(callbackContext, "URL opened in WebView successfully")
                     
                 } catch (e: Exception) {
                     sendError(callbackContext, "Error opening WebView: ${e.message}")
