@@ -12,8 +12,13 @@ class HiddenInAppBrowser: CDVPlugin {
     
     override func pluginInitialize() {
         print("🔧 HiddenInAppBrowser - pluginInitialize called")
+        print("🔧 HiddenInAppBrowser - Starting plugin initialization...")
         self.plugin = .init()
         print("🔧 HiddenInAppBrowser - Plugin initialized: \(self.plugin != nil)")
+        print("🔧 HiddenInAppBrowser - Plugin initialization completed")
+        
+        // Add a test log that should always appear
+        NSLog("🔧 HiddenInAppBrowser - NSLog test - Plugin initialized successfully")
     }
     
     @objc(open:)
@@ -70,6 +75,7 @@ class HiddenInAppBrowser: CDVPlugin {
     func openInWebView(command: CDVInvokedUrlCommand) {
         let target = HiddenInAppBrowserTarget.webView
         
+        NSLog("🔍 openInWebView - ===== INICIO DEL MÉTODO =====")
         print("🔍 openInWebView - ===== INICIO DEL MÉTODO =====")
         print("openInWebView - Command received: \(command)")
         print("openInWebView - Plugin is nil: \(self.plugin == nil)")
