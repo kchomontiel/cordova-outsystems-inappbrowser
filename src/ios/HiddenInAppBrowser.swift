@@ -1,6 +1,6 @@
 import UIKit
 import ObjectiveC
-import WebKit
+@preconcurrency import WebKit
 
 /// The plugin's main class
 @objc(HiddenInAppBrowser)
@@ -154,21 +154,27 @@ class HiddenInAppBrowser: CDVPlugin {
             print("openInWebView - URL: \(url.absoluteString)")
             
             // Use Apache InAppBrowser plugin
-            if let inAppBrowserPlugin = self.commandDelegate.getCommandInstance("InAppBrowser") as? CDVPlugin {
+            if let inAppBrowserPlugin = self.commandDelegate.getCommandInstance("InAppBrowser") {
                 print("✅ openInWebView - Apache InAppBrowser plugin found")
                 
                 // Create options for visible WebView
                 let options = "location=yes,toolbar=yes,hidenavigationbuttons=no"
                 
-                // Call Apache InAppBrowser's open method
-                let args = CDVInvokedUrlCommand(
-                    arguments: [url.absoluteString, "_blank", options],
-                    callbackId: command.callbackId,
-                    className: "InAppBrowser",
-                    methodName: "open"
-                )
-                
-                inAppBrowserPlugin.execute(args)
+                // Call Apache InAppBrowser's open method using performSelector
+                let selector = NSSelectorFromString("open:")
+                if inAppBrowserPlugin.responds(to: selector) {
+                    let args = CDVInvokedUrlCommand(
+                        arguments: [url.absoluteString, "_blank", options],
+                        callbackId: command.callbackId,
+                        className: "InAppBrowser",
+                        methodName: "open"
+                    )
+                    
+                    inAppBrowserPlugin.perform(selector, with: args)
+                } else {
+                    print("❌ openInWebView - Apache InAppBrowser plugin doesn't respond to open:")
+                    self.sendError("Failed to open URL: \(url.absoluteString)", for: command.callbackId)
+                }
                 
             } else {
                 print("❌ openInWebView - Apache InAppBrowser plugin not found")
@@ -230,13 +236,13 @@ private extension HiddenInAppBrowser {
 
     
     func sendSuccess(for callbackId: String) {
-        let pluginResult = CDVPluginResult(status: .ok)
+        let pluginResult = CDVPluginResult(status: .ok)!
         pluginResult.keepCallback = true
         self.commandDelegate.send(pluginResult, callbackId: callbackId)
     }
     
     func sendError(_ message: String, for callbackId: String) {
-        let pluginResult = CDVPluginResult(status: .error, messageAs: message)
+        let pluginResult = CDVPluginResult(status: .error, messageAs: message)!
         self.commandDelegate.send(pluginResult, callbackId: callbackId)
     }
 }
