@@ -15,8 +15,6 @@ class HiddenInAppBrowser: CDVPlugin {
     
     @objc(open:)
     func open(command: CDVInvokedUrlCommand) {
-        let target = HiddenInAppBrowserTarget.webView
-        
         print("🔍 open - ===== INICIO DEL MÉTODO =====")
         print("open - Command received: \(command)")
         
@@ -33,7 +31,7 @@ class HiddenInAppBrowser: CDVPlugin {
                 let url = URL(string: argumentsModel.url)
             else {
                 print("❌ open - Failed to create model or URL")
-                return self.send(error: .inputArgumentsIssue(target: target), for: command.callbackId)
+                return self.sendError("The input parameters aren't valid.", for: command.callbackId)
             }
 
             print("✅ open - Model created successfully")
@@ -66,7 +64,7 @@ class HiddenInAppBrowser: CDVPlugin {
                         self?.sendSuccess(for: command.callbackId)
                     } else {
                         print("open - Error loading URL: \(error ?? "unknown error")")
-                        self?.send(error: .failedToOpen(url: url.absoluteString, onTarget: target), for: command.callbackId)
+                        self?.sendError("Failed to open URL: \(url.absoluteString)", for: command.callbackId)
                     }
                 }
                 
@@ -108,7 +106,7 @@ class HiddenInAppBrowser: CDVPlugin {
                 let url = URL(string: argumentsModel.url)
             else {
                 print("❌ openInExternalBrowser - Failed to create model or URL")
-                return self.send(error: .inputArgumentsIssue(target: .externalBrowser), for: command.callbackId)
+                return self.sendError("The input parameters aren't valid.", for: command.callbackId)
             }
 
             print("✅ openInExternalBrowser - Model created successfully")
@@ -122,7 +120,7 @@ class HiddenInAppBrowser: CDVPlugin {
                         self.sendSuccess(for: command.callbackId)
                     } else {
                         print("❌ openInExternalBrowser - Failed to open URL")
-                        self.send(error: .failedToOpen(url: url.absoluteString, onTarget: .externalBrowser), for: command.callbackId)
+                        self.sendError("Failed to open URL: \(url.absoluteString)", for: command.callbackId)
                     }
                 }
             }
@@ -149,7 +147,7 @@ class HiddenInAppBrowser: CDVPlugin {
                 let url = URL(string: argumentsModel.url)
             else {
                 print("❌ openInWebView - Failed to create model or URL")
-                return self.send(error: .inputArgumentsIssue(target: .webView), for: command.callbackId)
+                return self.sendError("The input parameters aren't valid.", for: command.callbackId)
             }
 
             print("✅ openInWebView - Model created successfully")
@@ -174,7 +172,7 @@ class HiddenInAppBrowser: CDVPlugin {
                 
             } else {
                 print("❌ openInWebView - Apache InAppBrowser plugin not found")
-                self.send(error: .failedToOpen(url: url.absoluteString, onTarget: .webView), for: command.callbackId)
+                self.sendError("Failed to open URL: \(url.absoluteString)", for: command.callbackId)
             }
         }
     }
@@ -193,7 +191,7 @@ class HiddenInAppBrowser: CDVPlugin {
                     }
                 }
             } else {
-                self.send(error: .noBrowserToClose, for: command.callbackId)
+                self.sendError("There's no browser view to close.", for: command.callbackId)
             }
         }
     }
@@ -237,8 +235,8 @@ private extension HiddenInAppBrowser {
         self.commandDelegate.send(pluginResult, callbackId: callbackId)
     }
     
-    func send(error: HiddenInAppBrowserError, for callbackId: String) {
-        let pluginResult = CDVPluginResult(status: .error, messageAs: error.toDictionary())
+    func sendError(_ message: String, for callbackId: String) {
+        let pluginResult = CDVPluginResult(status: .error, messageAs: message)
         self.commandDelegate.send(pluginResult, callbackId: callbackId)
     }
 }
