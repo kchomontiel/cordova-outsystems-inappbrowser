@@ -43,22 +43,27 @@ class HiddenInAppBrowser: CordovaPlugin() {
     private fun open(args: JSONArray, callbackContext: CallbackContext) {
         try {
             // Debug: Log the received arguments
-            android.util.Log.d("HiddenInAppBrowser", "Received args: $args")
+            android.util.Log.d("HiddenInAppBrowser", "🔍 open - ===== INICIO DEL MÉTODO =====")
+            android.util.Log.d("HiddenInAppBrowser", "open - Received args: $args")
             
             val argumentsDictionary = args.getJSONObject(0)
-            android.util.Log.d("HiddenInAppBrowser", "Arguments dictionary: $argumentsDictionary")
+            android.util.Log.d("HiddenInAppBrowser", "open - Arguments dictionary: $argumentsDictionary")
             
             val url = argumentsDictionary.getString("url")
-            android.util.Log.d("HiddenInAppBrowser", "Extracted URL: $url")
+            android.util.Log.d("HiddenInAppBrowser", "open - Extracted URL: $url")
             
             if (url.isNullOrEmpty()) {
                 sendError(callbackContext, "URL is required")
                 return
             }
 
-            // Create options with hidden=yes
+            // Get options from arguments if provided
+            val providedOptions = argumentsDictionary.optJSONObject("options")
+            android.util.Log.d("HiddenInAppBrowser", "open - Provided options: $providedOptions")
+
+            // Create options with hidden=yes (ALWAYS hidden for this method)
             val options = JSONObject().apply {
-                put("hidden", "yes")
+                put("hidden", "yes")  // Always hidden
                 put("location", "no")
                 put("toolbar", "no")
                 put("zoom", "no")
@@ -73,83 +78,97 @@ class HiddenInAppBrowser: CordovaPlugin() {
                 put("fullscreen", "yes")
             }
 
-            // Create args for the original plugin
-            val originalArgs = JSONArray().apply {
-                put(url)
-                put(options.toString())
+            // Merge with provided options if any, but keep hidden=yes
+            if (providedOptions != null) {
+                android.util.Log.d("HiddenInAppBrowser", "open - Merging with provided options")
+                val iterator = providedOptions.keys()
+                while (iterator.hasNext()) {
+                    val key = iterator.next()
+                    val value = providedOptions.get(key)
+                    // Don't override hidden=yes
+                    if (key != "hidden") {
+                        options.put(key, value)
+                        android.util.Log.d("HiddenInAppBrowser", "open - Added option: $key = $value")
+                    }
+                }
             }
             
-            // Check if hidden mode is requested
-            val isHidden = options.optString("hidden", "no") == "yes"
+            android.util.Log.d("HiddenInAppBrowser", "open - Final options: $options")
             
-            if (isHidden) {
-                // Hidden mode: Load URL in background WebView
-                try {
-                    val activity = cordova.activity
-                    if (activity == null) {
-                        sendError(callbackContext, "Activity is not available")
-                        return
-                    }
-                    
-                    // Run WebView creation on UI thread
-                    activity.runOnUiThread {
-                        try {
-                            // Create a background WebView (invisible)
-                            val webView = android.webkit.WebView(activity)
-                            webView.settings.apply {
-                                javaScriptEnabled = true
-                                domStorageEnabled = true
-                                loadWithOverviewMode = true
-                                useWideViewPort = true
-                                builtInZoomControls = true
-                                displayZoomControls = false
-                                setSupportZoom(true)
-                                mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            // ALWAYS use hidden mode for this method
+            android.util.Log.d("HiddenInAppBrowser", "open - Using hidden mode")
+            
+            // Hidden mode: Load URL in background WebView
+            try {
+                val activity = cordova.activity
+                if (activity == null) {
+                    android.util.Log.e("HiddenInAppBrowser", "open - Activity is null")
+                    sendError(callbackContext, "Activity is not available")
+                    return
+                }
+                
+                android.util.Log.d("HiddenInAppBrowser", "open - Activity is available, creating hidden WebView")
+                
+                // Run WebView creation on UI thread
+                activity.runOnUiThread {
+                    try {
+                        android.util.Log.d("HiddenInAppBrowser", "open - Creating hidden WebView on UI thread")
+                        
+                        // Create a background WebView (invisible)
+                        val webView = android.webkit.WebView(activity)
+                        android.util.Log.d("HiddenInAppBrowser", "open - WebView created")
+                        
+                        webView.settings.apply {
+                            javaScriptEnabled = true
+                            domStorageEnabled = true
+                            loadWithOverviewMode = true
+                            useWideViewPort = true
+                            builtInZoomControls = true
+                            displayZoomControls = false
+                            setSupportZoom(true)
+                            mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                        }
+                        android.util.Log.d("HiddenInAppBrowser", "open - WebView settings configured")
+                        
+                        // Set WebView to be invisible
+                        webView.alpha = 0f
+                        webView.visibility = android.view.View.GONE
+                        android.util.Log.d("HiddenInAppBrowser", "open - WebView set to invisible")
+                        
+                        // Create a custom WebViewClient to handle navigation
+                        webView.webViewClient = object : android.webkit.WebViewClient() {
+                            override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
+                                super.onPageFinished(view, url)
+                                android.util.Log.d("HiddenInAppBrowser", "open - Page finished loading: $url")
+                                sendSuccess(callbackContext, "URL loaded in hidden WebView successfully")
                             }
                             
-                            // Set WebView to be invisible
-                            webView.alpha = 0f
-                            webView.visibility = android.view.View.GONE
-                            
-                            // Load the URL in background
-                            webView.loadUrl(url)
-                            
-                            sendSuccess(callbackContext, "URL loaded in hidden WebView successfully")
-                            
-                        } catch (e: Exception) {
-                            sendError(callbackContext, "Error loading URL in hidden mode: ${e.message}")
+                            override fun onReceivedError(view: android.webkit.WebView?, errorCode: Int, description: String?, failingUrl: String?) {
+                                super.onReceivedError(view, errorCode, description, failingUrl)
+                                android.util.Log.e("HiddenInAppBrowser", "open - Error loading URL: $description")
+                                sendError(callbackContext, "Error loading URL: $description")
+                            }
                         }
+                        android.util.Log.d("HiddenInAppBrowser", "open - WebViewClient configured")
+                        
+                        // Load the URL in background
+                        android.util.Log.d("HiddenInAppBrowser", "open - Loading URL: $url")
+                        webView.loadUrl(url)
+                        android.util.Log.d("HiddenInAppBrowser", "open - URL load initiated")
+                        
+                    } catch (e: Exception) {
+                        android.util.Log.e("HiddenInAppBrowser", "open - Error creating hidden WebView: ${e.message}", e)
+                        sendError(callbackContext, "Error loading URL in hidden mode: ${e.message}")
                     }
-                    
-                } catch (e: Exception) {
-                    sendError(callbackContext, "Error setting up hidden WebView: ${e.message}")
                 }
-            } else {
-                // Visible mode: Open in external browser
-                try {
-                    val activity = cordova.activity
-                    if (activity == null) {
-                        sendError(callbackContext, "Activity is not available")
-                        return
-                    }
-                    
-                    // Create intent to open URL in external browser
-                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
-                    
-                    // Check if there's an app to handle this intent
-                    if (intent.resolveActivity(activity.packageManager) != null) {
-                        activity.startActivity(intent)
-                        sendSuccess(callbackContext, "URL opened in external browser successfully")
-                    } else {
-                        sendError(callbackContext, "No app found to handle this URL")
-                    }
-                    
-                } catch (e: Exception) {
-                    sendError(callbackContext, "Error opening URL: ${e.message}")
-                }
+                
+            } catch (e: Exception) {
+                android.util.Log.e("HiddenInAppBrowser", "open - Error setting up hidden WebView: ${e.message}", e)
+                sendError(callbackContext, "Error setting up hidden WebView: ${e.message}")
             }
             
         } catch (e: Exception) {
+            android.util.Log.e("HiddenInAppBrowser", "open - Error in method: ${e.message}", e)
             sendError(callbackContext, "Error opening InAppBrowser: ${e.message}")
         }
     }
