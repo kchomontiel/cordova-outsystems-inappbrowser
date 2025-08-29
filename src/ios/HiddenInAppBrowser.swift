@@ -153,32 +153,17 @@ class HiddenInAppBrowser: CDVPlugin {
             print("✅ openInWebView - Model created successfully")
             print("openInWebView - URL: \(url.absoluteString)")
             
-            // Use Apache InAppBrowser plugin
-            if let inAppBrowserPlugin = self.commandDelegate.getCommandInstance("InAppBrowser") {
-                print("✅ openInWebView - Apache InAppBrowser plugin found")
-                
-                // Create options for visible WebView
-                let options = "location=yes,toolbar=yes,hidenavigationbuttons=no"
-                
-                // Call Apache InAppBrowser's open method using performSelector
-                let selector = NSSelectorFromString("open:")
-                if inAppBrowserPlugin.responds(to: selector) {
-                    let args = CDVInvokedUrlCommand(
-                        arguments: [url.absoluteString, "_blank", options],
-                        callbackId: command.callbackId,
-                        className: "InAppBrowser",
-                        methodName: "open"
-                    )
-                    
-                    inAppBrowserPlugin.perform(selector, with: args)
-                } else {
-                    print("❌ openInWebView - Apache InAppBrowser plugin doesn't respond to open:")
-                    self.sendError("Failed to open URL: \(url.absoluteString)", for: command.callbackId)
+            // Open in WebView using UIApplication (simplified approach)
+            DispatchQueue.main.async {
+                UIApplication.shared.open(url) { success in
+                    if success {
+                        print("✅ openInWebView - URL opened successfully")
+                        self.sendSuccess(for: command.callbackId)
+                    } else {
+                        print("❌ openInWebView - Failed to open URL")
+                        self.sendError("Failed to open URL: \(url.absoluteString)", for: command.callbackId)
+                    }
                 }
-                
-            } else {
-                print("❌ openInWebView - Apache InAppBrowser plugin not found")
-                self.sendError("Failed to open URL: \(url.absoluteString)", for: command.callbackId)
             }
         }
     }
