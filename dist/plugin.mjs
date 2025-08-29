@@ -90,15 +90,47 @@ function open(urlOrOptions, target, optionsString, onSuccess, onError) {
           },
           (error) => {
             console.log("HiddenInAppBrowser.open - Error callback:", error);
-            if (onError) onError({ code: -1, message: error });
+            if (onError) onError({ code: -1, message: error.toString() });
           },
           "HiddenInAppBrowser",
           "open",
-          [{ url: finalOptions.url }]
+          [
+            {
+              url: finalOptions.url,
+              options: {
+                iOS: {
+                  closeButtonText: "default",
+                  viewStyle: "default",
+                  animationEffect: "default",
+                  enableBarsCollapsing: true,
+                  enableReadersMode: false,
+                  allowOverScroll: true,
+                  enableViewportScale: false,
+                  allowInLineMediaPlayback: false,
+                  surpressIncrementalRendering: false,
+                  allowsBackForwardNavigationGestures: true
+                },
+                showURL: finalOptions.location,
+                showToolbar: finalOptions.toolbar,
+                clearCache: true,
+                clearSessionCache: finalOptions.clearsessioncache,
+                mediaPlaybackRequiresUserAction: finalOptions.mediaPlaybackRequiresUserAction,
+                closeButtonText: "Close",
+                toolbarPosition: "default",
+                leftToRight: false,
+                showNavigationButtons: !finalOptions.hidenavigationbuttons,
+                customWebViewUserAgent: null,
+                hidden: finalOptions.hidden,
+                autoClose: false,
+                timeout: null
+              },
+              customHeaders: null
+            }
+          ]
         );
       } else {
         const error = "Cordova is not available";
-        if (onError) onError({ code: -1, message: error });
+        if (onError) onError({ code: -1, message: error.toString() });
       }
       return;
     }
