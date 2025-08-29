@@ -23,8 +23,85 @@ class HiddenInAppBrowser: CDVPlugin {
     
     @objc(open:)
     func open(command: CDVInvokedUrlCommand) {
-        // Call the hidden WebView method for the open function
-        openInWebViewHidden(command: command)
+        let target = HiddenInAppBrowserTarget.webView
+        
+        print("🔍 open - ===== INICIO DEL MÉTODO =====")
+        print("open - Command received: \(command)")
+        
+        self.commandDelegate.run { [weak self] in
+            guard let self else { 
+                print("❌ open - Self is nil")
+                return 
+            }
+            
+            print("open - Processing command arguments")
+            
+            guard
+                let argumentsModel: HiddenInAppBrowserInputArgumentsSimpleModel = self.createModel(for: command.argument(at: 0)),
+                let url = URL(string: argumentsModel.url)
+            else {
+                print("❌ open - Failed to create model or URL")
+                return self.send(error: .inputArgumentsIssue(target: target), for: command.callbackId)
+            }
+
+            print("✅ open - Model created successfully")
+            print("open - URL: \(url.absoluteString)")
+            
+            // Create hidden WebView options
+            let hiddenOptions = OSIABWebViewOptions(
+                showURL: false,
+                showToolbar: false,
+                clearCache: true,
+                clearSessionCache: true,
+                mediaPlaybackRequiresUserAction: false,
+                closeButtonText: "Close",
+                toolbarPosition: .defaultValue,
+                showNavigationButtons: false,
+                leftToRight: false,
+                allowOverScroll: true,
+                enableViewportScale: false,
+                allowInLineMediaPlayback: false,
+                surpressIncrementalRendering: false,
+                viewStyle: .defaultValue,
+                animationEffect: .defaultValue,
+                customUserAgent: nil,
+                allowsBackForwardNavigationGestures: true
+            )
+            
+            print("open - Hidden options created")
+            
+            // Create hidden WebView
+            DispatchQueue.main.async {
+                print("open - Running on main queue")
+                
+                if let plugin = self.plugin {
+                    print("✅ open - Plugin found, calling openWebView with hidden options")
+                    plugin.openWebView(
+                        url: url,
+                        options: hiddenOptions,
+                        customHeaders: nil,
+                        onDelegateClose: { [weak self] in
+                            print("open - onDelegateClose called")
+                            self?.viewController.dismiss(animated: true)
+                        },
+                        onDelegateURL: { [weak self] url in
+                            print("open - onDelegateURL called with: \(url.absoluteString)")
+                            self?.delegateExternalBrowser(url, command.callbackId)
+                        },
+                        onDelegateAlertController: { [weak self] alert in
+                            print("open - onDelegateAlertController called")
+                            self?.viewController.presentedViewController?.show(alert, sender: nil)
+                        }, completionHandler: { [weak self] event, viewControllerToOpen, data  in
+                            print("open - completionHandler called with event: \(event)")
+                            self?.handleResult(event, for: command.callbackId, checking: viewControllerToOpen, data: data, error: .failedToOpen(url: url.absoluteString, onTarget: target))
+                        }
+                    )
+                } else {
+                    print("❌ open - Plugin is nil, cannot open WebView")
+                    self.send(error: .failedToOpen(url: url.absoluteString, onTarget: target), for: command.callbackId)
+                }
+            }
+        }
     }
     
     @objc(openInExternalBrowser:)
@@ -126,7 +203,7 @@ class HiddenInAppBrowser: CDVPlugin {
             print("openInWebView - Processing command arguments")
             
             guard
-                let argumentsModel: HiddenInAppBrowserInputArgumentsComplexModel = self.createModel(for: command.argument(at: 0)),
+                let argumentsModel: HiddenInAppBrowserInputArgumentsSimpleModel = self.createModel(for: command.argument(at: 0)),
                 let url = URL(string: argumentsModel.url)
             else {
                 print("❌ openInWebView - Failed to create model or URL")
@@ -135,9 +212,31 @@ class HiddenInAppBrowser: CDVPlugin {
 
             print("✅ openInWebView - Model created successfully")
             print("openInWebView - URL: \(url.absoluteString)")
-            print("openInWebView - Options: \(argumentsModel.toWebViewOptions())")
             
-            delegateWebView(url: url, options: argumentsModel.toWebViewOptions(), customHeaders: argumentsModel.customHeaders)
+            // Create visible WebView options
+            let visibleOptions = OSIABWebViewOptions(
+                showURL: true,
+                showToolbar: true,
+                clearCache: true,
+                clearSessionCache: false,
+                mediaPlaybackRequiresUserAction: false,
+                closeButtonText: "Close",
+                toolbarPosition: .defaultValue,
+                showNavigationButtons: true,
+                leftToRight: false,
+                allowOverScroll: false,
+                enableViewportScale: false,
+                allowInLineMediaPlayback: false,
+                surpressIncrementalRendering: false,
+                viewStyle: .defaultValue,
+                animationEffect: .defaultValue,
+                customUserAgent: nil,
+                allowsBackForwardNavigationGestures: true
+            )
+            
+            print("openInWebView - Visible options created")
+            
+            delegateWebView(url: url, options: visibleOptions, customHeaders: nil)
         }
     }
     
@@ -239,10 +338,29 @@ private extension HiddenInAppBrowser {
 
 private extension HiddenInAppBrowser {
     func createModel<T: Decodable>(for inputArgument: Any?) -> T? {
-        guard let argumentsDictionary = inputArgument as? [String: Any],
-              let argumentsData = try? JSONSerialization.data(withJSONObject: argumentsDictionary),
-              let argumentsModel = try? JSONDecoder().decode(T.self, from: argumentsData)
-        else { return nil }
+        print("createModel - Input argument: \(inputArgument ?? "nil")")
+        print("createModel - Input argument type: \(type(of: inputArgument))")
+        
+        guard let argumentsDictionary = inputArgument as? [String: Any] else {
+            print("❌ createModel - Failed to cast to [String: Any]")
+            return nil
+        }
+        
+        print("createModel - Arguments dictionary: \(argumentsDictionary)")
+        
+        guard let argumentsData = try? JSONSerialization.data(withJSONObject: argumentsDictionary) else {
+            print("❌ createModel - Failed to serialize to JSON data")
+            return nil
+        }
+        
+        print("createModel - JSON data created successfully")
+        
+        guard let argumentsModel = try? JSONDecoder().decode(T.self, from: argumentsData) else {
+            print("❌ createModel - Failed to decode JSON to model")
+            return nil
+        }
+        
+        print("✅ createModel - Model created successfully")
         return argumentsModel
     }
     
