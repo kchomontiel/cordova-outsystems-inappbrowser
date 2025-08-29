@@ -1,13 +1,11 @@
 import OSInAppBrowserLib
 import UIKit
 
-typealias OSInAppBrowserEngine = OSIABEngine<OSIABApplicationRouterAdapter, OSIABSafariViewControllerRouterAdapter, OSIABWebViewRouterAdapter>
-
 /// The plugin's main class
 @objc(HiddenInAppBrowser)
 class HiddenInAppBrowser: CDVPlugin {
     /// The native library's main class
-    private var plugin: OSInAppBrowserEngine?
+    private var plugin: OSIABEngine<OSIABApplicationRouterAdapter, OSIABSafariViewControllerRouterAdapter, OSIABWebViewRouterAdapter>?
     private var openedViewController: UIViewController?
     
     override func pluginInitialize() {
@@ -388,7 +386,7 @@ private extension HiddenInAppBrowser {
     }
 }
 
-private extension OSInAppBrowserEngine {
+private extension OSIABEngine<OSIABApplicationRouterAdapter, OSIABSafariViewControllerRouterAdapter, OSIABWebViewRouterAdapter> {
     func openExternalBrowser(_ url: URL, _ completionHandler: @escaping (Bool) -> Void) {
         let router = OSIABApplicationRouterAdapter()
         self.openExternalBrowser(url, routerDelegate: router, completionHandler)
@@ -433,11 +431,4 @@ private extension OSInAppBrowserEngine {
         )
         self.openWebView(url, routerDelegate: router) { completionHandler(.success, $0, nil) }
     }
-}
- 
-enum OSIABEventType: Int {
-    case success = 1
-    case pageClosed
-    case pageLoadCompleted
-    case pageNavigationCompleted
 }

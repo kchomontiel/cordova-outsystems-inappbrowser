@@ -111,7 +111,4 @@ extension HiddenInAppBrowserInputArgumentsComplexModel {
     }
 }
 
-extension OSIABAnimationEffect: Decodable {}
-extension OSIABDismissStyle: Decodable {}
-extension OSIABToolbarPosition: Decodable {}
-extension OSIABViewStyle: Decodable {}
+
