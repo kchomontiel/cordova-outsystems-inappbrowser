@@ -153,17 +153,52 @@ class HiddenInAppBrowser: CDVPlugin {
             print("✅ openInWebView - Model created successfully")
             print("openInWebView - URL: \(url.absoluteString)")
             
-            // Open in WebView using UIApplication (simplified approach)
+            // Create a modal WebView (like Android)
             DispatchQueue.main.async {
-                UIApplication.shared.open(url) { success in
+                print("✅ openInWebView - Creating modal WebView")
+                
+                // Create WebView
+                let webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 400, height: 600))
+                webView.configuration.allowsInlineMediaPlayback = true
+                webView.configuration.mediaTypesRequiringUserActionForPlayback = []
+                
+                // Create view controller
+                let webViewController = UIViewController()
+                webViewController.view = webView
+                webViewController.title = "WebView"
+                
+                // Add close button
+                let closeButton = UIBarButtonItem(barButtonSystemItem: .close, target: self, action: #selector(self.closeWebView))
+                webViewController.navigationItem.leftBarButtonItem = closeButton
+                
+                // Create navigation controller
+                let navigationController = UINavigationController(rootViewController: webViewController)
+                navigationController.modalPresentationStyle = .pageSheet
+                
+                // Set delegate
+                let webViewDelegate = ModalWebViewDelegate { [weak self] success, error in
                     if success {
-                        print("✅ openInWebView - URL opened successfully")
-                        self.sendSuccess(for: command.callbackId)
+                        print("✅ openInWebView - Page loaded successfully")
+                        self?.sendSuccess(for: command.callbackId)
                     } else {
-                        print("❌ openInWebView - Failed to open URL")
-                        self.sendError("Failed to open URL: \(url.absoluteString)", for: command.callbackId)
+                        print("❌ openInWebView - Failed to load page: \(error ?? "unknown error")")
+                        self?.sendError("Failed to load URL: \(url.absoluteString)", for: command.callbackId)
                     }
                 }
+                
+                webView.navigationDelegate = webViewDelegate
+                
+                // Keep references
+                objc_setAssociatedObject(webView, &AssociatedKeys.delegateKey, webViewDelegate, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+                objc_setAssociatedObject(self, &AssociatedKeys.webViewKey, webView, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+                self.openedViewController = navigationController
+                
+                // Load URL
+                let request = URLRequest(url: url)
+                webView.load(request)
+                
+                // Present modal
+                self.viewController.present(navigationController, animated: true)
             }
         }
     }
@@ -184,6 +219,12 @@ class HiddenInAppBrowser: CDVPlugin {
             } else {
                 self.sendError("There's no browser view to close.", for: command.callbackId)
             }
+        }
+    }
+    
+    @objc func closeWebView() {
+        if let openedViewController {
+            openedViewController.dismiss(animated: true)
         }
     }
 }
@@ -266,6 +307,35 @@ private class HiddenWebViewDelegate: NSObject, WKNavigationDelegate {
     
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         print("HiddenWebViewDelegate - decidePolicyFor: \(navigationAction.request.url?.absoluteString ?? "nil")")
+        decisionHandler(.allow)
+    }
+}
+
+private class ModalWebViewDelegate: NSObject, WKNavigationDelegate {
+    private let completion: (Bool, String?) -> Void
+    
+    init(completion: @escaping (Bool, String?) -> Void) {
+        self.completion = completion
+        super.init()
+    }
+    
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        print("ModalWebViewDelegate - webView didFinish")
+        completion(true, nil)
+    }
+    
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        print("ModalWebViewDelegate - didFail: \(error.localizedDescription)")
+        completion(false, error.localizedDescription)
+    }
+    
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        print("ModalWebViewDelegate - didFailProvisionalNavigation: \(error.localizedDescription)")
+        completion(false, error.localizedDescription)
+    }
+    
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        print("ModalWebViewDelegate - decidePolicyFor: \(navigationAction.request.url?.absoluteString ?? "nil")")
         decisionHandler(.allow)
     }
 }
