@@ -370,20 +370,24 @@ private extension HiddenInAppBrowser {
     
     func sendSuccess(_ eventType: HiddenInAppBrowserEventType? = nil, for callbackId: String, data: Any? = nil) {
         let pluginResult: CDVPluginResult
-        var dataToSend = [String: Any]()
-
-        if let eventType {
+        
+        if let eventType = eventType {
+            var dataToSend = [String: Any]()
             dataToSend["eventType"] = eventType.rawValue
-            dataToSend["data"] = data
+            if let data = data {
+                dataToSend["data"] = data
+            }
+            
             if let jsonData = try? JSONSerialization.data(withJSONObject: dataToSend, options: .prettyPrinted),
                let jsonString = String(data: jsonData, encoding: .utf8) {
-                pluginResult = .init(status: .ok, messageAs: jsonString)
+                pluginResult = CDVPluginResult(status: .ok, messageAs: jsonString)
             } else {
-                pluginResult = .init(status: .ok)
+                pluginResult = CDVPluginResult(status: .ok)
             }
         } else {
-            pluginResult = .init(status: .ok)
+            pluginResult = CDVPluginResult(status: .ok)
         }
+        
         pluginResult.keepCallback = true
         self.commandDelegate.send(pluginResult, callbackId: callbackId)
     }
