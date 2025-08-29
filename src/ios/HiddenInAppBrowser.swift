@@ -1,4 +1,5 @@
 import UIKit
+import ObjectiveC
 
 /// The plugin's main class
 @objc(HiddenInAppBrowser)
@@ -198,44 +199,7 @@ class HiddenInAppBrowser: CDVPlugin {
     }
 }
 
-private extension HiddenInAppBrowser {
-    func delegateExternalBrowser(_ url: URL, _ callbackId: String) {
-        DispatchQueue.main.async {
-            self.plugin?.openExternalBrowser(url, { [weak self] success in
-                guard let self else { return }
-                
-                if success {
-                    self.sendSuccess(for: callbackId)
-                } else {
-                    self.send(error: .failedToOpen(url: url.absoluteString, onTarget: .externalBrowser), for: callbackId)
-                }
-            })
-        }
-    }
-    
-    func handleResult(_ event: OSIABEventType, for callbackId: String, checking viewController: UIViewController?, data: Any?, error: HiddenInAppBrowserError) {
-        let sendEvent: (Any?) -> Void = { data in self.sendSuccess(event, for: callbackId, data: data) }
-        
-        switch event {
-        case .success:
-            if let viewController {
-                self.present(viewController) { [weak self] in
-                    self?.openedViewController = viewController
-                    sendEvent(data)
-                }
-            } else {
-                self.send(error: error, for: callbackId)
-            }
-        case .pageClosed:
-            self.openedViewController = nil
-            fallthrough
-        case .pageLoadCompleted:
-            sendEvent(data)
-        case .pageNavigationCompleted:
-            sendEvent(data)
-        }
-    }
-}
+
 
 private extension HiddenInAppBrowser {
     func createModel<T: Decodable>(for inputArgument: Any?) -> T? {
@@ -265,17 +229,7 @@ private extension HiddenInAppBrowser {
         return argumentsModel
     }
     
-    func present(_ viewController: UIViewController, _ completionHandler: (() -> Void)?) {
-        let showNewViewController: () -> Void = {
-            self.viewController.present(viewController, animated: true, completion: completionHandler)
-        }
-        
-        if let presentedViewController = self.viewController.presentedViewController, presentedViewController == self.openedViewController {
-            presentedViewController.dismiss(animated: true, completion: showNewViewController)
-        } else {
-            showNewViewController()
-        }
-    }
+
     
     func sendSuccess(for callbackId: String) {
         let pluginResult = CDVPluginResult(status: .ok)
