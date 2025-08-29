@@ -1,6 +1,14 @@
 import OSInAppBrowserLib
 import UIKit
 
+// Define our own event type to avoid conflicts with the original plugin
+enum HiddenInAppBrowserEventType: Int {
+    case success = 1
+    case pageClosed
+    case pageLoadCompleted
+    case pageNavigationCompleted
+}
+
 /// The plugin's main class
 @objc(HiddenInAppBrowser)
 class HiddenInAppBrowser: CDVPlugin {
@@ -315,7 +323,7 @@ private extension HiddenInAppBrowser {
         }
     }
     
-    func handleResult(_ event: OSIABEventType, for callbackId: String, checking viewController: UIViewController?, data: Any?, error: HiddenInAppBrowserError) {
+    func handleResult(_ event: HiddenInAppBrowserEventType, for callbackId: String, checking viewController: UIViewController?, data: Any?, error: HiddenInAppBrowserError) {
         let sendEvent: (Any?) -> Void = { data in self.sendSuccess(event, for: callbackId, data: data) }
         
         switch event {
@@ -360,7 +368,7 @@ private extension HiddenInAppBrowser {
         }
     }
     
-    func sendSuccess(_ eventType: OSIABEventType? = nil, for callbackId: String, data: Any? = nil) {
+    func sendSuccess(_ eventType: HiddenInAppBrowserEventType? = nil, for callbackId: String, data: Any? = nil) {
         let pluginResult: CDVPluginResult
         var dataToSend = [String: Any]()
 
@@ -392,13 +400,13 @@ private extension OSIABEngine<OSIABApplicationRouterAdapter, OSIABSafariViewCont
         self.openExternalBrowser(url, routerDelegate: router, completionHandler)
     }
     
-    func openSystemBrowser(_ url: URL, _ options: OSIABSystemBrowserOptions, _ completionHandler: @escaping (OSIABEventType, UIViewController?) -> Void) {
+    func openSystemBrowser(_ url: URL, _ options: OSIABSystemBrowserOptions, _ completionHandler: @escaping (HiddenInAppBrowserEventType, UIViewController?) -> Void) {
         let router = OSIABSafariViewControllerRouterAdapter(
             options,
-            onBrowserPageLoad: { completionHandler(.pageLoadCompleted, nil) },
-            onBrowserClosed: { completionHandler(.pageClosed, nil) }
+            onBrowserPageLoad: { completionHandler(HiddenInAppBrowserEventType.pageLoadCompleted, nil) },
+            onBrowserClosed: { completionHandler(HiddenInAppBrowserEventType.pageClosed, nil) }
         )
-        self.openSystemBrowser(url, routerDelegate: router) { completionHandler(.success, $0) }
+        self.openSystemBrowser(url, routerDelegate: router) { completionHandler(HiddenInAppBrowserEventType.success, $0) }
     }
     
     func openWebView(
@@ -408,19 +416,19 @@ private extension OSIABEngine<OSIABApplicationRouterAdapter, OSIABSafariViewCont
         onDelegateClose: @escaping () -> Void,
         onDelegateURL: @escaping (URL) -> Void,
         onDelegateAlertController: @escaping (UIAlertController) -> Void,
-        completionHandler: @escaping (OSIABEventType, UIViewController?, String?) -> Void
+        completionHandler: @escaping (HiddenInAppBrowserEventType, UIViewController?, String?) -> Void
     ) {
         let callbackHandler = OSIABWebViewCallbackHandler(
             onDelegateURL: onDelegateURL,
             onDelegateAlertController: onDelegateAlertController,
-            onBrowserPageLoad: { completionHandler(.pageLoadCompleted, nil, nil) },
+            onBrowserPageLoad: { completionHandler(HiddenInAppBrowserEventType.pageLoadCompleted, nil, nil) },
             onBrowserClosed: { isAlreadyClosed in
                 if !isAlreadyClosed {
                     onDelegateClose()
                 }
-                completionHandler(.pageClosed, nil, nil)
+                completionHandler(HiddenInAppBrowserEventType.pageClosed, nil, nil)
             }, onBrowserPageNavigationCompleted: { url in
-                completionHandler(.pageNavigationCompleted, nil, url)
+                completionHandler(HiddenInAppBrowserEventType.pageNavigationCompleted, nil, url)
             }
         )
         let router = OSIABWebViewRouterAdapter(
@@ -429,6 +437,6 @@ private extension OSIABEngine<OSIABApplicationRouterAdapter, OSIABSafariViewCont
             cacheManager: OSIABBrowserCacheManager(dataStore: .default()),
             callbackHandler: callbackHandler
         )
-        self.openWebView(url, routerDelegate: router) { completionHandler(.success, $0, nil) }
+        self.openWebView(url, routerDelegate: router) { completionHandler(HiddenInAppBrowserEventType.success, $0, nil) }
     }
 }
