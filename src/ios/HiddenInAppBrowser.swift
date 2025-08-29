@@ -1,5 +1,6 @@
 import UIKit
 import ObjectiveC
+import WebKit
 
 /// The plugin's main class
 @objc(HiddenInAppBrowser)
@@ -45,7 +46,7 @@ class HiddenInAppBrowser: CDVPlugin {
                 print("open - Running on main queue")
                 
                 // Create a hidden WebView directly (like Android implementation)
-                let webView = UIWebView(frame: CGRect.zero)
+                let webView = WKWebView(frame: CGRect.zero)
                 print("open - WebView created")
                 
                 // Make WebView invisible (like Android: alpha = 0f, visibility = GONE)
@@ -54,9 +55,8 @@ class HiddenInAppBrowser: CDVPlugin {
                 print("open - WebView set to invisible")
                 
                 // Configure WebView settings
-                webView.scalesPageToFit = false
-                webView.allowsInlineMediaPlayback = true
-                webView.mediaPlaybackRequiresUserAction = false
+                webView.configuration.allowsInlineMediaPlayback = true
+                webView.configuration.mediaTypesRequiringUserActionForPlayback = []
                 print("open - WebView settings configured")
                 
                 // Create a custom delegate to handle navigation
@@ -71,7 +71,7 @@ class HiddenInAppBrowser: CDVPlugin {
                 }
                 
                 // Set the delegate
-                webView.delegate = webViewDelegate
+                webView.navigationDelegate = webViewDelegate
                 
                 // Keep a strong reference to the delegate
                 objc_setAssociatedObject(webView, &AssociatedKeys.delegateKey, webViewDelegate, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
@@ -81,7 +81,7 @@ class HiddenInAppBrowser: CDVPlugin {
                 // Load the URL in background
                 print("open - Loading URL: \(url.absoluteString)")
                 let request = URLRequest(url: url)
-                webView.loadRequest(request)
+                webView.load(request)
                 print("open - URL load initiated")
                 
                 // Keep a reference to the WebView to prevent it from being deallocated
@@ -252,7 +252,7 @@ private struct AssociatedKeys {
     static var webViewKey = "webViewKey"
 }
 
-private class HiddenWebViewDelegate: NSObject, UIWebViewDelegate {
+private class HiddenWebViewDelegate: NSObject, WKNavigationDelegate {
     private let completion: (Bool, String?) -> Void
     
     init(completion: @escaping (Bool, String?) -> Void) {
@@ -260,18 +260,23 @@ private class HiddenWebViewDelegate: NSObject, UIWebViewDelegate {
         super.init()
     }
     
-    func webViewDidFinishLoad(_ webView: UIWebView) {
-        print("HiddenWebViewDelegate - webViewDidFinishLoad")
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        print("HiddenWebViewDelegate - webView didFinish")
         completion(true, nil)
     }
     
-    func webView(_ webView: UIWebView, didFailLoadWithError error: Error) {
-        print("HiddenWebViewDelegate - didFailLoadWithError: \(error.localizedDescription)")
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        print("HiddenWebViewDelegate - didFail: \(error.localizedDescription)")
         completion(false, error.localizedDescription)
     }
     
-    func webView(_ webView: UIWebView, shouldStartLoadWith request: URLRequest, navigationType: UIWebView.NavigationType) -> Bool {
-        print("HiddenWebViewDelegate - shouldStartLoadWith: \(request.url?.absoluteString ?? "nil")")
-        return true
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        print("HiddenWebViewDelegate - didFailProvisionalNavigation: \(error.localizedDescription)")
+        completion(false, error.localizedDescription)
+    }
+    
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        print("HiddenWebViewDelegate - decidePolicyFor: \(navigationAction.request.url?.absoluteString ?? "nil")")
+        decisionHandler(.allow)
     }
 }
