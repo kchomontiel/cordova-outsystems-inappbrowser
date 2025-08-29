@@ -1,23 +1,13 @@
-import OSInAppBrowserLib
 import UIKit
-
-typealias HiddenInAppBrowserEngine = OSIABEngine<OSIABApplicationRouterAdapter, OSIABSafariViewControllerRouterAdapter, OSIABWebViewRouterAdapter>
 
 /// The plugin's main class
 @objc(HiddenInAppBrowser)
 class HiddenInAppBrowser: CDVPlugin {
-    /// The native library's main class
-    private var plugin: HiddenInAppBrowserEngine?
     private var openedViewController: UIViewController?
     
     override func pluginInitialize() {
         print("🔧 HiddenInAppBrowser - pluginInitialize called")
-        print("🔧 HiddenInAppBrowser - Starting plugin initialization...")
-        self.plugin = .init()
-        print("🔧 HiddenInAppBrowser - Plugin initialized: \(self.plugin != nil)")
         print("🔧 HiddenInAppBrowser - Plugin initialization completed")
-        
-        // Add a test log that should always appear
         NSLog("🔧 HiddenInAppBrowser - NSLog test - Plugin initialized successfully")
     }
     
@@ -47,152 +37,103 @@ class HiddenInAppBrowser: CDVPlugin {
             print("✅ open - Model created successfully")
             print("open - URL: \(url.absoluteString)")
             
-            // Create hidden WebView options
-            let hiddenOptions = OSIABWebViewOptions(
-                showURL: false,
-                showToolbar: false,
-                clearCache: true,
-                clearSessionCache: true,
-                mediaPlaybackRequiresUserAction: false,
-                closeButtonText: "Close",
-                toolbarPosition: .defaultValue,
-                showNavigationButtons: false,
-                leftToRight: false,
-                allowOverScroll: true,
-                enableViewportScale: false,
-                allowInLineMediaPlayback: false,
-                surpressIncrementalRendering: false,
-                viewStyle: .defaultValue,
-                animationEffect: .defaultValue,
-                customUserAgent: nil,
-                allowsBackForwardNavigationGestures: true
-            )
+            print("open - Creating hidden WebView directly")
             
-            print("open - Hidden options created")
-            
-            // Create hidden WebView
+            // Create hidden WebView directly (like Android)
             DispatchQueue.main.async {
                 print("open - Running on main queue")
                 
-                if let plugin = self.plugin {
-                    print("✅ open - Plugin found, calling openWebView with hidden options")
-                    plugin.openWebView(
-                        url: url,
-                        options: hiddenOptions,
-                        customHeaders: nil,
-                        onDelegateClose: { [weak self] in
-                            print("open - onDelegateClose called")
-                            self?.viewController.dismiss(animated: true)
-                        },
-                        onDelegateURL: { [weak self] url in
-                            print("open - onDelegateURL called with: \(url.absoluteString)")
-                            self?.delegateExternalBrowser(url, command.callbackId)
-                        },
-                        onDelegateAlertController: { [weak self] alert in
-                            print("open - onDelegateAlertController called")
-                            self?.viewController.presentedViewController?.show(alert, sender: nil)
-                        }, completionHandler: { [weak self] event, viewControllerToOpen, data  in
-                            print("open - completionHandler called with event: \(event)")
-                            self?.handleResult(event, for: command.callbackId, checking: viewControllerToOpen, data: data, error: .failedToOpen(url: url.absoluteString, onTarget: target))
-                        }
-                    )
-                } else {
-                    print("❌ open - Plugin is nil, cannot open WebView")
-                    self.send(error: .failedToOpen(url: url.absoluteString, onTarget: target), for: command.callbackId)
+                // Create a hidden WebView directly (like Android implementation)
+                let webView = UIWebView(frame: CGRect.zero)
+                print("open - WebView created")
+                
+                // Make WebView invisible (like Android: alpha = 0f, visibility = GONE)
+                webView.alpha = 0.0
+                webView.isHidden = true
+                print("open - WebView set to invisible")
+                
+                // Configure WebView settings
+                webView.scalesPageToFit = false
+                webView.allowsInlineMediaPlayback = true
+                webView.mediaPlaybackRequiresUserAction = false
+                print("open - WebView settings configured")
+                
+                // Create a custom delegate to handle navigation
+                let webViewDelegate = HiddenWebViewDelegate { [weak self] success, error in
+                    if success {
+                        print("open - Page finished loading successfully")
+                        self?.sendSuccess(for: command.callbackId)
+                    } else {
+                        print("open - Error loading URL: \(error ?? "unknown error")")
+                        self?.send(error: .failedToOpen(url: url.absoluteString, onTarget: target), for: command.callbackId)
+                    }
                 }
+                
+                // Set the delegate
+                webView.delegate = webViewDelegate
+                
+                // Keep a strong reference to the delegate
+                objc_setAssociatedObject(webView, &AssociatedKeys.delegateKey, webViewDelegate, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+                
+                print("open - WebView delegate configured")
+                
+                // Load the URL in background
+                print("open - Loading URL: \(url.absoluteString)")
+                let request = URLRequest(url: url)
+                webView.loadRequest(request)
+                print("open - URL load initiated")
+                
+                // Keep a reference to the WebView to prevent it from being deallocated
+                objc_setAssociatedObject(self, &AssociatedKeys.webViewKey, webView, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
             }
         }
     }
     
     @objc(openInExternalBrowser:)
     func openInExternalBrowser(command: CDVInvokedUrlCommand) {
-        let target = HiddenInAppBrowserTarget.externalBrowser
+        print("🔍 openInExternalBrowser - ===== INICIO DEL MÉTODO =====")
+        print("openInExternalBrowser - Command received: \(command)")
         
         self.commandDelegate.run { [weak self] in
-            guard let self else { return }
+            guard let self else { 
+                print("❌ openInExternalBrowser - Self is nil")
+                return 
+            }
+            
+            print("openInExternalBrowser - Processing command arguments")
             
             guard
                 let argumentsModel: HiddenInAppBrowserInputArgumentsSimpleModel = self.createModel(for: command.argument(at: 0)),
                 let url = URL(string: argumentsModel.url)
             else {
-                return self.send(error: .inputArgumentsIssue(target: target), for: command.callbackId)
+                print("❌ openInExternalBrowser - Failed to create model or URL")
+                return self.send(error: .inputArgumentsIssue(target: .externalBrowser), for: command.callbackId)
             }
+
+            print("✅ openInExternalBrowser - Model created successfully")
+            print("openInExternalBrowser - URL: \(url.absoluteString)")
             
-            delegateExternalBrowser(url, command.callbackId)
-        }
-    }
-    
-    @objc(openInSystemBrowser:)
-    func openInSystemBrowser(command: CDVInvokedUrlCommand) {
-        let target = HiddenInAppBrowserTarget.systemBrowser
-        
-        func delegateSystemBrowser(_ url: URL, _ options: OSIABSystemBrowserOptions) {
+            // Open in external browser
             DispatchQueue.main.async {
-                self.plugin?.openSystemBrowser(url, options, { [weak self] event, viewControllerToOpen in
-                    self?.handleResult(event, for: command.callbackId, checking: viewControllerToOpen, data: nil, error: .failedToOpen(url: url.absoluteString, onTarget: target))
-                })
-            }
-        }
-        
-        self.commandDelegate.run { [weak self] in
-            guard let self else { return }
-            
-            guard
-                let argumentsModel: HiddenInAppBrowserInputArgumentsComplexModel = self.createModel(for: command.argument(at: 0)),
-                let url = URL(string: argumentsModel.url)
-            else {
-                return self.send(error: .inputArgumentsIssue(target: target), for: command.callbackId)
-            }
-                        
-            delegateSystemBrowser(url, argumentsModel.toSystemBrowserOptions())
-        }
-    }
-    
-    @objc(openInWebView:)
-    func openInWebView(command: CDVInvokedUrlCommand) {
-        let target = HiddenInAppBrowserTarget.webView
-        
-        NSLog("🔍 openInWebView - ===== INICIO DEL MÉTODO =====")
-        print("🔍 openInWebView - ===== INICIO DEL MÉTODO =====")
-        print("openInWebView - Command received: \(command)")
-        print("openInWebView - Plugin is nil: \(self.plugin == nil)")
-        
-        func delegateWebView(url: URL, options: OSIABWebViewOptions, customHeaders: [String: String]? = nil) {
-            print("openInWebView - delegateWebView called with URL: \(url.absoluteString)")
-            print("openInWebView - Plugin is nil in delegateWebView: \(self.plugin == nil)")
-            
-            DispatchQueue.main.async {
-                print("openInWebView - Running on main queue")
-                print("openInWebView - Plugin is nil on main queue: \(self.plugin == nil)")
-                
-                if let plugin = self.plugin {
-                    print("✅ openInWebView - Plugin found, calling openWebView")
-                    plugin.openWebView(
-                        url: url,
-                        options: options,
-                        customHeaders: customHeaders,
-                        onDelegateClose: { [weak self] in
-                            print("openInWebView - onDelegateClose called")
-                            self?.viewController.dismiss(animated: true)
-                        },
-                        onDelegateURL: { [weak self] url in
-                            print("openInWebView - onDelegateURL called with: \(url.absoluteString)")
-                            self?.delegateExternalBrowser(url, command.callbackId)
-                        },
-                        onDelegateAlertController: { [weak self] alert in
-                            print("openInWebView - onDelegateAlertController called")
-                            self?.viewController.presentedViewController?.show(alert, sender: nil)
-                        }, completionHandler: { [weak self] event, viewControllerToOpen, data  in
-                            print("openInWebView - completionHandler called with event: \(event)")
-                            self?.handleResult(event, for: command.callbackId, checking: viewControllerToOpen, data: data, error: .failedToOpen(url: url.absoluteString, onTarget: target))
-                        }
-                    )
-                } else {
-                    print("❌ openInWebView - Plugin is nil, cannot open WebView")
-                    self.send(error: .failedToOpen(url: url.absoluteString, onTarget: target), for: command.callbackId)
+                UIApplication.shared.open(url) { success in
+                    if success {
+                        print("✅ openInExternalBrowser - URL opened successfully")
+                        self.sendSuccess(for: command.callbackId)
+                    } else {
+                        print("❌ openInExternalBrowser - Failed to open URL")
+                        self.send(error: .failedToOpen(url: url.absoluteString, onTarget: .externalBrowser), for: command.callbackId)
+                    }
                 }
             }
         }
+    }
+    
+
+    
+    @objc(openInWebView:)
+    func openInWebView(command: CDVInvokedUrlCommand) {
+        print("🔍 openInWebView - ===== INICIO DEL MÉTODO =====")
+        print("openInWebView - Command received: \(command)")
         
         self.commandDelegate.run { [weak self] in
             guard let self else { 
@@ -207,77 +148,37 @@ class HiddenInAppBrowser: CDVPlugin {
                 let url = URL(string: argumentsModel.url)
             else {
                 print("❌ openInWebView - Failed to create model or URL")
-                return self.send(error: .inputArgumentsIssue(target: target), for: command.callbackId)
+                return self.send(error: .inputArgumentsIssue(target: .webView), for: command.callbackId)
             }
 
             print("✅ openInWebView - Model created successfully")
             print("openInWebView - URL: \(url.absoluteString)")
             
-            // Create visible WebView options
-            let visibleOptions = OSIABWebViewOptions(
-                showURL: true,
-                showToolbar: true,
-                clearCache: true,
-                clearSessionCache: false,
-                mediaPlaybackRequiresUserAction: false,
-                closeButtonText: "Close",
-                toolbarPosition: .defaultValue,
-                showNavigationButtons: true,
-                leftToRight: false,
-                allowOverScroll: false,
-                enableViewportScale: false,
-                allowInLineMediaPlayback: false,
-                surpressIncrementalRendering: false,
-                viewStyle: .defaultValue,
-                animationEffect: .defaultValue,
-                customUserAgent: nil,
-                allowsBackForwardNavigationGestures: true
-            )
-            
-            print("openInWebView - Visible options created")
-            
-            delegateWebView(url: url, options: visibleOptions, customHeaders: nil)
+            // Use Apache InAppBrowser plugin
+            if let inAppBrowserPlugin = self.commandDelegate.getCommandInstance("InAppBrowser") as? CDVPlugin {
+                print("✅ openInWebView - Apache InAppBrowser plugin found")
+                
+                // Create options for visible WebView
+                let options = "location=yes,toolbar=yes,hidenavigationbuttons=no"
+                
+                // Call Apache InAppBrowser's open method
+                let args = CDVInvokedUrlCommand(
+                    arguments: [url.absoluteString, "_blank", options],
+                    callbackId: command.callbackId,
+                    className: "InAppBrowser",
+                    methodName: "open"
+                )
+                
+                inAppBrowserPlugin.execute(args)
+                
+            } else {
+                print("❌ openInWebView - Apache InAppBrowser plugin not found")
+                self.send(error: .failedToOpen(url: url.absoluteString, onTarget: .webView), for: command.callbackId)
+            }
         }
     }
     
-    @objc(openInWebViewHidden:)
-    func openInWebViewHidden(command: CDVInvokedUrlCommand) {
-        let target = HiddenInAppBrowserTarget.webView
-        
-        func delegateWebViewHidden(url: URL, options: OSIABWebViewOptions, customHeaders: [String: String]? = nil) {
-            DispatchQueue.main.async {
-                self.plugin?.openWebView(
-                    url: url,
-                    options: options,
-                    customHeaders: customHeaders,
-                    onDelegateClose: { [weak self] in
-                        self?.viewController.dismiss(animated: true)
-                    },
-                    onDelegateURL: { [weak self] url in
-                        self?.delegateExternalBrowser(url, command.callbackId)
-                    },
-                    onDelegateAlertController: { [weak self] alert in
-                        self?.viewController.presentedViewController?.show(alert, sender: nil)
-                    }, completionHandler: { [weak self] event, viewControllerToOpen, data  in
-                        self?.handleResult(event, for: command.callbackId, checking: viewControllerToOpen, data: data, error: .failedToOpen(url: url.absoluteString, onTarget: target))
-                    }
-                )
-            }
-        }
-        
-        self.commandDelegate.run { [weak self] in
-            guard let self else { return }
-            
-            guard
-                let argumentsModel: HiddenInAppBrowserInputArgumentsComplexModel = self.createModel(for: command.argument(at: 0)),
-                let url = URL(string: argumentsModel.url)
-            else {
-                return self.send(error: .inputArgumentsIssue(target: target), for: command.callbackId)
-            }
 
-            delegateWebViewHidden(url: url, options: argumentsModel.toWebViewHiddenOptions(), customHeaders: argumentsModel.customHeaders)
-        }
-    }
     
     @objc(close:)
     func close(command: CDVInvokedUrlCommand) {
@@ -376,22 +277,8 @@ private extension HiddenInAppBrowser {
         }
     }
     
-    func sendSuccess(_ eventType: OSIABEventType? = nil, for callbackId: String, data: Any? = nil) {
-        let pluginResult: CDVPluginResult
-        var dataToSend = [String: Any]()
-
-        if let eventType {
-            dataToSend["eventType"] = eventType.rawValue
-            dataToSend["data"] = data
-            if let jsonData = try? JSONSerialization.data(withJSONObject: dataToSend, options: .prettyPrinted),
-               let jsonString = String(data: jsonData, encoding: .utf8) {
-                pluginResult = .init(status: .ok, messageAs: jsonString)
-            } else {
-                pluginResult = .init(status: .ok)
-            }
-        } else {
-            pluginResult = .init(status: .ok)
-        }
+    func sendSuccess(for callbackId: String) {
+        let pluginResult = CDVPluginResult(status: .ok)
         pluginResult.keepCallback = true
         self.commandDelegate.send(pluginResult, callbackId: callbackId)
     }
@@ -402,49 +289,35 @@ private extension HiddenInAppBrowser {
     }
 }
 
-private extension HiddenInAppBrowserEngine {
-    func openExternalBrowser(_ url: URL, _ completionHandler: @escaping (Bool) -> Void) {
-        let router = OSIABApplicationRouterAdapter()
-        self.openExternalBrowser(url, routerDelegate: router, completionHandler)
+
+
+// MARK: - Hidden WebView Implementation (like Android)
+
+private struct AssociatedKeys {
+    static var delegateKey = "delegateKey"
+    static var webViewKey = "webViewKey"
+}
+
+private class HiddenWebViewDelegate: NSObject, UIWebViewDelegate {
+    private let completion: (Bool, String?) -> Void
+    
+    init(completion: @escaping (Bool, String?) -> Void) {
+        self.completion = completion
+        super.init()
     }
     
-    func openSystemBrowser(_ url: URL, _ options: OSIABSystemBrowserOptions, _ completionHandler: @escaping (OSIABEventType, UIViewController?) -> Void) {
-        let router = OSIABSafariViewControllerRouterAdapter(
-            options,
-            onBrowserPageLoad: { completionHandler(.pageLoadCompleted, nil) },
-            onBrowserClosed: { completionHandler(.pageClosed, nil) }
-        )
-        self.openSystemBrowser(url, routerDelegate: router) { completionHandler(.success, $0) }
+    func webViewDidFinishLoad(_ webView: UIWebView) {
+        print("HiddenWebViewDelegate - webViewDidFinishLoad")
+        completion(true, nil)
     }
     
-    func openWebView(
-        url: URL,
-        options: OSIABWebViewOptions,
-        customHeaders: [String: String]? = nil,
-        onDelegateClose: @escaping () -> Void,
-        onDelegateURL: @escaping (URL) -> Void,
-        onDelegateAlertController: @escaping (UIAlertController) -> Void,
-        completionHandler: @escaping (OSIABEventType, UIViewController?, String?) -> Void
-    ) {
-        let callbackHandler = OSIABWebViewCallbackHandler(
-            onDelegateURL: onDelegateURL,
-            onDelegateAlertController: onDelegateAlertController,
-            onBrowserPageLoad: { completionHandler(.pageLoadCompleted, nil, nil) },
-            onBrowserClosed: { isAlreadyClosed in
-                if !isAlreadyClosed {
-                    onDelegateClose()
-                }
-                completionHandler(.pageClosed, nil, nil)
-            }, onBrowserPageNavigationCompleted: { url in
-                completionHandler(.pageNavigationCompleted, nil, url)
-            }
-        )
-        let router = OSIABWebViewRouterAdapter(
-            options: options,
-            customHeaders: customHeaders,
-            cacheManager: OSIABBrowserCacheManager(dataStore: .default()),
-            callbackHandler: callbackHandler
-        )
-        self.openWebView(url, routerDelegate: router) { completionHandler(.success, $0, nil) }
+    func webView(_ webView: UIWebView, didFailLoadWithError error: Error) {
+        print("HiddenWebViewDelegate - didFailLoadWithError: \(error.localizedDescription)")
+        completion(false, error.localizedDescription)
+    }
+    
+    func webView(_ webView: UIWebView, shouldStartLoadWith request: URLRequest, navigationType: UIWebView.NavigationType) -> Bool {
+        print("HiddenWebViewDelegate - shouldStartLoadWith: \(request.url?.absoluteString ?? "nil")")
+        return true
     }
 }

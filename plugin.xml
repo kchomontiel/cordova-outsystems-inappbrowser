@@ -42,13 +42,6 @@
         <source-file src="src/ios/HiddenInAppBrowserError.swift" />
         <source-file src="src/ios/HiddenInAppBrowserInputArgumentsModel.swift" />
 
-        <podspec>
-            <config>
-                <source url="https://cdn.cocoapods.org/"/>
-            </config>
-            <pods use-frameworks="true">
-                <pod name="OSInAppBrowserLib" spec="2.1.0" />
-            </pods>
-        </podspec> 
+ 
     </platform>
 </plugin>
