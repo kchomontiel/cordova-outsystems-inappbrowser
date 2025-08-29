@@ -394,6 +394,23 @@ class HiddenInAppBrowser: CordovaPlugin() {
                         }
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - Layout created")
                         
+                        // Create a dialog to show the WebView
+                        val dialog = android.app.AlertDialog.Builder(activity)
+                            .setView(layout)
+                            .setCancelable(false)
+                            .create()
+                        
+                        // Set dialog to full screen
+                        dialog.window?.apply {
+                            setLayout(
+                                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                                android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                            )
+                            setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.WHITE))
+                        }
+                        
+                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - Dialog created")
+                        
                         // Add a toolbar with close button
                         val toolbar = android.widget.LinearLayout(activity).apply {
                             orientation = android.widget.LinearLayout.HORIZONTAL
@@ -414,7 +431,7 @@ class HiddenInAppBrowser: CordovaPlugin() {
                             setOnClickListener {
                                 android.util.Log.d("HiddenInAppBrowser", "openInWebView - Close button clicked")
                                 // Close the dialog
-                                dialog?.dismiss()
+                                dialog.dismiss()
                                 sendSuccess(callbackContext, "WebView closed")
                             }
                             layoutParams = android.widget.LinearLayout.LayoutParams(
@@ -438,23 +455,6 @@ class HiddenInAppBrowser: CordovaPlugin() {
                         )
                         layout.addView(webView)
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - WebView added to layout")
-                        
-                        // Create a dialog to show the WebView
-                        val dialog = android.app.AlertDialog.Builder(activity)
-                            .setView(layout)
-                            .setCancelable(false)
-                            .create()
-                        
-                        // Set dialog to full screen
-                        dialog.window?.apply {
-                            setLayout(
-                                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                                android.view.ViewGroup.LayoutParams.MATCH_PARENT
-                            )
-                            setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.WHITE))
-                        }
-                        
-                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - Dialog created")
                         
                         // Show the dialog
                         dialog.show()
