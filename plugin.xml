@@ -35,6 +35,7 @@
             <feature name="HiddenInAppBrowser">
                 <param name="ios-package" value="HiddenInAppBrowser" />
             </feature>
+            <preference name="SwiftVersion" value="5" />
         </config-file>
 
         <source-file src="src/ios/HiddenInAppBrowser.swift" />
@@ -49,31 +50,5 @@
                 <pod name="OSInAppBrowserLib" spec="2.1.0" />
             </pods>
         </podspec> 
-        
-        <!-- iOS build settings for OutSystems MABS compatibility -->
-        <config-file parent="/*" target="project.pbxproj">
-            <key>SWIFT_VERSION</key>
-            <string>5.0</string>
-        </config-file>
-        
-        <config-file parent="/*" target="project.pbxproj">
-            <key>CLANG_ENABLE_MODULES</key>
-            <string>YES</string>
-        </config-file>
-        
-        <config-file parent="/*" target="project.pbxproj">
-            <key>DEFINES_MODULE</key>
-            <string>YES</string>
-        </config-file>
-        
-        <config-file parent="/*" target="project.pbxproj">
-            <key>SWIFT_OPTIMIZATION_LEVEL</key>
-            <string>-Onone</string>
-        </config-file>
-        
-        <config-file parent="/*" target="project.pbxproj">
-            <key>SWIFT_ACTIVE_COMPILATION_CONDITIONS</key>
-            <string>DEBUG</string>
-        </config-file>
     </platform>
 </plugin>

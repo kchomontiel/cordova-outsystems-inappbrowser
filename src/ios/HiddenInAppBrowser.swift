@@ -34,7 +34,7 @@ class HiddenInAppBrowser: CDVPlugin {
         print("openInExternalBrowser - Command received: \(command)")
         
         self.commandDelegate.run { [weak self] in
-            guard let self else { 
+            guard let self = self else { 
                 print("❌ openInExternalBrowser - Self is nil")
                 return 
             }
@@ -153,7 +153,7 @@ class HiddenInAppBrowser: CDVPlugin {
         print("openInWebView - Command received: \(command)")
         
         self.commandDelegate.run { [weak self] in
-            guard let self else { 
+            guard let self = self else { 
                 print("❌ openInWebView - Self is nil")
                 return 
             }
@@ -293,7 +293,7 @@ class HiddenInAppBrowser: CDVPlugin {
     @objc(close:)
     func close(command: CDVInvokedUrlCommand) {
         self.commandDelegate.run { [weak self] in
-            guard let self else { return }
+            guard let self = self else { return }
             
             if let openedViewController {
                 DispatchQueue.main.async {
@@ -312,7 +312,7 @@ private extension HiddenInAppBrowser {
     func delegateExternalBrowser(_ url: URL, _ callbackId: String) {
         DispatchQueue.main.async {
             self.plugin?.openExternalBrowser(url, { [weak self] success in
-                guard let self else { return }
+                guard let self = self else { return }
                 
                 if success {
                     self.sendSuccess(for: callbackId)
