@@ -227,7 +227,7 @@
               },
               "HiddenInAppBrowser",
               methodName,
-              [{ url: finalOptions.url }]
+              [{ url: finalOptions.url, options: finalOptions }]
             );
           } else {
             const error = "Cordova is not available";
@@ -248,7 +248,9 @@
         console.log(`${methodName} - Options.url type:`, typeof urlOrOptions.url);
         let urlFromOptions = urlOrOptions.url;
         if (typeof urlFromOptions !== "string") {
-          console.log(`${methodName} - URL is not a string, attempting conversion...`);
+          console.log(
+            `${methodName} - URL is not a string, attempting conversion...`
+          );
           if (Array.isArray(urlFromOptions)) {
             console.log(`${methodName} - URL is an array, joining...`);
             urlFromOptions = urlFromOptions.join("");
@@ -269,7 +271,7 @@
     console.log(`${methodName} - Final options:`, finalOptions);
     console.log(`${methodName} - Final options.url:`, finalOptions.url);
     console.log(`Parameters being sent to cordova.exec:`, [
-      { url: finalOptions.url }
+      { url: finalOptions.url, options: finalOptions }
     ]);
     return new Promise((resolve, reject) => {
       if (typeof cordova !== "undefined" && cordova.exec) {
@@ -278,7 +280,7 @@
           (error) => reject(new Error(error)),
           "HiddenInAppBrowser",
           methodName,
-          [{ url: finalOptions.url }]
+          [{ url: finalOptions.url, options: finalOptions }]
         );
       } else {
         reject(new Error("Cordova is not available"));

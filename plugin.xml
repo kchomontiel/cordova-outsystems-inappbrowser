@@ -4,6 +4,9 @@
     <description>InAppBrowser OutSystems Cordova Plugin</description>
     <author>OutSystems Inc</author>
     
+    <!-- Dependency on the original Apache InAppBrowser plugin -->
+    <dependency id="cordova-plugin-inappbrowser" />
+    
     <js-module name="HiddenInAppBrowser" src="dist/plugin.js">
         <clobbers target="cordova.plugins.HiddenInAppBrowser" />
     </js-module>

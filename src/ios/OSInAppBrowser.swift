@@ -34,7 +34,54 @@ class OSInAppBrowser: CDVPlugin {
                 return self.send(error: .inputArgumentsIssue(target: target), for: command.callbackId)
             }
             
-            delegateExternalBrowser(url, command.callbackId)
+            // Get options from arguments if provided
+            var options: [String: String] = [
+                "hidden": "no",
+                "location": "yes",
+                "toolbar": "yes",
+                "zoom": "yes",
+                "hardwareback": "yes",
+                "mediaPlaybackRequiresUserAction": "no",
+                "shouldPauseOnSuspend": "no",
+                "clearsessioncache": "no",
+                "cache": "yes",
+                "disallowoverscroll": "no",
+                "hidenavigationbuttons": "no",
+                "hideurlbar": "no",
+                "fullscreen": "no"
+            ]
+            
+            // Merge with provided options if any
+            if let argumentsDictionary = command.argument(at: 0) as? [String: Any],
+               let providedOptions = argumentsDictionary["options"] as? [String: Any] {
+                for (key, value) in providedOptions {
+                    options[key] = "\(value)"
+                }
+            }
+            
+            // Use the original InAppBrowser plugin to open in external browser
+            DispatchQueue.main.async {
+                // Convert options to string format expected by InAppBrowser
+                let optionsString = options.map { "\($0.key)=\($0.value)" }.joined(separator: ",")
+                
+                // Use the original InAppBrowser plugin
+                if let inAppBrowser = self.commandDelegate.getCommandInstance("InAppBrowser") {
+                    inAppBrowser.execute("open", with: [url.absoluteString, "_system", optionsString], callbackId: command.callbackId)
+                } else {
+                    // Fallback: open in Safari
+                    if UIApplication.shared.canOpenURL(url) {
+                        UIApplication.shared.open(url) { success in
+                            if success {
+                                self.sendSuccess(for: command.callbackId)
+                            } else {
+                                self.send(error: .failedToOpen(url: url.absoluteString, onTarget: target), for: command.callbackId)
+                            }
+                        }
+                    } else {
+                        self.send(error: .failedToOpen(url: url.absoluteString, onTarget: target), for: command.callbackId)
+                    }
+                }
+            }
         }
     }
     
@@ -68,6 +115,56 @@ class OSInAppBrowser: CDVPlugin {
     func openInWebView(command: CDVInvokedUrlCommand) {
         let target = OSInAppBrowserTarget.webView
         
+        self.commandDelegate.run { [weak self] in
+            guard let self else { return }
+            
+            guard
+                let argumentsModel: OSInAppBrowserInputArgumentsComplexModel = self.createModel(for: command.argument(at: 0)),
+                let url = URL(string: argumentsModel.url)
+            else {
+                return self.send(error: .inputArgumentsIssue(target: target), for: command.callbackId)
+            }
+
+            // Get options from arguments if provided
+            var options: [String: String] = [
+                "hidden": "no",
+                "location": "yes",
+                "toolbar": "yes",
+                "zoom": "yes",
+                "hardwareback": "yes",
+                "mediaPlaybackRequiresUserAction": "no",
+                "shouldPauseOnSuspend": "no",
+                "clearsessioncache": "no",
+                "cache": "yes",
+                "disallowoverscroll": "no",
+                "hidenavigationbuttons": "no",
+                "hideurlbar": "no",
+                "fullscreen": "no"
+            ]
+            
+            // Merge with provided options if any
+            if let argumentsDictionary = command.argument(at: 0) as? [String: Any],
+               let providedOptions = argumentsDictionary["options"] as? [String: Any] {
+                for (key, value) in providedOptions {
+                    options[key] = "\(value)"
+                }
+            }
+
+            // Use the original InAppBrowser plugin to open in WebView
+            DispatchQueue.main.async {
+                // Convert options to string format expected by InAppBrowser
+                let optionsString = options.map { "\($0.key)=\($0.value)" }.joined(separator: ",")
+                
+                // Use the original InAppBrowser plugin
+                if let inAppBrowser = self.commandDelegate.getCommandInstance("InAppBrowser") {
+                    inAppBrowser.execute("open", with: [url.absoluteString, "_blank", optionsString], callbackId: command.callbackId)
+                } else {
+                    // Fallback: use the existing WebView implementation
+                    delegateWebView(url: url, options: argumentsModel.toWebViewOptions(), customHeaders: argumentsModel.customHeaders)
+                }
+            }
+        }
+        
         func delegateWebView(url: URL, options: OSIABWebViewOptions, customHeaders: [String: String]? = nil) {
             DispatchQueue.main.async {
                 self.plugin?.openWebView(
@@ -87,19 +184,6 @@ class OSInAppBrowser: CDVPlugin {
                     }
                 )
             }
-        }
-        
-        self.commandDelegate.run { [weak self] in
-            guard let self else { return }
-            
-            guard
-                let argumentsModel: OSInAppBrowserInputArgumentsComplexModel = self.createModel(for: command.argument(at: 0)),
-                let url = URL(string: argumentsModel.url)
-            else {
-                return self.send(error: .inputArgumentsIssue(target: target), for: command.callbackId)
-            }
-
-            delegateWebView(url: url, options: argumentsModel.toWebViewOptions(), customHeaders: argumentsModel.customHeaders)
         }
     }
     

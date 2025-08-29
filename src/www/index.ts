@@ -1,5 +1,9 @@
 import { HiddenInAppBrowserOpenOptions } from "./definitions";
-import { DEFAULT_OPEN_OPTIONS, DEFAULT_EXTERNAL_BROWSER_OPTIONS, DEFAULT_WEBVIEW_OPTIONS } from "./defaults";
+import {
+  DEFAULT_OPEN_OPTIONS,
+  DEFAULT_EXTERNAL_BROWSER_OPTIONS,
+  DEFAULT_WEBVIEW_OPTIONS,
+} from "./defaults";
 
 // Export the open function directly for Cordova
 export function open(
@@ -235,7 +239,7 @@ function processOptionsAndExecute(
             },
             "HiddenInAppBrowser",
             methodName,
-            [{ url: finalOptions.url }]
+            [{ url: finalOptions.url, options: finalOptions }]
           );
         } else {
           const error = "Cordova is not available";
@@ -261,7 +265,9 @@ function processOptionsAndExecute(
       let urlFromOptions: string = urlOrOptions.url as string;
 
       if (typeof urlFromOptions !== "string") {
-        console.log(`${methodName} - URL is not a string, attempting conversion...`);
+        console.log(
+          `${methodName} - URL is not a string, attempting conversion...`
+        );
 
         if (Array.isArray(urlFromOptions)) {
           console.log(`${methodName} - URL is an array, joining...`);
@@ -296,7 +302,7 @@ function processOptionsAndExecute(
   console.log(`${methodName} - Final options:`, finalOptions);
   console.log(`${methodName} - Final options.url:`, finalOptions.url);
   console.log(`Parameters being sent to cordova.exec:`, [
-    { url: finalOptions.url },
+    { url: finalOptions.url, options: finalOptions },
   ]);
 
   return new Promise((resolve, reject) => {
@@ -307,7 +313,7 @@ function processOptionsAndExecute(
         (error: string) => reject(new Error(error)),
         "HiddenInAppBrowser",
         methodName,
-        [{ url: finalOptions.url }]
+        [{ url: finalOptions.url, options: finalOptions }]
       );
     } else {
       reject(new Error("Cordova is not available"));
