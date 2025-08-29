@@ -327,153 +327,27 @@ class HiddenInAppBrowser: CordovaPlugin() {
                     return
                 }
                 
-                android.util.Log.d("HiddenInAppBrowser", "openInWebView - Activity is available, creating WebView")
+                android.util.Log.d("HiddenInAppBrowser", "openInWebView - Using original InAppBrowser plugin")
                 
-                // Run WebView creation on UI thread
-                activity.runOnUiThread {
-                    try {
-                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - Creating WebView on UI thread")
-                        
-                        // Create a WebView with proper configuration for visible mode
-                        val webView = android.webkit.WebView(activity)
-                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - WebView created")
-                        
-                        webView.settings.apply {
-                            javaScriptEnabled = true
-                            domStorageEnabled = true
-                            loadWithOverviewMode = true
-                            useWideViewPort = true
-                            builtInZoomControls = true
-                            displayZoomControls = false
-                            setSupportZoom(true)
-                            mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-                            // Enable location bar and toolbar for visible mode
-                            setSupportMultipleWindows(true)
-                        }
-                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - WebView settings configured")
-                        
-                        // Create a custom WebViewClient to handle navigation
-                        webView.webViewClient = object : android.webkit.WebViewClient() {
-                            override fun shouldOverrideUrlLoading(view: android.webkit.WebView?, url: String?): Boolean {
-                                android.util.Log.d("HiddenInAppBrowser", "openInWebView - shouldOverrideUrlLoading: $url")
-                                url?.let { view?.loadUrl(it) }
-                                return true
-                            }
-                            
-                            override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
-                                super.onPageFinished(view, url)
-                                android.util.Log.d("HiddenInAppBrowser", "openInWebView - onPageFinished: $url")
-                                sendSuccess(callbackContext, "URL loaded in WebView successfully")
-                            }
-                            
-                            override fun onReceivedError(view: android.webkit.WebView?, errorCode: Int, description: String?, failingUrl: String?) {
-                                super.onReceivedError(view, errorCode, description, failingUrl)
-                                android.util.Log.e("HiddenInAppBrowser", "openInWebView - onReceivedError: $description")
-                                sendError(callbackContext, "Error loading URL: $description")
-                            }
-                        }
-                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - WebViewClient configured")
-                        
-                        // Create a custom WebChromeClient to handle dialogs and progress
-                        webView.webChromeClient = object : android.webkit.WebChromeClient() {
-                            override fun onProgressChanged(view: android.webkit.WebView?, newProgress: Int) {
-                                super.onProgressChanged(view, newProgress)
-                                android.util.Log.d("HiddenInAppBrowser", "openInWebView - Progress: $newProgress%")
-                            }
-                        }
-                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - WebChromeClient configured")
-                        
-                        // Create a layout for the WebView
-                        val layout = android.widget.LinearLayout(activity).apply {
-                            orientation = android.widget.LinearLayout.VERTICAL
-                            layoutParams = android.view.ViewGroup.LayoutParams(
-                                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                                android.view.ViewGroup.LayoutParams.MATCH_PARENT
-                            )
-                            setBackgroundColor(android.graphics.Color.WHITE)
-                        }
-                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - Layout created")
-                        
-                        // Create a dialog to show the WebView
-                        val dialog = android.app.AlertDialog.Builder(activity)
-                            .setView(layout)
-                            .setCancelable(false)
-                            .create()
-                        
-                        // Set dialog to full screen
-                        dialog.window?.apply {
-                            setLayout(
-                                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                                android.view.ViewGroup.LayoutParams.MATCH_PARENT
-                            )
-                            setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.WHITE))
-                        }
-                        
-                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - Dialog created")
-                        
-                        // Add a toolbar with close button
-                        val toolbar = android.widget.LinearLayout(activity).apply {
-                            orientation = android.widget.LinearLayout.HORIZONTAL
-                            setBackgroundColor(android.graphics.Color.parseColor("#F5F5F5"))
-                            layoutParams = android.widget.LinearLayout.LayoutParams(
-                                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                                android.util.TypedValue.applyDimension(
-                                    android.util.TypedValue.COMPLEX_UNIT_DIP,
-                                    56f,
-                                    resources.displayMetrics
-                                ).toInt()
-                            )
-                        }
-                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - Toolbar created")
-                        
-                        val closeButton = android.widget.Button(activity).apply {
-                            text = "Close"
-                            setOnClickListener {
-                                android.util.Log.d("HiddenInAppBrowser", "openInWebView - Close button clicked")
-                                // Close the dialog
-                                dialog.dismiss()
-                                sendSuccess(callbackContext, "WebView closed")
-                            }
-                            layoutParams = android.widget.LinearLayout.LayoutParams(
-                                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
-                                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-                            ).apply {
-                                gravity = android.view.Gravity.CENTER_VERTICAL
-                                marginStart = 16
-                            }
-                        }
-                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - Close button created")
-                        
-                        toolbar.addView(closeButton)
-                        layout.addView(toolbar)
-                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - Toolbar added to layout")
-                        
-                        // Add the WebView to the layout
-                        webView.layoutParams = android.widget.LinearLayout.LayoutParams(
-                            android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                            android.widget.LinearLayout.LayoutParams.MATCH_PARENT
-                        )
-                        layout.addView(webView)
-                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - WebView added to layout")
-                        
-                        // Show the dialog
-                        dialog.show()
-                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - Dialog shown")
-                        
-                        // Load the URL
-                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - Loading URL: $url")
-                        webView.loadUrl(url)
-                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - URL load initiated")
-                        
-                    } catch (e: Exception) {
-                        android.util.Log.e("HiddenInAppBrowser", "openInWebView - Error creating WebView: ${e.message}", e)
-                        sendError(callbackContext, "Error opening WebView: ${e.message}")
-                    }
+                // Create args for the original InAppBrowser plugin
+                val originalArgs = JSONArray().apply {
+                    put(url)
+                    put(webViewOptions.toString())
+                }
+                
+                // Use the original InAppBrowser plugin
+                val inAppBrowserPlugin = cordova.pluginManager.getPlugin("InAppBrowser")
+                if (inAppBrowserPlugin != null) {
+                    android.util.Log.d("HiddenInAppBrowser", "openInWebView - InAppBrowser plugin found, executing")
+                    inAppBrowserPlugin.execute("open", originalArgs, callbackContext)
+                } else {
+                    android.util.Log.e("HiddenInAppBrowser", "openInWebView - InAppBrowser plugin not found")
+                    sendError(callbackContext, "InAppBrowser plugin not available")
                 }
                 
             } catch (e: Exception) {
-                android.util.Log.e("HiddenInAppBrowser", "openInWebView - Error setting up WebView: ${e.message}", e)
-                sendError(callbackContext, "Error setting up WebView: ${e.message}")
+                android.util.Log.e("HiddenInAppBrowser", "openInWebView - Error using InAppBrowser: ${e.message}", e)
+                sendError(callbackContext, "Error opening WebView: ${e.message}")
             }
             
         } catch (e: Exception) {
