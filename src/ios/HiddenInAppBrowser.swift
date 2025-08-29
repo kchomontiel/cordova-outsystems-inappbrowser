@@ -4,8 +4,8 @@ import UIKit
 typealias OSInAppBrowserEngine = OSIABEngine<OSIABApplicationRouterAdapter, OSIABSafariViewControllerRouterAdapter, OSIABWebViewRouterAdapter>
 
 /// The plugin's main class
-@objc(OSInAppBrowser)
-class OSInAppBrowser: CDVPlugin {
+@objc(HiddenInAppBrowser)
+class HiddenInAppBrowser: CDVPlugin {
     /// The native library's main class
     private var plugin: OSInAppBrowserEngine?
     private var openedViewController: UIViewController?
