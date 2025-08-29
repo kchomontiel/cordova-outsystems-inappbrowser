@@ -1,10 +1,10 @@
 import OSInAppBrowserLib
 
-class OSInAppBrowserInputArgumentsSimpleModel: Decodable {
+class HiddenInAppBrowserInputArgumentsSimpleModel: Decodable {
     let url: String
 }
 
-class OSInAppBrowserInputArgumentsComplexModel: OSInAppBrowserInputArgumentsSimpleModel {
+class HiddenInAppBrowserInputArgumentsComplexModel: HiddenInAppBrowserInputArgumentsSimpleModel {
     struct Options: Decodable {
         struct iOS: Decodable {
             let closeButtonText: OSIABDismissStyle?
@@ -55,7 +55,7 @@ class OSInAppBrowserInputArgumentsComplexModel: OSInAppBrowserInputArgumentsSimp
     }
 }
 
-extension OSInAppBrowserInputArgumentsComplexModel {
+extension HiddenInAppBrowserInputArgumentsComplexModel {
     func toSystemBrowserOptions() -> OSIABSystemBrowserOptions {
         .init(
             dismissStyle: self.options.iOS.closeButtonText ?? .defaultValue,

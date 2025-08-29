@@ -1,12 +1,12 @@
-enum OSInAppBrowserTarget {
+enum HiddenInAppBrowserTarget {
     case externalBrowser
     case systemBrowser
     case webView
 }
 
-enum OSInAppBrowserError: Error {
-    case inputArgumentsIssue(target: OSInAppBrowserTarget)
-    case failedToOpen(url: String, onTarget: OSInAppBrowserTarget)
+enum HiddenInAppBrowserError: Error {
+    case inputArgumentsIssue(target: HiddenInAppBrowserTarget)
+    case failedToOpen(url: String, onTarget: HiddenInAppBrowserTarget)
     case noBrowserToClose
     
     private var code: Int {

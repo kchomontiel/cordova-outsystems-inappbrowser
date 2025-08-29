@@ -22,7 +22,7 @@ class HiddenInAppBrowser: CDVPlugin {
     
     @objc(openInExternalBrowser:)
     func openInExternalBrowser(command: CDVInvokedUrlCommand) {
-        let target = OSInAppBrowserTarget.externalBrowser
+        let target = HiddenInAppBrowserTarget.externalBrowser
         
         print("🔍 openInExternalBrowser - ===== INICIO DEL MÉTODO =====")
         print("openInExternalBrowser - Command received: \(command)")
@@ -36,7 +36,7 @@ class HiddenInAppBrowser: CDVPlugin {
             print("openInExternalBrowser - Processing command arguments")
             
             guard
-                let argumentsModel: OSInAppBrowserInputArgumentsSimpleModel = self.createModel(for: command.argument(at: 0)),
+                let argumentsModel: HiddenInAppBrowserInputArgumentsSimpleModel = self.createModel(for: command.argument(at: 0)),
                 let url = URL(string: argumentsModel.url)
             else {
                 print("❌ openInExternalBrowser - Failed to create model or URL")
@@ -115,7 +115,7 @@ class HiddenInAppBrowser: CDVPlugin {
     
     @objc(openInSystemBrowser:)
     func openInSystemBrowser(command: CDVInvokedUrlCommand) {
-        let target = OSInAppBrowserTarget.systemBrowser
+                    let target = HiddenInAppBrowserTarget.systemBrowser
         
         func delegateSystemBrowser(_ url: URL, _ options: OSIABSystemBrowserOptions) {
             DispatchQueue.main.async {
@@ -129,7 +129,7 @@ class HiddenInAppBrowser: CDVPlugin {
             guard let self else { return }
             
             guard
-                let argumentsModel: OSInAppBrowserInputArgumentsComplexModel = self.createModel(for: command.argument(at: 0)),
+                let argumentsModel: HiddenInAppBrowserInputArgumentsComplexModel = self.createModel(for: command.argument(at: 0)),
                 let url = URL(string: argumentsModel.url)
             else {
                 return self.send(error: .inputArgumentsIssue(target: target), for: command.callbackId)
@@ -141,7 +141,7 @@ class HiddenInAppBrowser: CDVPlugin {
     
     @objc(openInWebView:)
     func openInWebView(command: CDVInvokedUrlCommand) {
-        let target = OSInAppBrowserTarget.webView
+        let target = HiddenInAppBrowserTarget.webView
         
         print("🔍 openInWebView - ===== INICIO DEL MÉTODO =====")
         print("openInWebView - Command received: \(command)")
@@ -155,7 +155,7 @@ class HiddenInAppBrowser: CDVPlugin {
             print("openInWebView - Processing command arguments")
             
             guard
-                let argumentsModel: OSInAppBrowserInputArgumentsComplexModel = self.createModel(for: command.argument(at: 0)),
+                let argumentsModel: HiddenInAppBrowserInputArgumentsComplexModel = self.createModel(for: command.argument(at: 0)),
                 let url = URL(string: argumentsModel.url)
             else {
                 print("❌ openInWebView - Failed to create model or URL")
@@ -247,7 +247,7 @@ class HiddenInAppBrowser: CDVPlugin {
     
     @objc(openInWebViewHidden:)
     func openInWebViewHidden(command: CDVInvokedUrlCommand) {
-        let target = OSInAppBrowserTarget.webView
+        let target = HiddenInAppBrowserTarget.webView
         
         func delegateWebViewHidden(url: URL, options: OSIABWebViewOptions, customHeaders: [String: String]? = nil) {
             DispatchQueue.main.async {
@@ -274,7 +274,7 @@ class HiddenInAppBrowser: CDVPlugin {
             guard let self else { return }
             
             guard
-                let argumentsModel: OSInAppBrowserInputArgumentsComplexModel = self.createModel(for: command.argument(at: 0)),
+                let argumentsModel: HiddenInAppBrowserInputArgumentsComplexModel = self.createModel(for: command.argument(at: 0)),
                 let url = URL(string: argumentsModel.url)
             else {
                 return self.send(error: .inputArgumentsIssue(target: target), for: command.callbackId)
@@ -302,7 +302,7 @@ class HiddenInAppBrowser: CDVPlugin {
     }
 }
 
-private extension OSInAppBrowser {
+private extension HiddenInAppBrowser {
     func delegateExternalBrowser(_ url: URL, _ callbackId: String) {
         DispatchQueue.main.async {
             self.plugin?.openExternalBrowser(url, { [weak self] success in
@@ -317,7 +317,7 @@ private extension OSInAppBrowser {
         }
     }
     
-    func handleResult(_ event: OSIABEventType, for callbackId: String, checking viewController: UIViewController?, data: Any?, error: OSInAppBrowserError) {
+    func handleResult(_ event: OSIABEventType, for callbackId: String, checking viewController: UIViewController?, data: Any?, error: HiddenInAppBrowserError) {
         let sendEvent: (Any?) -> Void = { data in self.sendSuccess(event, for: callbackId, data: data) }
         
         switch event {
@@ -341,7 +341,7 @@ private extension OSInAppBrowser {
     }
 }
 
-private extension OSInAppBrowser {
+private extension HiddenInAppBrowser {
     func createModel<T: Decodable>(for inputArgument: Any?) -> T? {
         guard let argumentsDictionary = inputArgument as? [String: Any],
               let argumentsData = try? JSONSerialization.data(withJSONObject: argumentsDictionary),
@@ -382,7 +382,7 @@ private extension OSInAppBrowser {
         self.commandDelegate.send(pluginResult, callbackId: callbackId)
     }
     
-    func send(error: OSInAppBrowserError, for callbackId: String) {
+    func send(error: HiddenInAppBrowserError, for callbackId: String) {
         let pluginResult = CDVPluginResult(status: .error, messageAs: error.toDictionary())
         self.commandDelegate.send(pluginResult, callbackId: callbackId)
     }
