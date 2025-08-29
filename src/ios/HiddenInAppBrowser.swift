@@ -157,8 +157,8 @@ class HiddenInAppBrowser: CDVPlugin {
             DispatchQueue.main.async {
                 print("✅ openInWebView - Creating modal WebView")
                 
-                // Create WebView
-                let webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 400, height: 600))
+                // Create WebView with full screen
+                let webView = WKWebView()
                 webView.configuration.allowsInlineMediaPlayback = true
                 webView.configuration.mediaTypesRequiringUserActionForPlayback = []
                 
@@ -173,7 +173,7 @@ class HiddenInAppBrowser: CDVPlugin {
                 
                 // Create navigation controller
                 let navigationController = UINavigationController(rootViewController: webViewController)
-                navigationController.modalPresentationStyle = .pageSheet
+                navigationController.modalPresentationStyle = .fullScreen
                 
                 // Set delegate
                 let webViewDelegate = ModalWebViewDelegate { [weak self] success, error in
