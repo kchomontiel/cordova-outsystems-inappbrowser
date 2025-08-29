@@ -84,29 +84,25 @@ function open(urlOrOptions, target, optionsString, onSuccess, onError) {
     finalOptions = { ...DEFAULT_OPEN_OPTIONS, ...parsedOptions, url };
     if (onSuccess || onError) {
       console.log("HiddenInAppBrowser.open - Using callback mode");
-      return new Promise((resolve, reject) => {
-        if (typeof cordova !== "undefined" && cordova.exec) {
-          cordova.exec(
-            () => {
-              console.log("HiddenInAppBrowser.open - Success callback");
-              if (onSuccess) onSuccess();
-              resolve();
-            },
-            (error) => {
-              console.log("HiddenInAppBrowser.open - Error callback:", error);
-              if (onError) onError({ code: -1, message: error });
-              reject(new Error(error));
-            },
-            "HiddenInAppBrowser",
-            "open",
-            [{ url: finalOptions.url }]
-          );
-        } else {
-          const error = "Cordova is not available";
-          if (onError) onError({ code: -1, message: error });
-          reject(new Error(error));
-        }
-      });
+      if (typeof cordova !== "undefined" && cordova.exec) {
+        cordova.exec(
+          () => {
+            console.log("HiddenInAppBrowser.open - Success callback");
+            if (onSuccess) onSuccess();
+          },
+          (error) => {
+            console.log("HiddenInAppBrowser.open - Error callback:", error);
+            if (onError) onError({ code: -1, message: error });
+          },
+          "HiddenInAppBrowser",
+          "open",
+          [{ url: finalOptions.url }]
+        );
+      } else {
+        const error = "Cordova is not available";
+        if (onError) onError({ code: -1, message: error });
+      }
+      return;
     }
   } else {
     console.log("HiddenInAppBrowser.open - Using modern API format");
@@ -216,12 +212,17 @@ function processOptionsAndExecute(urlOrOptions, target, optionsString, onSuccess
       console.log(`📞 ${methodName} - Using callback mode`);
       return new Promise((resolve, reject) => {
         if (typeof cordova !== "undefined" && cordova.exec) {
-          console.log(`📱 ${methodName} - Cordova is available, calling exec...`);
+          console.log(
+            `📱 ${methodName} - Cordova is available, calling exec...`
+          );
           const execParams2 = [{ url: finalOptions.url, options: finalOptions }];
           console.log(`${methodName} - Exec parameters:`, execParams2);
           cordova.exec(
             (result) => {
-              console.log(`✅ ${methodName} - Success callback received:`, result);
+              console.log(
+                `✅ ${methodName} - Success callback received:`,
+                result
+              );
               if (onSuccess) onSuccess();
               resolve();
             },
@@ -277,7 +278,10 @@ function processOptionsAndExecute(urlOrOptions, target, optionsString, onSuccess
   console.log(`📤 ${methodName} - Final options:`, finalOptions);
   console.log(`${methodName} - Final options.url:`, finalOptions.url);
   const execParams = [{ url: finalOptions.url, options: finalOptions }];
-  console.log(`📤 ${methodName} - Parameters being sent to cordova.exec:`, execParams);
+  console.log(
+    `📤 ${methodName} - Parameters being sent to cordova.exec:`,
+    execParams
+  );
   return new Promise((resolve, reject) => {
     if (typeof cordova !== "undefined" && cordova.exec) {
       console.log(`📱 ${methodName} - Cordova is available, calling exec...`);

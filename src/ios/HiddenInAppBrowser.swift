@@ -11,7 +11,9 @@ class HiddenInAppBrowser: CDVPlugin {
     private var openedViewController: UIViewController?
     
     override func pluginInitialize() {
+        print("🔧 HiddenInAppBrowser - pluginInitialize called")
         self.plugin = .init()
+        print("🔧 HiddenInAppBrowser - Plugin initialized: \(self.plugin != nil)")
     }
     
     @objc(open:)
@@ -68,37 +70,67 @@ class HiddenInAppBrowser: CDVPlugin {
     func openInWebView(command: CDVInvokedUrlCommand) {
         let target = HiddenInAppBrowserTarget.webView
         
+        print("🔍 openInWebView - ===== INICIO DEL MÉTODO =====")
+        print("openInWebView - Command received: \(command)")
+        print("openInWebView - Plugin is nil: \(self.plugin == nil)")
+        
         func delegateWebView(url: URL, options: OSIABWebViewOptions, customHeaders: [String: String]? = nil) {
+            print("openInWebView - delegateWebView called with URL: \(url.absoluteString)")
+            print("openInWebView - Plugin is nil in delegateWebView: \(self.plugin == nil)")
+            
             DispatchQueue.main.async {
-                self.plugin?.openWebView(
-                    url: url,
-                    options: options,
-                    customHeaders: customHeaders,
-                    onDelegateClose: { [weak self] in
-                        self?.viewController.dismiss(animated: true)
-                    },
-                    onDelegateURL: { [weak self] url in
-                        self?.delegateExternalBrowser(url, command.callbackId)
-                    },
-                    onDelegateAlertController: { [weak self] alert in
-                        self?.viewController.presentedViewController?.show(alert, sender: nil)
-                    }, completionHandler: { [weak self] event, viewControllerToOpen, data  in
-                        self?.handleResult(event, for: command.callbackId, checking: viewControllerToOpen, data: data, error: .failedToOpen(url: url.absoluteString, onTarget: target))
-                    }
-                )
+                print("openInWebView - Running on main queue")
+                print("openInWebView - Plugin is nil on main queue: \(self.plugin == nil)")
+                
+                if let plugin = self.plugin {
+                    print("✅ openInWebView - Plugin found, calling openWebView")
+                    plugin.openWebView(
+                        url: url,
+                        options: options,
+                        customHeaders: customHeaders,
+                        onDelegateClose: { [weak self] in
+                            print("openInWebView - onDelegateClose called")
+                            self?.viewController.dismiss(animated: true)
+                        },
+                        onDelegateURL: { [weak self] url in
+                            print("openInWebView - onDelegateURL called with: \(url.absoluteString)")
+                            self?.delegateExternalBrowser(url, command.callbackId)
+                        },
+                        onDelegateAlertController: { [weak self] alert in
+                            print("openInWebView - onDelegateAlertController called")
+                            self?.viewController.presentedViewController?.show(alert, sender: nil)
+                        }, completionHandler: { [weak self] event, viewControllerToOpen, data  in
+                            print("openInWebView - completionHandler called with event: \(event)")
+                            self?.handleResult(event, for: command.callbackId, checking: viewControllerToOpen, data: data, error: .failedToOpen(url: url.absoluteString, onTarget: target))
+                        }
+                    )
+                } else {
+                    print("❌ openInWebView - Plugin is nil, cannot open WebView")
+                    self.send(error: .failedToOpen(url: url.absoluteString, onTarget: target), for: command.callbackId)
+                }
             }
         }
         
         self.commandDelegate.run { [weak self] in
-            guard let self else { return }
+            guard let self else { 
+                print("❌ openInWebView - Self is nil")
+                return 
+            }
+            
+            print("openInWebView - Processing command arguments")
             
             guard
                 let argumentsModel: HiddenInAppBrowserInputArgumentsComplexModel = self.createModel(for: command.argument(at: 0)),
                 let url = URL(string: argumentsModel.url)
             else {
+                print("❌ openInWebView - Failed to create model or URL")
                 return self.send(error: .inputArgumentsIssue(target: target), for: command.callbackId)
             }
 
+            print("✅ openInWebView - Model created successfully")
+            print("openInWebView - URL: \(url.absoluteString)")
+            print("openInWebView - Options: \(argumentsModel.toWebViewOptions())")
+            
             delegateWebView(url: url, options: argumentsModel.toWebViewOptions(), customHeaders: argumentsModel.customHeaders)
         }
     }
