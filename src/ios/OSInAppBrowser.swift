@@ -24,15 +24,26 @@ class OSInAppBrowser: CDVPlugin {
     func openInExternalBrowser(command: CDVInvokedUrlCommand) {
         let target = OSInAppBrowserTarget.externalBrowser
         
+        print("🔍 openInExternalBrowser - ===== INICIO DEL MÉTODO =====")
+        print("openInExternalBrowser - Command received: \(command)")
+        
         self.commandDelegate.run { [weak self] in
-            guard let self else { return }
+            guard let self else { 
+                print("❌ openInExternalBrowser - Self is nil")
+                return 
+            }
+            
+            print("openInExternalBrowser - Processing command arguments")
             
             guard
                 let argumentsModel: OSInAppBrowserInputArgumentsSimpleModel = self.createModel(for: command.argument(at: 0)),
                 let url = URL(string: argumentsModel.url)
             else {
+                print("❌ openInExternalBrowser - Failed to create model or URL")
                 return self.send(error: .inputArgumentsIssue(target: target), for: command.callbackId)
             }
+            
+            print("openInExternalBrowser - URL extracted: \(url.absoluteString)")
             
             // Get options from arguments if provided
             var options: [String: String] = [
@@ -51,33 +62,50 @@ class OSInAppBrowser: CDVPlugin {
                 "fullscreen": "no"
             ]
             
+            print("openInExternalBrowser - Default options: \(options)")
+            
             // Merge with provided options if any
             if let argumentsDictionary = command.argument(at: 0) as? [String: Any],
                let providedOptions = argumentsDictionary["options"] as? [String: Any] {
+                print("openInExternalBrowser - Provided options found: \(providedOptions)")
                 for (key, value) in providedOptions {
                     options[key] = "\(value)"
+                    print("openInExternalBrowser - Added option: \(key) = \(value)")
                 }
+            } else {
+                print("openInExternalBrowser - No provided options found")
             }
+            
+            print("openInExternalBrowser - Final options: \(options)")
             
             // Use the original InAppBrowser plugin to open in external browser
             DispatchQueue.main.async {
+                print("openInExternalBrowser - Running on main queue")
+                
                 // Convert options to string format expected by InAppBrowser
                 let optionsString = options.map { "\($0.key)=\($0.value)" }.joined(separator: ",")
+                print("openInExternalBrowser - Options string: \(optionsString)")
                 
                 // Use the original InAppBrowser plugin
                 if let inAppBrowser = self.commandDelegate.getCommandInstance("InAppBrowser") {
+                    print("✅ openInExternalBrowser - InAppBrowser plugin found, using it")
                     inAppBrowser.execute("open", with: [url.absoluteString, "_system", optionsString], callbackId: command.callbackId)
                 } else {
+                    print("⚠️ openInExternalBrowser - InAppBrowser plugin not found, using fallback")
                     // Fallback: open in Safari
                     if UIApplication.shared.canOpenURL(url) {
+                        print("openInExternalBrowser - Opening URL in Safari: \(url.absoluteString)")
                         UIApplication.shared.open(url) { success in
                             if success {
+                                print("✅ openInExternalBrowser - Successfully opened in Safari")
                                 self.sendSuccess(for: command.callbackId)
                             } else {
+                                print("❌ openInExternalBrowser - Failed to open in Safari")
                                 self.send(error: .failedToOpen(url: url.absoluteString, onTarget: target), for: command.callbackId)
                             }
                         }
                     } else {
+                        print("❌ openInExternalBrowser - Cannot open URL: \(url.absoluteString)")
                         self.send(error: .failedToOpen(url: url.absoluteString, onTarget: target), for: command.callbackId)
                     }
                 }
@@ -115,15 +143,26 @@ class OSInAppBrowser: CDVPlugin {
     func openInWebView(command: CDVInvokedUrlCommand) {
         let target = OSInAppBrowserTarget.webView
         
+        print("🔍 openInWebView - ===== INICIO DEL MÉTODO =====")
+        print("openInWebView - Command received: \(command)")
+        
         self.commandDelegate.run { [weak self] in
-            guard let self else { return }
+            guard let self else { 
+                print("❌ openInWebView - Self is nil")
+                return 
+            }
+            
+            print("openInWebView - Processing command arguments")
             
             guard
                 let argumentsModel: OSInAppBrowserInputArgumentsComplexModel = self.createModel(for: command.argument(at: 0)),
                 let url = URL(string: argumentsModel.url)
             else {
+                print("❌ openInWebView - Failed to create model or URL")
                 return self.send(error: .inputArgumentsIssue(target: target), for: command.callbackId)
             }
+            
+            print("openInWebView - URL extracted: \(url.absoluteString)")
 
             // Get options from arguments if provided
             var options: [String: String] = [
@@ -142,23 +181,36 @@ class OSInAppBrowser: CDVPlugin {
                 "fullscreen": "no"
             ]
             
+            print("openInWebView - Default options: \(options)")
+            
             // Merge with provided options if any
             if let argumentsDictionary = command.argument(at: 0) as? [String: Any],
                let providedOptions = argumentsDictionary["options"] as? [String: Any] {
+                print("openInWebView - Provided options found: \(providedOptions)")
                 for (key, value) in providedOptions {
                     options[key] = "\(value)"
+                    print("openInWebView - Added option: \(key) = \(value)")
                 }
+            } else {
+                print("openInWebView - No provided options found")
             }
+            
+            print("openInWebView - Final options: \(options)")
 
             // Use the original InAppBrowser plugin to open in WebView
             DispatchQueue.main.async {
+                print("openInWebView - Running on main queue")
+                
                 // Convert options to string format expected by InAppBrowser
                 let optionsString = options.map { "\($0.key)=\($0.value)" }.joined(separator: ",")
+                print("openInWebView - Options string: \(optionsString)")
                 
                 // Use the original InAppBrowser plugin
                 if let inAppBrowser = self.commandDelegate.getCommandInstance("InAppBrowser") {
+                    print("✅ openInWebView - InAppBrowser plugin found, using it")
                     inAppBrowser.execute("open", with: [url.absoluteString, "_blank", optionsString], callbackId: command.callbackId)
                 } else {
+                    print("⚠️ openInWebView - InAppBrowser plugin not found, using fallback")
                     // Fallback: use the existing WebView implementation
                     delegateWebView(url: url, options: argumentsModel.toWebViewOptions(), customHeaders: argumentsModel.customHeaders)
                 }
@@ -166,20 +218,26 @@ class OSInAppBrowser: CDVPlugin {
         }
         
         func delegateWebView(url: URL, options: OSIABWebViewOptions, customHeaders: [String: String]? = nil) {
+            print("openInWebView - Using fallback WebView implementation")
             DispatchQueue.main.async {
+                print("openInWebView - Opening WebView with URL: \(url.absoluteString)")
                 self.plugin?.openWebView(
                     url: url,
                     options: options,
                     customHeaders: customHeaders,
                     onDelegateClose: { [weak self] in
+                        print("openInWebView - WebView closed")
                         self?.viewController.dismiss(animated: true)
                     },
                     onDelegateURL: { [weak self] url in
+                        print("openInWebView - URL delegate called: \(url.absoluteString)")
                         self?.delegateExternalBrowser(url, command.callbackId)
                     },
                     onDelegateAlertController: { [weak self] alert in
+                        print("openInWebView - Alert controller delegate called")
                         self?.viewController.presentedViewController?.show(alert, sender: nil)
                     }, completionHandler: { [weak self] event, viewControllerToOpen, data  in
+                        print("openInWebView - Completion handler called with event: \(event)")
                         self?.handleResult(event, for: command.callbackId, checking: viewControllerToOpen, data: data, error: .failedToOpen(url: url.absoluteString, onTarget: target))
                     }
                 )
