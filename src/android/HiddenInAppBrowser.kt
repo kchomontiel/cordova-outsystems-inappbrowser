@@ -390,6 +390,7 @@ class HiddenInAppBrowser: CordovaPlugin() {
                                 android.view.ViewGroup.LayoutParams.MATCH_PARENT,
                                 android.view.ViewGroup.LayoutParams.MATCH_PARENT
                             )
+                            setBackgroundColor(android.graphics.Color.WHITE)
                         }
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - Layout created")
                         
@@ -412,8 +413,8 @@ class HiddenInAppBrowser: CordovaPlugin() {
                             text = "Close"
                             setOnClickListener {
                                 android.util.Log.d("HiddenInAppBrowser", "openInWebView - Close button clicked")
-                                // Close the WebView
-                                layout.visibility = android.view.View.GONE
+                                // Close the dialog
+                                dialog?.dismiss()
                                 sendSuccess(callbackContext, "WebView closed")
                             }
                             layoutParams = android.widget.LinearLayout.LayoutParams(
@@ -438,9 +439,26 @@ class HiddenInAppBrowser: CordovaPlugin() {
                         layout.addView(webView)
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - WebView added to layout")
                         
-                        // Add the layout to the activity
-                        activity.setContentView(layout)
-                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - Layout set as content view")
+                        // Create a dialog to show the WebView
+                        val dialog = android.app.AlertDialog.Builder(activity)
+                            .setView(layout)
+                            .setCancelable(false)
+                            .create()
+                        
+                        // Set dialog to full screen
+                        dialog.window?.apply {
+                            setLayout(
+                                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                                android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                            )
+                            setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.WHITE))
+                        }
+                        
+                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - Dialog created")
+                        
+                        // Show the dialog
+                        dialog.show()
+                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - Dialog shown")
                         
                         // Load the URL
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - Loading URL: $url")
