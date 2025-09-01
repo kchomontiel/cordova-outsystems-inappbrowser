@@ -358,21 +358,66 @@ function processOptionsAndExecute(
       cordova.exec(
         (result: any) => {
           console.log(`✅ ${methodName} - Success callback received:`, result);
+          console.log(
+            `🔍 ${methodName} - Checking if onSuccess callback exists:`,
+            typeof onSuccess
+          );
+          console.log(
+            `🔍 ${methodName} - onSuccess callback value:`,
+            onSuccess
+          );
+
           // Ejecutar callback de éxito si existe
           if (onSuccess) {
-            console.log(`${methodName} - Executing onSuccess callback`);
-            onSuccess();
+            console.log(`🚀 ${methodName} - Executing onSuccess callback`);
+            try {
+              onSuccess();
+              console.log(
+                `✅ ${methodName} - onSuccess callback executed successfully`
+              );
+            } catch (error) {
+              console.log(
+                `❌ ${methodName} - Error executing onSuccess callback:`,
+                error
+              );
+            }
+          } else {
+            console.log(`⚠️ ${methodName} - No onSuccess callback provided`);
           }
+
+          console.log(`🔍 ${methodName} - Resolving promise`);
           resolve();
+          console.log(`✅ ${methodName} - Promise resolved`);
         },
         (error: string) => {
           console.log(`❌ ${methodName} - Error callback received:`, error);
+          console.log(
+            `🔍 ${methodName} - Checking if onError callback exists:`,
+            typeof onError
+          );
+          console.log(`🔍 ${methodName} - onError callback value:`, onError);
+
           // Ejecutar callback de error si existe
           if (onError) {
-            console.log(`${methodName} - Executing onError callback`);
-            onError({ code: -1, message: error });
+            console.log(`🚀 ${methodName} - Executing onError callback`);
+            try {
+              onError({ code: -1, message: error });
+              console.log(
+                `✅ ${methodName} - onError callback executed successfully`
+              );
+            } catch (error) {
+              console.log(
+                `❌ ${methodName} - Error executing onError callback:`,
+                error
+              );
+            }
+          } else {
+            console.log(`⚠️ ${methodName} - No onError callback provided`);
           }
+
+          console.log(`🔍 ${methodName} - Rejecting promise`);
           reject(new Error(error));
+          console.log(`✅ ${methodName} - Promise rejected`);
         },
         "HiddenInAppBrowser",
         methodName,
@@ -393,7 +438,91 @@ export function openInExternalBrowser(
   optionsString?: string,
   onSuccess?: () => void,
   onError?: (error: any) => void
-): Promise<void> {
+): Promise<void> | void {
+  // Debug: Log the raw parameters received
+  console.log(
+    "HiddenInAppBrowser.openInExternalBrowser - Raw parameters received:",
+    {
+      urlOrOptions,
+      target,
+      optionsString,
+      onSuccess,
+      onError,
+    }
+  );
+
+  let url: string;
+  let finalOptions: HiddenInAppBrowserOpenOptions;
+
+  // Handle legacy API: openInExternalBrowser(url, target, options, success, error)
+  if (typeof urlOrOptions === "string" && target !== undefined) {
+    console.log(
+      "HiddenInAppBrowser.openInExternalBrowser - Using legacy API format"
+    );
+    url = urlOrOptions;
+
+    // Parse options string if provided
+    let parsedOptions: any = {};
+    if (optionsString) {
+      console.log(
+        "HiddenInAppBrowser.openInExternalBrowser - Parsing options string:",
+        optionsString
+      );
+      const optionsArray = optionsString.split(",");
+      optionsArray.forEach((option) => {
+        const [key, value] = option.split("=");
+        if (key && value) {
+          parsedOptions[key.trim()] = value.trim();
+        }
+      });
+      console.log(
+        "HiddenInAppBrowser.openInExternalBrowser - Parsed options:",
+        parsedOptions
+      );
+    }
+
+    finalOptions = {
+      ...DEFAULT_EXTERNAL_BROWSER_OPTIONS,
+      ...parsedOptions,
+      url,
+    };
+
+    // If callbacks are provided, use them instead of Promise
+    if (onSuccess || onError) {
+      console.log(
+        "HiddenInAppBrowser.openInExternalBrowser - Using callback mode"
+      );
+      if (typeof cordova !== "undefined" && cordova.exec) {
+        cordova.exec(
+          () => {
+            console.log(
+              "HiddenInAppBrowser.openInExternalBrowser - Success callback"
+            );
+            if (onSuccess) onSuccess();
+          },
+          (error: string) => {
+            console.log(
+              "HiddenInAppBrowser.openInExternalBrowser - Error callback:",
+              error
+            );
+            if (onError) onError({ code: -1, message: error.toString() });
+          },
+          "HiddenInAppBrowser",
+          "openInExternalBrowser",
+          [{ url: finalOptions.url, options: finalOptions }]
+        );
+      } else {
+        const error = "Cordova is not available";
+        if (onError) onError({ code: -1, message: error.toString() });
+      }
+      return; // Return without Promise when using callbacks
+    }
+  }
+
+  // Handle modern API: openInExternalBrowser(options) or openInExternalBrowser(url) - use Promise
+  console.log(
+    "HiddenInAppBrowser.openInExternalBrowser - Using modern API format with Promise"
+  );
   return processOptionsAndExecute(
     urlOrOptions,
     target,
@@ -412,7 +541,78 @@ export function openInWebView(
   optionsString?: string,
   onSuccess?: () => void,
   onError?: (error: any) => void
-): Promise<void> {
+): Promise<void> | void {
+  // Debug: Log the raw parameters received
+  console.log("HiddenInAppBrowser.openInWebView - Raw parameters received:", {
+    urlOrOptions,
+    target,
+    optionsString,
+    onSuccess,
+    onError,
+  });
+
+  let url: string;
+  let finalOptions: HiddenInAppBrowserOpenOptions;
+
+  // Handle legacy API: openInWebView(url, target, options, success, error)
+  if (typeof urlOrOptions === "string" && target !== undefined) {
+    console.log("HiddenInAppBrowser.openInWebView - Using legacy API format");
+    url = urlOrOptions;
+
+    // Parse options string if provided
+    let parsedOptions: any = {};
+    if (optionsString) {
+      console.log(
+        "HiddenInAppBrowser.openInWebView - Parsing options string:",
+        optionsString
+      );
+      const optionsArray = optionsString.split(",");
+      optionsArray.forEach((option) => {
+        const [key, value] = option.split("=");
+        if (key && value) {
+          parsedOptions[key.trim()] = value.trim();
+        }
+      });
+      console.log(
+        "HiddenInAppBrowser.openInWebView - Parsed options:",
+        parsedOptions
+      );
+    }
+
+    finalOptions = { ...DEFAULT_WEBVIEW_OPTIONS, ...parsedOptions, url };
+
+    // If callbacks are provided, use them instead of Promise
+    if (onSuccess || onError) {
+      console.log("HiddenInAppBrowser.openInWebView - Using callback mode");
+      if (typeof cordova !== "undefined" && cordova.exec) {
+        cordova.exec(
+          () => {
+            console.log("HiddenInAppBrowser.openInWebView - Success callback");
+            if (onSuccess) onSuccess();
+          },
+          (error: string) => {
+            console.log(
+              "HiddenInAppBrowser.openInWebView - Error callback:",
+              error
+            );
+            if (onError) onError({ code: -1, message: error.toString() });
+          },
+          "HiddenInAppBrowser",
+          "openInWebView",
+          [{ url: finalOptions.url, options: finalOptions }]
+        );
+      } else {
+        const error = "Cordova is not available";
+        if (onError) onError({ code: -1, message: error.toString() });
+      }
+      return; // Return without Promise when using callbacks
+    }
+  }
+
+  // Handle modern API: openInWebView(options) or openInWebView(url) - use Promise
+  console.log(
+    "HiddenInAppBrowser.openInWebView - Using modern API format with Promise"
+  );
   return processOptionsAndExecute(
     urlOrOptions,
     target,
