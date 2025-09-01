@@ -1,6 +1,6 @@
 import UIKit
 import ObjectiveC
-@preconcurrency import WebKit
+import WebKit
 import Cordova
 
 /// The plugin's main class
@@ -41,7 +41,7 @@ class HiddenInAppBrowser: CDVPlugin {
         print("open - Command received: \(command)")
         
         self.commandDelegate.run { [weak self] in
-            guard let self else { 
+            guard let self = self else { 
                 print("❌ open - Self is nil")
                 return 
             }
@@ -116,7 +116,7 @@ class HiddenInAppBrowser: CDVPlugin {
         print("openInExternalBrowser - Command received: \(command)")
         
         self.commandDelegate.run { [weak self] in
-            guard let self else { 
+            guard let self = self else { 
                 print("❌ openInExternalBrowser - Self is nil")
                 return 
             }
@@ -157,7 +157,7 @@ class HiddenInAppBrowser: CDVPlugin {
         print("openInWebView - Command received: \(command)")
         
         self.commandDelegate.run { [weak self] in
-            guard let self else { 
+            guard let self = self else { 
                 print("❌ openInWebView - Self is nil")
                 return 
             }
@@ -234,9 +234,9 @@ class HiddenInAppBrowser: CDVPlugin {
     @objc(close:)
     func close(command: CDVInvokedUrlCommand) {
         self.commandDelegate.run { [weak self] in
-            guard let self else { return }
+            guard let self = self else { return }
             
-            if let openedViewController {
+            if let openedViewController = openedViewController {
                 DispatchQueue.main.async {
                     openedViewController.dismiss(animated: true) { [weak self] in
                         self?.sendSuccess(for: command.callbackId)
@@ -272,13 +272,11 @@ class HiddenInAppBrowser: CDVPlugin {
                 }
                 
                 print("HiddenInAppBrowser: Modal WebView closed successfully")
-                let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Modal WebView closed successfully")!
-                self.commandDelegate.send(result, callbackId: command.callbackId)
+                self.commandDelegate.sendPluginResult(CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Modal WebView closed successfully"), callbackId: command.callbackId)
                 
             } catch {
                 print("HiddenInAppBrowser: Error closing modal WebView: \(error)")
-                let result = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Error closing modal WebView: \(error.localizedDescription)")!
-                self.commandDelegate.send(result, callbackId: command.callbackId)
+                self.commandDelegate.sendPluginResult(CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Error closing modal WebView: \(error.localizedDescription)"), callbackId: command.callbackId)
             }
         }
     }
@@ -317,14 +315,14 @@ private extension HiddenInAppBrowser {
 
     
     func sendSuccess(for callbackId: String) {
-        let pluginResult = CDVPluginResult(status: .ok)!
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK)
         pluginResult.keepCallback = true
-        self.commandDelegate.send(pluginResult, callbackId: callbackId)
+        self.commandDelegate.sendPluginResult(pluginResult, callbackId: callbackId)
     }
     
     func sendError(_ message: String, for callbackId: String) {
-        let pluginResult = CDVPluginResult(status: .error, messageAs: message)!
-        self.commandDelegate.send(pluginResult, callbackId: callbackId)
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: message)
+        self.commandDelegate.sendPluginResult(pluginResult, callbackId: callbackId)
     }
 }
 

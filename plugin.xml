@@ -39,7 +39,6 @@
         </config-file>
 
         <source-file src="src/ios/HiddenInAppBrowser.swift" />
-        <source-file src="src/ios/HiddenInAppBrowserError.swift" />
         <source-file src="src/ios/HiddenInAppBrowserInputArgumentsModel.swift" />
 
  
