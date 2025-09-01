@@ -1,16 +1,38 @@
 import UIKit
 import ObjectiveC
 @preconcurrency import WebKit
+import Cordova
 
 /// The plugin's main class
 @objc(HiddenInAppBrowser)
 class HiddenInAppBrowser: CDVPlugin {
+    
+    // Agregar variables de clase para las referencias
+    private var modalWebView: WKWebView?
+    private var modalNavigationController: UINavigationController?
+    
     private var openedViewController: UIViewController?
     
     override func pluginInitialize() {
         print("🔧 HiddenInAppBrowser - pluginInitialize called")
         print("🔧 HiddenInAppBrowser - Plugin initialization completed")
         NSLog("🔧 HiddenInAppBrowser - NSLog test - Plugin initialized successfully")
+    }
+    
+    override func execute(_ command: CDVInvokedUrlCommand) -> Bool {
+        switch command.methodName {
+        case "open":
+            open(command: command)
+        case "openInExternalBrowser":
+            openInExternalBrowser(command: command)
+        case "openInWebView":
+            openInWebView(command: command)
+        case "closeWebView":
+            closeWebView(command: command)
+        default:
+            return false
+        }
+        return true
     }
     
     @objc(open:)
@@ -193,6 +215,10 @@ class HiddenInAppBrowser: CDVPlugin {
                 objc_setAssociatedObject(self, &AssociatedKeys.webViewKey, webView, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
                 self.openedViewController = navigationController
                 
+                // Guardar referencias para closeWebView
+                self.modalWebView = webView
+                self.modalNavigationController = navigationController
+                
                 // Load URL
                 let request = URLRequest(url: url)
                 webView.load(request)
@@ -222,9 +248,38 @@ class HiddenInAppBrowser: CDVPlugin {
         }
     }
     
-    @objc func closeWebView() {
-        if let openedViewController {
-            openedViewController.dismiss(animated: true)
+    @objc func closeWebView(_ command: CDVInvokedUrlCommand) {
+        print("HiddenInAppBrowser: closeWebView() called")
+        
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            
+            do {
+                // Cerrar modal WebView
+                if let webView = self.modalWebView {
+                    print("HiddenInAppBrowser: Closing modal WebView")
+                    webView.stopLoading()
+                    webView.removeFromSuperview()
+                    self.modalWebView = nil
+                }
+                
+                // Cerrar modal
+                if let navController = self.modalNavigationController {
+                    print("HiddenInAppBrowser: Closing modal navigation")
+                    navController.dismiss(animated: true) {
+                        self.modalNavigationController = nil
+                    }
+                }
+                
+                print("HiddenInAppBrowser: Modal WebView closed successfully")
+                let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Modal WebView closed successfully")!
+                self.commandDelegate.send(result, callbackId: command.callbackId)
+                
+            } catch {
+                print("HiddenInAppBrowser: Error closing modal WebView: \(error)")
+                let result = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Error closing modal WebView: \(error.localizedDescription)")!
+                self.commandDelegate.send(result, callbackId: command.callbackId)
+            }
         }
     }
 }

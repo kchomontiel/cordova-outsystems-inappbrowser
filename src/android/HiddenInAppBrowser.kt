@@ -8,6 +8,10 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 class HiddenInAppBrowser: CordovaPlugin() {
+    
+    // Agregar variables de clase para las referencias
+    private var modalWebView: android.webkit.WebView? = null
+    private var modalDialog: android.app.AlertDialog? = null
 
     override fun initialize(cordova: CordovaInterface, webView: CordovaWebView) {
         super.initialize(cordova, webView)
@@ -27,6 +31,9 @@ class HiddenInAppBrowser: CordovaPlugin() {
             }
             "openInWebView" -> {
                 openInWebView(args, callbackContext)
+            }
+            "closeWebView" -> {
+                closeWebView(args, callbackContext)
             }
             else -> {
                 return false
@@ -89,9 +96,47 @@ class HiddenInAppBrowser: CordovaPlugin() {
                     if (key != "hidden") {
                         options.put(key, value)
                         android.util.Log.d("HiddenInAppBrowser", "open - Added option: $key = $value")
+                            }
+    }
+    
+    // Agregar el método closeWebView
+    @JvmSuppressWildcards
+    fun closeWebView(args: JSONArray, callbackContext: CallbackContext) {
+        try {
+            android.util.Log.d("HiddenInAppBrowser", "🔍 closeWebView - ===== INICIO DEL MÉTODO =====")
+            android.util.Log.d("HiddenInAppBrowser", "closeWebView - Received args: $args")
+            
+            cordova.activity.runOnUiThread {
+                try {
+                    // Cerrar modal WebView
+                    modalWebView?.let { webView ->
+                        android.util.Log.d("HiddenInAppBrowser", "closeWebView - Closing modal WebView")
+                        webView.stopLoading()
+                        webView.destroy()
+                        modalWebView = null
                     }
+                    
+                    // Cerrar diálogo modal
+                    modalDialog?.let { dialog ->
+                        android.util.Log.d("HiddenInAppBrowser", "closeWebView - Closing modal dialog")
+                        dialog.dismiss()
+                        modalDialog = null
+                    }
+                    
+                    android.util.Log.d("HiddenInAppBrowser", "closeWebView - Modal WebView closed successfully")
+                    callbackContext.success("Modal WebView closed successfully")
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("HiddenInAppBrowser", "closeWebView - Error closing modal WebView", e)
+                    callbackContext.error("Error closing modal WebView: ${e.message}")
                 }
             }
+        } catch (e: Exception) {
+            android.util.Log.e("HiddenInAppBrowser", "closeWebView - Error in closeWebView method", e)
+            callbackContext.error("Error in closeWebView method: ${e.message}")
+        }
+    }
+}
             
             android.util.Log.d("HiddenInAppBrowser", "open - Final options: $options")
             
@@ -483,6 +528,10 @@ class HiddenInAppBrowser: CordovaPlugin() {
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - Loading URL: $url")
                         webView.loadUrl(url)
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - URL load initiated")
+                        
+                        // Después de crear el AlertDialog, guardar las referencias
+                        modalWebView = webView
+                        modalDialog = dialog
                         
                     } catch (e: Exception) {
                         android.util.Log.e("HiddenInAppBrowser", "openInWebView - Error creating WebView: ${e.message}", e)

@@ -414,6 +414,20 @@ export function openInWebView(
   );
 }
 
+export function closeWebView(): Promise<void> | void {
+  return cordova.exec(
+    () => {
+      console.log('HiddenInAppBrowser: WebView closed successfully');
+    },
+    (error) => {
+      console.error('HiddenInAppBrowser: Error closing WebView:', error);
+    },
+    'HiddenInAppBrowser',
+    'closeWebView',
+    []
+  );
+}
+
 // Debug: Log to console to verify plugin is loaded
 if (typeof console !== "undefined") {
   console.log("HiddenInAppBrowser plugin loaded with functions:", {
