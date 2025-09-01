@@ -455,7 +455,7 @@ export function openInExternalBrowser(
   let finalOptions: HiddenInAppBrowserOpenOptions;
 
   // Handle legacy API: openInExternalBrowser(url, target, options, success, error)
-  if (typeof urlOrOptions === "string" && target !== undefined) {
+  if (typeof urlOrOptions === "string" && (onSuccess || onError)) {
     console.log(
       "HiddenInAppBrowser.openInExternalBrowser - Using legacy API format"
     );
@@ -555,7 +555,7 @@ export function openInWebView(
   let finalOptions: HiddenInAppBrowserOpenOptions;
 
   // Handle legacy API: openInWebView(url, target, options, success, error)
-  if (typeof urlOrOptions === "string" && target !== undefined) {
+  if (typeof urlOrOptions === "string" && (onSuccess || onError)) {
     console.log("HiddenInAppBrowser.openInWebView - Using legacy API format");
     url = urlOrOptions;
 
