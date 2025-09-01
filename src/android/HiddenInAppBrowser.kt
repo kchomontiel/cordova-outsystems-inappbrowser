@@ -92,10 +92,11 @@ class HiddenInAppBrowser: CordovaPlugin() {
                 while (iterator.hasNext()) {
                     val key = iterator.next()
                     val value = providedOptions.get(key)
-                                    // Don't override hidden=yes
-                if (key != "hidden") {
-                    options.put(key, value)
-                    android.util.Log.d("HiddenInAppBrowser", "open - Added option: $key = $value")
+                    // Don't override hidden=yes
+                    if (key != "hidden") {
+                        options.put(key, value)
+                        android.util.Log.d("HiddenInAppBrowser", "open - Added option: $key = $value")
+                    }
                 }
             }
             
