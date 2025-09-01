@@ -358,10 +358,20 @@ function processOptionsAndExecute(
       cordova.exec(
         (result: any) => {
           console.log(`✅ ${methodName} - Success callback received:`, result);
+          // Ejecutar callback de éxito si existe
+          if (onSuccess) {
+            console.log(`${methodName} - Executing onSuccess callback`);
+            onSuccess();
+          }
           resolve();
         },
         (error: string) => {
           console.log(`❌ ${methodName} - Error callback received:`, error);
+          // Ejecutar callback de error si existe
+          if (onError) {
+            console.log(`${methodName} - Executing onError callback`);
+            onError({ code: -1, message: error });
+          }
           reject(new Error(error));
         },
         "HiddenInAppBrowser",
@@ -417,13 +427,13 @@ export function openInWebView(
 export function closeWebView(): Promise<void> | void {
   return cordova.exec(
     () => {
-      console.log('HiddenInAppBrowser: WebView closed successfully');
+      console.log("HiddenInAppBrowser: WebView closed successfully");
     },
     (error) => {
-      console.error('HiddenInAppBrowser: Error closing WebView:', error);
+      console.error("HiddenInAppBrowser: Error closing WebView:", error);
     },
-    'HiddenInAppBrowser',
-    'closeWebView',
+    "HiddenInAppBrowser",
+    "closeWebView",
     []
   );
 }
