@@ -420,77 +420,92 @@ export function openInWebView(
     onError,
   });
 
+  // OutSystems SIEMPRE usa la API legacy con callbacks
+  console.log(
+    "HiddenInAppBrowser.openInWebView - Using legacy API format (OutSystems)"
+  );
+
   let url: string;
   let finalOptions: HiddenInAppBrowserOpenOptions;
 
-  // Handle legacy API: openInWebView(url, target, options, success, error)
-  if (typeof urlOrOptions === "string" && (onSuccess || onError)) {
-    console.log("HiddenInAppBrowser.openInWebView - Using legacy API format");
+  // Parse URL
+  if (typeof urlOrOptions === "string") {
     url = urlOrOptions;
-
-    // Parse options string if provided
-    let parsedOptions: any = {};
-    if (optionsString) {
-      console.log(
-        "HiddenInAppBrowser.openInWebView - Parsing options string:",
-        optionsString
-      );
-      const optionsArray = optionsString.split(",");
-      optionsArray.forEach((option) => {
-        const [key, value] = option.split("=");
-        if (key && value) {
-          parsedOptions[key.trim()] = value.trim();
-        }
-      });
-      console.log(
-        "HiddenInAppBrowser.openInWebView - Parsed options:",
-        parsedOptions
-      );
-    }
-
-    finalOptions = { ...DEFAULT_WEBVIEW_OPTIONS, ...parsedOptions, url };
-
-    // If callbacks are provided, use them instead of Promise
-    if (onSuccess || onError) {
-      console.log("HiddenInAppBrowser.openInWebView - Using callback mode");
-      if (typeof cordova !== "undefined" && cordova.exec) {
-        cordova.exec(
-          () => {
-            console.log("HiddenInAppBrowser.openInWebView - Success callback");
-            if (onSuccess) onSuccess();
-          },
-          (error: string) => {
-            console.log(
-              "HiddenInAppBrowser.openInWebView - Error callback:",
-              error
-            );
-            if (onError) onError({ code: -1, message: error.toString() });
-          },
-          "HiddenInAppBrowser",
-          "openInWebView",
-          [{ url: finalOptions.url, options: finalOptions }]
-        );
-      } else {
-        const error = "Cordova is not available";
-        if (onError) onError({ code: -1, message: error.toString() });
-      }
-      return; // Return without Promise when using callbacks
-    }
+    console.log("HiddenInAppBrowser.openInWebView - URL from legacy API:", url);
+  } else {
+    url = "https://example.com"; // fallback
+    console.log(
+      "HiddenInAppBrowser.openInWebView - Invalid URL, using fallback:",
+      url
+    );
   }
 
-  // Handle modern API: openInWebView(options) or openInWebView(url) - use Promise
+  // Parse options string if provided
+  let parsedOptions: any = {};
+  if (optionsString) {
+    console.log(
+      "HiddenInAppBrowser.openInWebView - Parsing options string:",
+      optionsString
+    );
+    const optionsArray = optionsString.split(",");
+    optionsArray.forEach((option) => {
+      const [key, value] = option.split("=");
+      if (key && value) {
+        parsedOptions[key.trim()] = value.trim();
+      }
+    });
+    console.log(
+      "HiddenInAppBrowser.openInWebView - Parsed options:",
+      parsedOptions
+    );
+  }
+
+  finalOptions = { ...DEFAULT_WEBVIEW_OPTIONS, ...parsedOptions, url };
   console.log(
-    "HiddenInAppBrowser.openInWebView - Using modern API format with Promise"
+    "HiddenInAppBrowser.openInWebView - Final options after merge:",
+    finalOptions
   );
-  return processOptionsAndExecute(
-    urlOrOptions,
-    target,
-    optionsString,
-    onSuccess,
-    onError,
-    DEFAULT_WEBVIEW_OPTIONS,
-    "openInWebView"
+
+  // SIEMPRE usar callbacks (OutSystems)
+  console.log(
+    "HiddenInAppBrowser.openInWebView - Using callback mode (OutSystems)"
   );
+
+  if (typeof cordova !== "undefined" && cordova.exec) {
+    cordova.exec(
+      () => {
+        console.log("HiddenInAppBrowser.openInWebView - Success callback");
+        if (onSuccess) {
+          console.log(
+            "HiddenInAppBrowser.openInWebView - Calling onSuccess callback"
+          );
+          onSuccess();
+        }
+      },
+      (error: string) => {
+        console.log(
+          "HiddenInAppBrowser.openInWebView - Error callback:",
+          error
+        );
+        if (onError) {
+          console.log(
+            "HiddenInAppBrowser.openInWebView - Calling onError callback"
+          );
+          onError({ code: -1, message: error.toString() });
+        }
+      },
+      "HiddenInAppBrowser",
+      "openInWebView",
+      [{ url: finalOptions.url, options: finalOptions }]
+    );
+  } else {
+    const error = "Cordova is not available";
+    console.log(
+      "HiddenInAppBrowser.openInWebView - Cordova not available:",
+      error
+    );
+    if (onError) onError({ code: -1, message: error.toString() });
+  }
 }
 
 export function closeWebView(): Promise<void> | void {
