@@ -458,7 +458,6 @@ class HiddenInAppBrowser: CordovaPlugin() {
                                 android.util.Log.d("HiddenInAppBrowser", "openInWebView - Close button clicked")
                                 // Close the dialog
                                 dialog.dismiss()
-                                sendSuccess(callbackContext, "WebView closed")
                             }
                             layoutParams = android.widget.LinearLayout.LayoutParams(
                                 android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -494,6 +493,10 @@ class HiddenInAppBrowser: CordovaPlugin() {
                         // Después de crear el AlertDialog, guardar las referencias
                         modalWebView = webView
                         modalDialog = dialog
+                        
+                        // Enviar callback de éxito inmediatamente cuando se abra el modal
+                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - Sending success callback")
+                        sendSuccess(callbackContext, "WebView opened successfully")
                         
                     } catch (e: Exception) {
                         android.util.Log.e("HiddenInAppBrowser", "openInWebView - Error creating WebView: ${e.message}", e)

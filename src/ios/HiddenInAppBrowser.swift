@@ -201,6 +201,7 @@ class HiddenInAppBrowser: CDVPlugin {
                 let webViewDelegate = ModalWebViewDelegate { [weak self] success, error in
                     if success {
                         print("✅ openInWebView - Page loaded successfully")
+                        // Enviar callback inmediatamente cuando se abra exitosamente
                         self?.sendSuccess(for: command.callbackId)
                     } else {
                         print("❌ openInWebView - Failed to load page: \(error ?? "unknown error")")
@@ -280,6 +281,8 @@ class HiddenInAppBrowser: CDVPlugin {
             }
         }
     }
+    
+
 }
 
 
@@ -333,6 +336,7 @@ private extension HiddenInAppBrowser {
 private struct AssociatedKeys {
     static var delegateKey = "delegateKey"
     static var webViewKey = "webViewKey"
+    static var callbackIdKey = "callbackIdKey"
 }
 
 private class HiddenWebViewDelegate: NSObject, WKNavigationDelegate {
