@@ -229,195 +229,63 @@ function processOptionsAndExecute(
   });
   console.log(`${methodName} - Default options:`, defaultOptions);
 
+  // OutSystems SIEMPRE usa la API legacy con callbacks
+  console.log(`📋 ${methodName} - Using legacy API format (OutSystems)`);
+
   let url: string;
   let finalOptions: HiddenInAppBrowserOpenOptions;
 
-  // Handle legacy API: method(url, target, options, success, error)
-  if (typeof urlOrOptions === "string" && target !== undefined) {
-    console.log(`📋 ${methodName} - Using legacy API format`);
+  // Parse URL
+  if (typeof urlOrOptions === "string") {
     url = urlOrOptions;
     console.log(`${methodName} - URL from legacy API:`, url);
-
-    // Parse options string if provided
-    let parsedOptions: any = {};
-    if (optionsString) {
-      console.log(`${methodName} - Parsing options string:`, optionsString);
-      const optionsArray = optionsString.split(",");
-      optionsArray.forEach((option) => {
-        const [key, value] = option.split("=");
-        if (key && value) {
-          parsedOptions[key.trim()] = value.trim();
-        }
-      });
-      console.log(`${methodName} - Parsed options:`, parsedOptions);
-    }
-
-    finalOptions = { ...defaultOptions, ...parsedOptions, url };
-    console.log(`${methodName} - Final options after merge:`, finalOptions);
-
-    // If callbacks are provided, use them instead of Promise
-    if (onSuccess || onError) {
-      console.log(`📞 ${methodName} - Using callback mode`);
-      return new Promise((resolve, reject) => {
-        if (typeof cordova !== "undefined" && cordova.exec) {
-          console.log(
-            `📱 ${methodName} - Cordova is available, calling exec...`
-          );
-          const execParams = [{ url: finalOptions.url, options: finalOptions }];
-          console.log(`${methodName} - Exec parameters:`, execParams);
-
-          cordova.exec(
-            (result: any) => {
-              console.log(
-                `✅ ${methodName} - Success callback received:`,
-                result
-              );
-              if (onSuccess) onSuccess();
-              resolve();
-            },
-            (error: string) => {
-              console.log(`❌ ${methodName} - Error callback received:`, error);
-              if (onError) onError({ code: -1, message: error });
-              reject(new Error(error));
-            },
-            "HiddenInAppBrowser",
-            methodName,
-            execParams
-          );
-        } else {
-          const error = "Cordova is not available";
-          console.log(`❌ ${methodName} - ${error}`);
-          if (onError) onError({ code: -1, message: error });
-          reject(new Error(error));
-        }
-      });
-    }
   } else {
-    // Handle modern API: method(options) or method(url)
-    console.log(`📋 ${methodName} - Using modern API format`);
-
-    if (typeof urlOrOptions === "string") {
-      console.log(`${methodName} - Options is a string, using as URL`);
-      url = urlOrOptions;
-      finalOptions = { ...defaultOptions, url };
-    } else {
-      console.log(`${methodName} - Options is an object`);
-      console.log(`${methodName} - Options.url:`, urlOrOptions.url);
-      console.log(`${methodName} - Options.url type:`, typeof urlOrOptions.url);
-
-      // Handle case where options.url might be an array of characters or malformed
-      let urlFromOptions: string = urlOrOptions.url as string;
-
-      if (typeof urlFromOptions !== "string") {
-        console.log(
-          `${methodName} - URL is not a string, attempting conversion...`
-        );
-
-        if (Array.isArray(urlFromOptions)) {
-          console.log(`${methodName} - URL is an array, joining...`);
-          urlFromOptions = (urlFromOptions as any[]).join("");
-        } else if (
-          typeof urlFromOptions === "object" &&
-          urlFromOptions !== null
-        ) {
-          console.log(`${methodName} - URL is an object, reconstructing...`);
-          // If it's an object with numeric keys, try to reconstruct the string
-          const keys = Object.keys(urlFromOptions)
-            .filter((key) => !isNaN(Number(key)))
-            .sort((a, b) => Number(a) - Number(b));
-          console.log(`${methodName} - Found keys:`, keys);
-          if (keys.length > 0) {
-            urlFromOptions = keys
-              .map((key) => (urlFromOptions as any)[key])
-              .join("");
-          }
-        }
-
-        console.log(`${methodName} - Converted URL to:`, urlFromOptions);
-      }
-
-      // Update options with the corrected URL
-      const correctedOptions = { ...urlOrOptions, url: urlFromOptions };
-      finalOptions = { ...defaultOptions, ...correctedOptions };
-    }
+    url = "https://example.com"; // fallback
+    console.log(`${methodName} - Invalid URL, using fallback:`, url);
   }
 
-  // Debug: Log the parameters being sent
-  console.log(`📤 ${methodName} - Final options:`, finalOptions);
-  console.log(`${methodName} - Final options.url:`, finalOptions.url);
-  const execParams = [{ url: finalOptions.url, options: finalOptions }];
-  console.log(
-    `📤 ${methodName} - Parameters being sent to cordova.exec:`,
-    execParams
-  );
+  // Parse options string if provided
+  let parsedOptions: any = {};
+  if (optionsString) {
+    console.log(`${methodName} - Parsing options string:`, optionsString);
+    const optionsArray = optionsString.split(",");
+    optionsArray.forEach((option) => {
+      const [key, value] = option.split("=");
+      if (key && value) {
+        parsedOptions[key.trim()] = value.trim();
+      }
+    });
+    console.log(`${methodName} - Parsed options:`, parsedOptions);
+  }
+
+  finalOptions = { ...defaultOptions, ...parsedOptions, url };
+  console.log(`${methodName} - Final options after merge:`, finalOptions);
+
+  // SIEMPRE usar callbacks (OutSystems)
+  console.log(`📞 ${methodName} - Using callback mode (OutSystems)`);
 
   return new Promise((resolve, reject) => {
-    // Use cordova.exec directly instead of require
     if (typeof cordova !== "undefined" && cordova.exec) {
       console.log(`📱 ${methodName} - Cordova is available, calling exec...`);
+      const execParams = [{ url: finalOptions.url, options: finalOptions }];
+      console.log(`${methodName} - Exec parameters:`, execParams);
+
       cordova.exec(
         (result: any) => {
           console.log(`✅ ${methodName} - Success callback received:`, result);
-          console.log(
-            `🔍 ${methodName} - Checking if onSuccess callback exists:`,
-            typeof onSuccess
-          );
-          console.log(
-            `🔍 ${methodName} - onSuccess callback value:`,
-            onSuccess
-          );
-
-          // Ejecutar callback de éxito si existe
           if (onSuccess) {
-            console.log(`🚀 ${methodName} - Executing onSuccess callback`);
-            try {
-              onSuccess();
-              console.log(
-                `✅ ${methodName} - onSuccess callback executed successfully`
-              );
-            } catch (error) {
-              console.log(
-                `❌ ${methodName} - Error executing onSuccess callback:`,
-                error
-              );
-            }
-          } else {
-            console.log(`⚠️ ${methodName} - No onSuccess callback provided`);
+            console.log(`📞 ${methodName} - Calling onSuccess callback`);
+            onSuccess();
           }
-
-          console.log(`🔍 ${methodName} - Resolving promise`);
           resolve();
-          console.log(`✅ ${methodName} - Promise resolved`);
         },
         (error: string) => {
           console.log(`❌ ${methodName} - Error callback received:`, error);
-          console.log(
-            `🔍 ${methodName} - Checking if onError callback exists:`,
-            typeof onError
-          );
-          console.log(`🔍 ${methodName} - onError callback value:`, onError);
-
-          // Ejecutar callback de error si existe
           if (onError) {
-            console.log(`🚀 ${methodName} - Executing onError callback`);
-            try {
-              onError({ code: -1, message: error });
-              console.log(
-                `✅ ${methodName} - onError callback executed successfully`
-              );
-            } catch (error) {
-              console.log(
-                `❌ ${methodName} - Error executing onError callback:`,
-                error
-              );
-            }
-          } else {
-            console.log(`⚠️ ${methodName} - No onError callback provided`);
+            console.log(`📞 ${methodName} - Calling onError callback`);
+            onError({ code: -1, message: error });
           }
-
-          console.log(`🔍 ${methodName} - Rejecting promise`);
           reject(new Error(error));
-          console.log(`✅ ${methodName} - Promise rejected`);
         },
         "HiddenInAppBrowser",
         methodName,
@@ -426,6 +294,7 @@ function processOptionsAndExecute(
     } else {
       const error = "Cordova is not available";
       console.log(`❌ ${methodName} - ${error}`);
+      if (onError) onError({ code: -1, message: error });
       reject(new Error(error));
     }
   });
