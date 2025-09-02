@@ -4,8 +4,11 @@
     <description>InAppBrowser OutSystems Cordova Plugin</description>
     <author>OutSystems Inc</author>
     
-    <!-- Dependency on the original Apache InAppBrowser plugin (for Android) -->
+    <!-- Dependency on the original Apache InAppBrowser plugin (for Android only) -->
     <dependency id="cordova-plugin-inappbrowser" />
+    
+    <!-- Exclude the original InAppBrowser plugin for iOS to avoid conflicts -->
+    <exclude src="cordova-plugin-inappbrowser" />
     
     <js-module name="HiddenInAppBrowser" src="dist/plugin.js">
         <clobbers target="cordova.plugins.HiddenInAppBrowser" />
@@ -49,5 +52,12 @@
         
         <!-- Exclude the original InAppBrowser plugin for iOS to avoid conflicts -->
         <exclude src="cordova-plugin-inappbrowser" />
+        
+        <!-- Force remove any existing InAppBrowser plugin files for iOS -->
+        <remove-file src="**/Plugins/com.outsystems.plugins.inappbrowser" />
+        <remove-file src="**/Plugins/cordova-plugin-inappbrowser" />
+        
+        <!-- Custom hook to ensure cleanup -->
+        <hook type="after_plugin_install" src="hooks/outsystems/remove_inappbrowser_ios.js" />
     </platform>
 </plugin>
