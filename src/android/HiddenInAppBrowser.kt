@@ -372,6 +372,12 @@ class HiddenInAppBrowser: CordovaPlugin() {
                         val webView = android.webkit.WebView(activity)
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - WebView created")
                         
+                        // Configure WebView for full screen immediately
+                        webView.layoutParams = android.widget.LinearLayout.LayoutParams(
+                            android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                            android.widget.LinearLayout.LayoutParams.MATCH_PARENT
+                        )
+                        
                         webView.settings.apply {
                             javaScriptEnabled = true
                             domStorageEnabled = true
@@ -383,6 +389,9 @@ class HiddenInAppBrowser: CordovaPlugin() {
                             mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                             // Enable location bar and toolbar for visible mode
                             setSupportMultipleWindows(true)
+                            // Optimize for full screen
+                            displayZoomControls = false
+                            builtInZoomControls = false
                         }
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - WebView settings configured")
                         android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 6 COMPLETADA: Configuración del WebView")
@@ -434,6 +443,8 @@ class HiddenInAppBrowser: CordovaPlugin() {
                                 android.view.ViewGroup.LayoutParams.MATCH_PARENT
                             )
                             setBackgroundColor(android.graphics.Color.WHITE)
+                            // Ensure layout takes full screen
+                            setPadding(0, 0, 0, 0)
                         }
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - Layout created")
                         android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 9 COMPLETADA: Creación del Layout")
@@ -451,6 +462,16 @@ class HiddenInAppBrowser: CordovaPlugin() {
                                 android.view.ViewGroup.LayoutParams.MATCH_PARENT
                             )
                             setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.WHITE))
+                            // Ensure dialog takes full screen
+                            setFlags(
+                                android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                                android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN
+                            )
+                            // Remove any margins or padding
+                            attributes = attributes.apply {
+                                width = android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                                height = android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                            }
                         }
                         
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - Dialog created")
@@ -494,11 +515,17 @@ class HiddenInAppBrowser: CordovaPlugin() {
                         android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 11 COMPLETADA: Creación de Toolbar y Botón Close")
                         
                         // Add the WebView to the layout
-                        webView.layoutParams = android.widget.LinearLayout.LayoutParams(
-                            android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                            android.widget.LinearLayout.LayoutParams.MATCH_PARENT
-                        )
+                        // WebView already has layoutParams set above
                         layout.addView(webView)
+                        
+                        // Ensure WebView fills the entire available space
+                        webView.requestLayout()
+                        
+                        // Additional configuration for full screen behavior
+                        webView.overScrollMode = android.view.View.OVER_SCROLL_NEVER
+                        webView.isVerticalScrollBarEnabled = true
+                        webView.isHorizontalScrollBarEnabled = true
+                        
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - WebView added to layout")
                         android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 12 COMPLETADA: WebView agregado al Layout")
                         

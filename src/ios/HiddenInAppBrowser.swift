@@ -190,15 +190,34 @@ class HiddenInAppBrowser: NSObject {
                 
                 // Create WebView with full screen
                 let webView = WKWebView()
+                
+                // Configure WebView to take full screen immediately
+                webView.frame = UIScreen.main.bounds
+                webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+                
+                // Ensure WebView fills the entire screen
+                webView.scrollView.contentInsetAdjustmentBehavior = .never
+                webView.scrollView.contentInset = .zero
+                webView.scrollView.scrollIndicatorInsets = .zero
+                
                 webView.configuration.allowsInlineMediaPlayback = true
                 webView.configuration.mediaTypesRequiringUserActionForPlayback = []
-                print("✅ openInWebView - FASE 4 COMPLETADA: WebView creado y configurado")
+                print("✅ openInWebView - FASE 4 COMPLETADA: WebView creado y configurado con pantalla completa")
                 
                 // Create view controller
                 let webViewController = UIViewController()
                 webViewController.view = webView
                 webViewController.title = "WebView"
-                print("✅ openInWebView - FASE 5 COMPLETADA: ViewController creado")
+                
+                // Configure view controller for full screen
+                webViewController.view.frame = UIScreen.main.bounds
+                webViewController.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+                
+                // Ensure view controller handles orientations correctly
+                webViewController.edgesForExtendedLayout = []
+                webViewController.extendedLayoutIncludesOpaqueBars = false
+                
+                print("✅ openInWebView - FASE 5 COMPLETADA: ViewController creado con pantalla completa")
                 
                 // Add close button
                 let closeButton = UIBarButtonItem(barButtonSystemItem: .close, target: self, action: #selector(self.closeWebViewAndSendSuccess))
@@ -208,7 +227,12 @@ class HiddenInAppBrowser: NSObject {
                 // Create navigation controller
                 let navigationController = UINavigationController(rootViewController: webViewController)
                 navigationController.modalPresentationStyle = .fullScreen
-                print("✅ openInWebView - FASE 7 COMPLETADA: NavigationController creado")
+                
+                // Configure navigation controller for full screen
+                navigationController.view.frame = UIScreen.main.bounds
+                navigationController.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+                
+                print("✅ openInWebView - FASE 7 COMPLETADA: NavigationController creado con pantalla completa")
                 
                 // Set delegate
                 let webViewDelegate = ModalWebViewDelegate { [weak self] success, error in
