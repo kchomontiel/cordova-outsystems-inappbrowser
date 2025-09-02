@@ -403,8 +403,8 @@ class HiddenInAppBrowser: CordovaPlugin() {
                             javaScriptCanOpenWindowsAutomatically = true
                             allowFileAccessFromFileURLs = true
                             allowUniversalAccessFromFileURLs = true
-                            // Cookie management
-                            setAppCacheEnabled(true)
+                            // Cookie management - using modern approach
+                            // setAppCacheEnabled was deprecated and removed
                             // Database settings
                             databaseEnabled = true
                             // Plugin support
