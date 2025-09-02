@@ -399,6 +399,20 @@ class HiddenInAppBrowser: CordovaPlugin() {
                             setSupportMultipleWindows(false)
                             // Cache settings
                             cacheMode = android.webkit.WebSettings.LOAD_DEFAULT
+                            // Enhanced settings for Google Tag Manager and complex pages
+                            javaScriptCanOpenWindowsAutomatically = true
+                            allowFileAccessFromFileURLs = true
+                            allowUniversalAccessFromFileURLs = true
+                            // Cookie management
+                            setAppCacheEnabled(true)
+                            // Database settings
+                            databaseEnabled = true
+                            // Plugin support
+                            setPluginState(android.webkit.WebSettings.PluginState.ON)
+                            // Enhanced rendering
+                            setRenderPriority(android.webkit.WebSettings.RenderPriority.HIGH)
+                            // Enable hardware acceleration
+                            setEnableSmoothTransition(true)
                         }
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - WebView settings configured")
                         android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 6 COMPLETADA: Configuración del WebView")
@@ -407,8 +421,19 @@ class HiddenInAppBrowser: CordovaPlugin() {
                         webView.webViewClient = object : android.webkit.WebViewClient() {
                             override fun shouldOverrideUrlLoading(view: android.webkit.WebView?, url: String?): Boolean {
                                 android.util.Log.d("HiddenInAppBrowser", "openInWebView - shouldOverrideUrlLoading: $url")
+                                // Log to WebView console
+                                view?.evaluateJavascript("console.log('🔗 WebView: Loading URL - $url');", null)
                                 url?.let { view?.loadUrl(it) }
                                 return true
+                            }
+                            
+                            override fun shouldInterceptRequest(view: android.webkit.WebView?, request: android.webkit.WebResourceRequest?): android.webkit.WebResourceResponse? {
+                                // Log resource requests for debugging
+                                request?.url?.let { url ->
+                                    android.util.Log.d("HiddenInAppBrowser", "openInWebView - Resource request: $url")
+                                    view?.evaluateJavascript("console.log('📡 WebView: Resource request - $url');", null)
+                                }
+                                return super.shouldInterceptRequest(view, request)
                             }
                             
                             override fun onPageStarted(view: android.webkit.WebView?, url: String?, favicon: android.graphics.Bitmap?) {
@@ -626,9 +651,12 @@ class HiddenInAppBrowser: CordovaPlugin() {
                         """.trimIndent(), null)
                         
                         // Send success callback AFTER dialog is shown (WebView is visible)
-                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - Sending success callback")
-                        sendSuccess(callbackContext, "WebView opened successfully")
-                        android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 14 COMPLETADA: Callback de éxito enviado")
+                        // Add delay to allow Google Tag Manager and page content to load
+                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                            android.util.Log.d("HiddenInAppBrowser", "openInWebView - Sending success callback after delay")
+                            sendSuccess(callbackContext, "WebView opened successfully")
+                            android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 14 COMPLETADA: Callback de éxito enviado")
+                        }, 2000) // 2 second delay for GTM and content to load
                         
                         // Load the URL
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - Loading URL: $url")
