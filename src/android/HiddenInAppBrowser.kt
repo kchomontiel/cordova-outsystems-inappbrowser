@@ -378,48 +378,67 @@ class HiddenInAppBrowser: CordovaPlugin() {
                             android.widget.LinearLayout.LayoutParams.MATCH_PARENT
                         )
                         
+                        // Configure advanced WebView settings for better compatibility
                         webView.settings.apply {
+                            // Basic settings
                             javaScriptEnabled = true
                             domStorageEnabled = true
+                            databaseEnabled = true
+                            
+                            // Display settings
                             loadWithOverviewMode = true
                             useWideViewPort = true
-                            builtInZoomControls = true
-                            displayZoomControls = false
-                            setSupportZoom(true)
-                            mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-                            // Enable location bar and toolbar for visible mode
-                            setSupportMultipleWindows(true)
-                            // Optimize for full screen
-                            displayZoomControls = false
                             builtInZoomControls = false
-                            // SSL and security settings for enterprise URLs
+                            displayZoomControls = false
+                            setSupportZoom(false)
+                            
+                            // Security and SSL
+                            mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                            setSupportMultipleWindows(false)
                             allowFileAccess = true
                             allowContentAccess = true
-                            // Handle SSL errors gracefully
-                            setSupportMultipleWindows(false)
-                            // Cache settings
                             cacheMode = android.webkit.WebSettings.LOAD_DEFAULT
-                            // Enhanced settings for Google Tag Manager and complex pages
+                            
+                            // Advanced settings for complex pages
                             javaScriptCanOpenWindowsAutomatically = true
                             allowFileAccessFromFileURLs = true
                             allowUniversalAccessFromFileURLs = true
-                            // Cookie management - using modern approach
-                            // setAppCacheEnabled was deprecated and removed
-                            // Database settings
-                            databaseEnabled = true
-                            // Plugin support
                             setPluginState(android.webkit.WebSettings.PluginState.ON)
-                            // Enhanced rendering
                             setRenderPriority(android.webkit.WebSettings.RenderPriority.HIGH)
-                            // Enable hardware acceleration
                             setEnableSmoothTransition(true)
+                            
+                            // Font and display settings
+                            setDefaultFontSize(16)
+                            setDefaultFixedFontSize(13)
+                            setMinimumFontSize(8)
+                            setMinimumLogicalFontSize(8)
+                            
+                            // Network settings
+                            setBlockNetworkImage(false)
+                            setBlockNetworkLoads(false)
+                            setAppCacheMaxSize(android.webkit.WebSettings.APP_CACHE_MAX_SIZE)
                         }
-                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - WebView settings configured")
-                        android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 6 COMPLETADA: Configuración del WebView")
+                        
+                        // Set custom User-Agent to mimic desktop browser completely
+                        webView.settings.userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 MultiBrowserPlugin/1.0"
+                        
+                        // Log the User-Agent for debugging
+                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - User-Agent configured: ${webView.settings.userAgentString}")
+                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - User-Agent length: ${webView.settings.userAgentString.length}")
+                        
+                        // Enable cookie management
+                        android.webkit.CookieManager.getInstance().apply {
+                            setAcceptCookie(true)
+                            setAcceptThirdPartyCookies(webView, true)
+                        }
+                        
+                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - Advanced WebView settings configured")
+                        android.util.Log.d("HiddenInAppBrowser", "✅ openInAppBrowser - FASE 6 COMPLETADA: Configuración avanzada del WebView")
                         
                         // Create a custom WebViewClient to handle navigation and errors
                         webView.webViewClient = object : android.webkit.WebViewClient() {
-                            override fun shouldOverrideUrlLoading(view: android.webkit.WebView?, url: String?): Boolean {
+                            override fun shouldOverrideUrlLoading(view: android.webkit.WebView?, request: android.webkit.WebResourceRequest?): Boolean {
+                                val url = request?.url?.toString()
                                 android.util.Log.d("HiddenInAppBrowser", "openInWebView - shouldOverrideUrlLoading: $url")
                                 // Log to WebView console
                                 safeEvaluateJavascript(view, "console.log('🔗 WebView: Loading URL - $url');")
@@ -433,22 +452,52 @@ class HiddenInAppBrowser: CordovaPlugin() {
                                     android.util.Log.d("HiddenInAppBrowser", "openInWebView - Resource request: $url")
                                     safeEvaluateJavascript(view, "console.log('📡 WebView: Resource request - $url');")
                                 }
+                                
+                                // Add custom headers to make WebView look more like a real browser
+                                request?.requestHeaders?.let { headers ->
+                                    // Add referer if not present
+                                    if (!headers.containsKey("Referer")) {
+                                        headers["Referer"] = "https://www.google.com/"
+                                    }
+                                    // Add common browser headers
+                                    headers["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+                                    headers["Accept-Language"] = "en-US,en;q=0.5"
+                                    headers["Accept-Encoding"] = "gzip, deflate, br"
+                                    headers["DNT"] = "1"
+                                    headers["Connection"] = "keep-alive"
+                                    headers["Upgrade-Insecure-Requests"] = "1"
+                                    headers["Sec-Fetch-Dest"] = "document"
+                                    headers["Sec-Fetch-Mode"] = "navigate"
+                                    headers["Sec-Fetch-Site"] = "none"
+                                    headers["Sec-Fetch-User"] = "?1"
+                                    headers["Cache-Control"] = "max-age=0"
+                                }
+                                
                                 return super.shouldInterceptRequest(view, request)
                             }
                             
                             override fun onPageStarted(view: android.webkit.WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                                 super.onPageStarted(view, url, favicon)
                                 android.util.Log.d("HiddenInAppBrowser", "openInWebView - onPageStarted: $url")
+                                android.util.Log.d("HiddenInAppBrowser", "openInWebView - Current WebView URL: ${view?.url}")
+                                android.util.Log.d("HiddenInAppBrowser", "openInWebView - WebView Title: ${view?.title}")
                                 // Log to WebView console
                                 safeEvaluateJavascript(view, "console.log('📱 WebView: Page loading started - $url');")
+                                safeEvaluateJavascript(view, "console.log('🔍 WebView: Current URL - ${view?.url}');")
+                                safeEvaluateJavascript(view, "console.log('📋 WebView: Title - ${view?.title}');")
                             }
                             
                             override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
                                 super.onPageFinished(view, url)
                                 android.util.Log.d("HiddenInAppBrowser", "openInWebView - onPageFinished: $url")
+                                android.util.Log.d("HiddenInAppBrowser", "openInWebView - Final WebView URL: ${view?.url}")
+                                android.util.Log.d("HiddenInAppBrowser", "openInWebView - Final WebView Title: ${view?.title}")
                                 android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 15 COMPLETADA: Página cargada completamente")
                                 // Log to WebView console
                                 safeEvaluateJavascript(view, "console.log('✅ WebView: Page loaded successfully - $url');")
+                                safeEvaluateJavascript(view, "console.log('🔍 WebView: Final URL - ${view?.url}');")
+                                safeEvaluateJavascript(view, "console.log('📋 WebView: Final Title - ${view?.title}');")
+                                safeEvaluateJavascript(view, "console.log('📊 WebView: Content Length - ${view?.contentHeight}');")
                                 // NO enviar callback aquí - esperar a que el diálogo esté visible
                             }
                             
