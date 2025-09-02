@@ -392,11 +392,18 @@ class HiddenInAppBrowser: CordovaPlugin() {
                             // Optimize for full screen
                             displayZoomControls = false
                             builtInZoomControls = false
+                            // SSL and security settings for enterprise URLs
+                            allowFileAccess = true
+                            allowContentAccess = true
+                            // Handle SSL errors gracefully
+                            setSupportMultipleWindows(false)
+                            // Cache settings
+                            cacheMode = android.webkit.WebSettings.LOAD_DEFAULT
                         }
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - WebView settings configured")
                         android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 6 COMPLETADA: Configuración del WebView")
                         
-                        // Create a custom WebViewClient to handle navigation
+                        // Create a custom WebViewClient to handle navigation and errors
                         webView.webViewClient = object : android.webkit.WebViewClient() {
                             override fun shouldOverrideUrlLoading(view: android.webkit.WebView?, url: String?): Boolean {
                                 android.util.Log.d("HiddenInAppBrowser", "openInWebView - shouldOverrideUrlLoading: $url")
@@ -407,19 +414,86 @@ class HiddenInAppBrowser: CordovaPlugin() {
                             override fun onPageStarted(view: android.webkit.WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                                 super.onPageStarted(view, url, favicon)
                                 android.util.Log.d("HiddenInAppBrowser", "openInWebView - onPageStarted: $url")
+                                // Log to WebView console
+                                view?.evaluateJavascript("console.log('📱 WebView: Page loading started - $url');", null)
                             }
                             
                             override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
                                 super.onPageFinished(view, url)
                                 android.util.Log.d("HiddenInAppBrowser", "openInWebView - onPageFinished: $url")
                                 android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 15 COMPLETADA: Página cargada completamente")
+                                // Log to WebView console
+                                view?.evaluateJavascript("console.log('✅ WebView: Page loaded successfully - $url');", null)
                                 // NO enviar callback aquí - esperar a que el diálogo esté visible
                             }
                             
                             override fun onReceivedError(view: android.webkit.WebView?, errorCode: Int, description: String?, failingUrl: String?) {
                                 super.onReceivedError(view, errorCode, description, failingUrl)
                                 android.util.Log.e("HiddenInAppBrowser", "openInWebView - onReceivedError: $description")
-                                sendError(callbackContext, "Error loading URL: $description")
+                                android.util.Log.e("HiddenInAppBrowser", "openInWebView - Error code: $errorCode")
+                                android.util.Log.e("HiddenInAppBrowser", "openInWebView - Failing URL: $failingUrl")
+                                
+                                // Log error to WebView console for debugging
+                                val errorMessage = "🚨 WebView Error: $description (Code: $errorCode) - URL: $failingUrl"
+                                view?.evaluateJavascript("console.error('$errorMessage');", null)
+                                
+                                // Handle specific HTTP error codes
+                                when (errorCode) {
+                                    405 -> {
+                                        android.util.Log.e("HiddenInAppBrowser", "openInWebView - HTTP 405: Method Not Allowed")
+                                        view?.evaluateJavascript("console.error('🚨 HTTP 405: Method Not Allowed - This URL requires specific HTTP method');", null)
+                                        sendError(callbackContext, "HTTP 405: Method Not Allowed - This URL requires specific HTTP method")
+                                    }
+                                    403 -> {
+                                        android.util.Log.e("HiddenInAppBrowser", "openInWebView - HTTP 403: Forbidden")
+                                        view?.evaluateJavascript("console.error('🚨 HTTP 403: Forbidden - Access denied to this URL');", null)
+                                        sendError(callbackContext, "HTTP 403: Forbidden - Access denied to this URL")
+                                    }
+                                    401 -> {
+                                        android.util.Log.e("HiddenInAppBrowser", "openInAppBrowser - HTTP 401: Unauthorized")
+                                        view?.evaluateJavascript("console.error('🚨 HTTP 401: Unauthorized - Authentication required');", null)
+                                        sendError(callbackContext, "HTTP 401: Unauthorized - Authentication required")
+                                    }
+                                    else -> {
+                                        view?.evaluateJavascript("console.error('🚨 WebView Error: $description (Code: $errorCode)');", null)
+                                        sendError(callbackContext, "Error loading URL: $description (Code: $errorCode)")
+                                    }
+                                }
+                            }
+                            
+                            override fun onReceivedHttpError(view: android.webkit.WebView?, request: android.webkit.WebResourceRequest?, errorResponse: android.webkit.WebResourceResponse?) {
+                                super.onReceivedHttpError(view, request, errorResponse)
+                                android.util.Log.e("HiddenInAppBrowser", "openInWebView - onReceivedHttpError: ${errorResponse?.statusCode}")
+                                android.util.Log.e("HiddenInAppBrowser", "openInWebView - Request URL: ${request?.url}")
+                                
+                                // Log HTTP error to WebView console for debugging
+                                val httpErrorMessage = "🚨 HTTP Error: ${errorResponse?.statusCode} - URL: ${request?.url}"
+                                view?.evaluateJavascript("console.error('$httpErrorMessage');", null)
+                                
+                                // Handle HTTP errors specifically
+                                errorResponse?.statusCode?.let { statusCode ->
+                                    when (statusCode) {
+                                        405 -> {
+                                            android.util.Log.e("HiddenInAppBrowser", "openInWebView - HTTP 405: Method Not Allowed")
+                                            view?.evaluateJavascript("console.error('🚨 HTTP 405: Method Not Allowed - This URL requires specific HTTP method');", null)
+                                            sendError(callbackContext, "HTTP 405: Method Not Allowed - This URL requires specific HTTP method")
+                                        }
+                                        403 -> {
+                                            android.util.Log.e("HiddenInAppBrowser", "openInAppBrowser", "openInWebView - HTTP 403: Forbidden")
+                                            view?.evaluateJavascript("console.error('🚨 HTTP 403: Forbidden - Access denied to this URL');", null)
+                                            sendError(callbackContext, "HTTP 403: Forbidden - Access denied to this URL")
+                                        }
+                                        401 -> {
+                                            android.util.Log.e("HiddenInAppBrowser", "openInWebView - HTTP 401: Unauthorized")
+                                            view?.evaluateJavascript("console.error('🚨 HTTP 401: Unauthorized - Authentication required');", null)
+                                            sendError(callbackContext, "HTTP 401: Unauthorized - Authentication required")
+                                        }
+                                        else -> {
+                                            view?.evaluateJavascript("console.error('🚨 HTTP Error: $statusCode');", null)
+                                            sendError(callbackContext, "HTTP Error: $statusCode")
+                                        }
+                                    }
+                                }
                             }
                         }
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - WebViewClient configured")
@@ -430,6 +504,13 @@ class HiddenInAppBrowser: CordovaPlugin() {
                             override fun onProgressChanged(view: android.webkit.WebView?, newProgress: Int) {
                                 super.onProgressChanged(view, newProgress)
                                 android.util.Log.d("HiddenInAppBrowser", "openInWebView - Progress: $newProgress%")
+                                // Log progress to WebView console
+                                view?.evaluateJavascript("console.log('📊 WebView Progress: $newProgress%');", null)
+                            }
+                            
+                            override fun onConsoleMessage(message: android.webkit.ConsoleMessage?): Boolean {
+                                android.util.Log.d("HiddenInAppBrowser", "openInWebView - Console: ${message?.message()}")
+                                return true
                             }
                         }
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - WebChromeClient configured")
@@ -535,6 +616,14 @@ class HiddenInAppBrowser: CordovaPlugin() {
                         dialog.show()
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - Dialog shown")
                         android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 13 COMPLETADA: Diálogo mostrado")
+                        
+                        // Add welcome message to WebView console
+                        webView.evaluateJavascript("""
+                            console.log('🚀 MultiBrowser Plugin WebView Opened Successfully!');
+                            console.log('📱 URL to load: $url');
+                            console.log('🔧 Debug mode: Enabled');
+                            console.log('📊 All errors and events will be logged here');
+                        """.trimIndent(), null)
                         
                         // Send success callback AFTER dialog is shown (WebView is visible)
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - Sending success callback")
