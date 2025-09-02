@@ -1,11 +1,10 @@
 import UIKit
 import ObjectiveC
 import WebKit
-import Cordova
 
 /// The plugin's main class
 @objc(HiddenInAppBrowser)
-class HiddenInAppBrowser: CDVPlugin {
+class HiddenInAppBrowser: NSObject {
     
     // Agregar variables de clase para las referencias
     private var modalWebView: WKWebView?
@@ -14,13 +13,17 @@ class HiddenInAppBrowser: CDVPlugin {
     private var openedViewController: UIViewController?
     private var lastCommandId: String?
     
-    override func pluginInitialize() {
+    // Cordova plugin properties (normally inherited from CDVPlugin)
+    var commandDelegate: CDVCommandDelegate?
+    var viewController: UIViewController?
+    
+    func pluginInitialize() {
         print("🔧 HiddenInAppBrowser - pluginInitialize called")
         print("🔧 HiddenInAppBrowser - Plugin initialization completed")
         NSLog("🔧 HiddenInAppBrowser - NSLog test - Plugin initialized successfully")
     }
     
-    override func execute(_ command: CDVInvokedUrlCommand) -> Bool {
+    func execute(_ command: CDVInvokedUrlCommand) -> Bool {
         switch command.methodName {
         case "open":
             open(command: command)
@@ -484,5 +487,45 @@ extension HiddenInAppBrowser: UIAdaptivePresentationControllerDelegate {
         } else {
             print("❌ presentationControllerDidDismiss - ERROR: No hay commandId disponible")
         }
+    }
+}
+
+// MARK: - Cordova Types (Basic implementations)
+@objc protocol CDVCommandDelegate {
+    func sendPluginResult(_ result: CDVPluginResult, callbackId: String)
+}
+
+@objc class CDVInvokedUrlCommand: NSObject {
+    var methodName: String = ""
+    var callbackId: String = ""
+    var arguments: [Any] = []
+    
+    func argument(at index: Int) -> Any? {
+        return index < arguments.count ? arguments[index] : nil
+    }
+}
+
+@objc class CDVPluginResult: NSObject {
+    enum Status: Int {
+        case OK = 1
+        case ERROR = 2
+    }
+    
+    let status: Status
+    let message: String?
+    var keepCallback: Bool = false
+    
+    init(status: Status, messageAs message: String?) {
+        self.status = status
+        self.message = message
+        super.init()
+    }
+    
+    convenience init(status: Status) {
+        self.init(status: status, messageAs: nil)
+    }
+    
+    convenience init(status: Status, messageAs message: String) {
+        self.init(status: status, messageAs: message)
     }
 }
