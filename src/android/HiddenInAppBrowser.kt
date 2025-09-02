@@ -455,6 +455,12 @@ class HiddenInAppBrowser: CordovaPlugin() {
                                 
                                 // Add custom headers to make WebView look more like a real browser
                                 request?.requestHeaders?.let { headers ->
+                                    // Add Host header for proper server identification
+                                    request.url?.host?.let { host ->
+                                        headers["Host"] = host
+                                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - Host header set: $host")
+                                    }
+                                    
                                     // Add referer if not present
                                     if (!headers.containsKey("Referer")) {
                                         headers["Referer"] = "https://www.google.com/"
@@ -471,6 +477,9 @@ class HiddenInAppBrowser: CordovaPlugin() {
                                     headers["Sec-Fetch-Site"] = "none"
                                     headers["Sec-Fetch-User"] = "?1"
                                     headers["Cache-Control"] = "max-age=0"
+                                    
+                                    // Log all headers for debugging
+                                    android.util.Log.d("HiddenInAppBrowser", "openInWebView - All headers configured: ${headers.keys.joinToString(", ")}")
                                 }
                                 
                                 return super.shouldInterceptRequest(view, request)
