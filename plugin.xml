@@ -5,10 +5,10 @@
     <author>OutSystems Inc</author>
     
     <!-- JavaScript común para todas las plataformas -->
-    <js-module name="HiddenInAppBrowser" src="dist/plugin.js">
-        <clobbers target="cordova.plugins.HiddenInAppBrowser" />
-        <clobbers target="HiddenInAppBrowser" />
-    </js-module>
+                <js-module name="HiddenInAppBrowser" src="dist/plugin.js">
+                <clobbers target="cordova.plugins.multibrowser" />
+                <clobbers target="multibrowser" />
+            </js-module>
     
     <!-- Configuración específica para Android -->
     <platform name="android">
