@@ -416,7 +416,7 @@ class HiddenInAppBrowser: CordovaPlugin() {
                             // Network settings
                             setBlockNetworkImage(false)
                             setBlockNetworkLoads(false)
-                            setAppCacheMaxSize(android.webkit.WebSettings.APP_CACHE_MAX_SIZE)
+                            // setAppCacheMaxSize was deprecated and removed in modern Android
                         }
                         
                         // Set custom User-Agent to mimic desktop browser completely
