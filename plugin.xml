@@ -13,7 +13,7 @@
         <dependency id="cordova-plugin-inappbrowser" />
         
         <config-file parent="/*" target="res/xml/config.xml">
-            <feature name="HiddenInAppBrowser">
+            <feature name="multibrowser">
                 <param name="android-package" value="com.outsystems.plugins.inappbrowser.osinappbrowser.HiddenInAppBrowser" />
             </feature>
             <preference name="GradlePluginKotlinEnabled" value="true" />
@@ -25,8 +25,11 @@
     </platform>
     
     <platform name="ios">
+        <!-- Excluir explícitamente el plugin original de OutSystems -->
+        <exclude src="com.outsystems.plugins.inappbrowser" />
+        
         <config-file parent="/*" target="config.xml">
-            <feature name="HiddenInAppBrowser">
+            <feature name="multibrowser">
                 <param name="ios-package" value="HiddenInAppBrowser" />
             </feature>
             <preference name="SwiftVersion" value="5" />
