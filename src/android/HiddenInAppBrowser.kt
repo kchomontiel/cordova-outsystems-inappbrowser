@@ -479,7 +479,7 @@ class HiddenInAppBrowser: CordovaPlugin() {
                                             sendError(callbackContext, "HTTP 405: Method Not Allowed - This URL requires specific HTTP method")
                                         }
                                         403 -> {
-                                            android.util.Log.e("HiddenInAppBrowser", "openInAppBrowser", "openInWebView - HTTP 403: Forbidden")
+                                            android.util.Log.e("HiddenInAppBrowser", "openInWebView - HTTP 403: Forbidden")
                                             view?.evaluateJavascript("console.error('🚨 HTTP 403: Forbidden - Access denied to this URL');", null)
                                             sendError(callbackContext, "HTTP 403: Forbidden - Access denied to this URL")
                                         }
