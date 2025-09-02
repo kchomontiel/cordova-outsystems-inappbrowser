@@ -6,6 +6,44 @@ This plugin provides three different ways to open URLs in your Cordova applicati
 2. **External Browser** (`openInExternalBrowser`) - Opens URLs in the device's default browser
 3. **WebView Mode** (`openInWebView`) - Opens URLs in a visible WebView within the app
 
+## 🚀 Quick Start for OutSystems
+
+### Installation from Repository
+
+```bash
+# Direct installation from Git
+cordova plugin add https://github.com/[your-username]/cordova-outsystems-inappbrowser.git
+
+# Or clone and install locally
+git clone https://github.com/[your-username]/cordova-outsystems-inappbrowser.git
+cd cordova-outsystems-inappbrowser
+npm install && npm run build
+cordova plugin add .
+```
+
+### Basic Usage in OutSystems
+
+```javascript
+// Wait for Cordova to be ready
+document.addEventListener(
+  "deviceready",
+  function () {
+    // Open visible WebView
+    window.HiddenInAppBrowser.openInWebView("https://www.google.com", {
+      success: function () {
+        console.log("WebView opened");
+      },
+      error: function (error) {
+        console.error("Error:", error);
+      },
+    });
+  },
+  false
+);
+```
+
+📖 **For detailed OutSystems installation instructions, see [INSTALL_OUTSYSTEMS.md](INSTALL_OUTSYSTEMS.md)**
+
 ## Installation
 
 ```bash
