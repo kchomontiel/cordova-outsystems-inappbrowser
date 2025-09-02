@@ -296,6 +296,7 @@ class HiddenInAppBrowser: CordovaPlugin() {
         try {
             android.util.Log.d("HiddenInAppBrowser", "🔍 openInWebView - ===== INICIO DEL MÉTODO =====")
             android.util.Log.d("HiddenInAppBrowser", "openInWebView - Received args: $args")
+            android.util.Log.d("HiddenInAppBrowser", "openInWebView - CallbackContext ID: ${callbackContext.callbackId}")
             
             val argumentsDictionary = args.getJSONObject(0)
             android.util.Log.d("HiddenInAppBrowser", "openInWebView - Arguments dictionary: $argumentsDictionary")
@@ -308,6 +309,8 @@ class HiddenInAppBrowser: CordovaPlugin() {
                 sendError(callbackContext, "URL is required")
                 return
             }
+            
+            android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 1 COMPLETADA: Validación de parámetros")
 
             // Get options from arguments if provided
             val options = argumentsDictionary.optJSONObject("options")
@@ -329,6 +332,8 @@ class HiddenInAppBrowser: CordovaPlugin() {
                 put("hideurlbar", "no")
                 put("fullscreen", "no")
             }
+            
+            android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 2 COMPLETADA: Configuración de opciones")
 
             // Merge with provided options if any
             if (options != null) {
@@ -343,6 +348,7 @@ class HiddenInAppBrowser: CordovaPlugin() {
             }
             
             android.util.Log.d("HiddenInAppBrowser", "openInWebView - Final options: $webViewOptions")
+            android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 3 COMPLETADA: Fusión de opciones")
             
             // Use the original InAppBrowser plugin to open in WebView
             try {
@@ -354,11 +360,13 @@ class HiddenInAppBrowser: CordovaPlugin() {
                 }
                 
                 android.util.Log.d("HiddenInAppBrowser", "openInWebView - Activity is available, creating WebView")
+                android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 4 COMPLETADA: Validación de Activity")
                 
                 // Run WebView creation on UI thread
                 activity.runOnUiThread {
                     try {
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - Creating WebView on UI thread")
+                        android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 5 COMPLETADA: Inicio de creación en UI thread")
                         
                         // Create a WebView with proper configuration for visible mode
                         val webView = android.webkit.WebView(activity)
@@ -377,6 +385,7 @@ class HiddenInAppBrowser: CordovaPlugin() {
                             setSupportMultipleWindows(true)
                         }
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - WebView settings configured")
+                        android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 6 COMPLETADA: Configuración del WebView")
                         
                         // Create a custom WebViewClient to handle navigation
                         webView.webViewClient = object : android.webkit.WebViewClient() {
@@ -386,10 +395,16 @@ class HiddenInAppBrowser: CordovaPlugin() {
                                 return true
                             }
                             
+                            override fun onPageStarted(view: android.webkit.WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+                                super.onPageStarted(view, url, favicon)
+                                android.util.Log.d("HiddenInAppBrowser", "openInWebView - onPageStarted: $url")
+                            }
+                            
                             override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
                                 super.onPageFinished(view, url)
                                 android.util.Log.d("HiddenInAppBrowser", "openInWebView - onPageFinished: $url")
-                                sendSuccess(callbackContext, "URL loaded in WebView successfully")
+                                android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 15 COMPLETADA: Página cargada completamente")
+                                // NO enviar callback aquí - esperar a que el diálogo esté visible
                             }
                             
                             override fun onReceivedError(view: android.webkit.WebView?, errorCode: Int, description: String?, failingUrl: String?) {
@@ -399,6 +414,7 @@ class HiddenInAppBrowser: CordovaPlugin() {
                             }
                         }
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - WebViewClient configured")
+                        android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 7 COMPLETADA: Configuración de WebViewClient")
                         
                         // Create a custom WebChromeClient to handle dialogs and progress
                         webView.webChromeClient = object : android.webkit.WebChromeClient() {
@@ -408,6 +424,7 @@ class HiddenInAppBrowser: CordovaPlugin() {
                             }
                         }
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - WebChromeClient configured")
+                        android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 8 COMPLETADA: Configuración de WebChromeClient")
                         
                         // Create a layout for the WebView
                         val layout = android.widget.LinearLayout(activity).apply {
@@ -419,6 +436,7 @@ class HiddenInAppBrowser: CordovaPlugin() {
                             setBackgroundColor(android.graphics.Color.WHITE)
                         }
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - Layout created")
+                        android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 9 COMPLETADA: Creación del Layout")
                         
                         // Create a dialog to show the WebView
                         val dialog = android.app.AlertDialog.Builder(activity)
@@ -436,6 +454,7 @@ class HiddenInAppBrowser: CordovaPlugin() {
                         }
                         
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - Dialog created")
+                        android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 10 COMPLETADA: Creación del Diálogo")
                         
                         // Add a toolbar with close button
                         val toolbar = android.widget.LinearLayout(activity).apply {
@@ -472,6 +491,7 @@ class HiddenInAppBrowser: CordovaPlugin() {
                         toolbar.addView(closeButton)
                         layout.addView(toolbar)
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - Toolbar added to layout")
+                        android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 11 COMPLETADA: Creación de Toolbar y Botón Close")
                         
                         // Add the WebView to the layout
                         webView.layoutParams = android.widget.LinearLayout.LayoutParams(
@@ -480,37 +500,47 @@ class HiddenInAppBrowser: CordovaPlugin() {
                         )
                         layout.addView(webView)
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - WebView added to layout")
+                        android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 12 COMPLETADA: WebView agregado al Layout")
+                        
+
                         
                         // Show the dialog
                         dialog.show()
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - Dialog shown")
+                        android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 13 COMPLETADA: Diálogo mostrado")
+                        
+                        // Send success callback AFTER dialog is shown (WebView is visible)
+                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - Sending success callback")
+                        sendSuccess(callbackContext, "WebView opened successfully")
+                        android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 14 COMPLETADA: Callback de éxito enviado")
                         
                         // Load the URL
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - Loading URL: $url")
                         webView.loadUrl(url)
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - URL load initiated")
+                        android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 16 COMPLETADA: Carga de URL iniciada")
                         
                         // Después de crear el AlertDialog, guardar las referencias
                         modalWebView = webView
                         modalDialog = dialog
-                        
-                        // Enviar callback de éxito inmediatamente cuando se abra el modal
-                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - Sending success callback")
-                        sendSuccess(callbackContext, "WebView opened successfully")
+                        android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 17 COMPLETADA: Referencias guardadas")
                         
                     } catch (e: Exception) {
                         android.util.Log.e("HiddenInAppBrowser", "openInWebView - Error creating WebView: ${e.message}", e)
+                        android.util.Log.e("HiddenInAppBrowser", "❌ openInWebView - ERROR en fase de creación del WebView")
                         sendError(callbackContext, "Error opening WebView: ${e.message}")
                     }
                 }
                 
             } catch (e: Exception) {
                 android.util.Log.e("HiddenInAppBrowser", "openInWebView - Error setting up WebView: ${e.message}", e)
+                android.util.Log.e("HiddenInAppBrowser", "❌ openInWebView - ERROR en fase de configuración del WebView")
                 sendError(callbackContext, "Error setting up WebView: ${e.message}")
             }
             
         } catch (e: Exception) {
             android.util.Log.e("HiddenInAppBrowser", "openInWebView - Error in method: ${e.message}", e)
+            android.util.Log.e("HiddenInAppBrowser", "❌ openInAppBrowser - ERROR GENERAL en método openInWebView")
             sendError(callbackContext, "Error opening WebView: ${e.message}")
         }
     }

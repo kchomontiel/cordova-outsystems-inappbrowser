@@ -5,13 +5,14 @@ import Cordova
 
 /// The plugin's main class
 @objc(HiddenInAppBrowser)
-class HiddenInAppBrowser: CDVPlugin {
+class HiddenInAppBrowser: CDVPlugin, UIAdaptivePresentationControllerDelegate {
     
     // Agregar variables de clase para las referencias
     private var modalWebView: WKWebView?
     private var modalNavigationController: UINavigationController?
     
     private var openedViewController: UIViewController?
+    private var lastCommandId: String?
     
     override func pluginInitialize() {
         print("🔧 HiddenInAppBrowser - pluginInitialize called")
@@ -156,6 +157,9 @@ class HiddenInAppBrowser: CDVPlugin {
         print("🔍 openInWebView - ===== INICIO DEL MÉTODO =====")
         print("openInWebView - Command received: \(command)")
         
+        // Guardar el commandId para usarlo cuando se cierre el WebView
+        self.lastCommandId = command.callbackId
+        
         self.commandDelegate.run { [weak self] in
             guard let self = self else { 
                 print("❌ openInWebView - Self is nil")
@@ -190,7 +194,7 @@ class HiddenInAppBrowser: CDVPlugin {
                 webViewController.title = "WebView"
                 
                 // Add close button
-                let closeButton = UIBarButtonItem(barButtonSystemItem: .close, target: self, action: #selector(self.closeWebView))
+                let closeButton = UIBarButtonItem(barButtonSystemItem: .close, target: self, action: #selector(self.closeWebViewAndSendSuccess))
                 webViewController.navigationItem.leftBarButtonItem = closeButton
                 
                 // Create navigation controller
@@ -201,8 +205,7 @@ class HiddenInAppBrowser: CDVPlugin {
                 let webViewDelegate = ModalWebViewDelegate { [weak self] success, error in
                     if success {
                         print("✅ openInWebView - Page loaded successfully")
-                        // Enviar callback inmediatamente cuando se abra exitosamente
-                        self?.sendSuccess(for: command.callbackId)
+                        // NO enviar callback aquí - esperar a que el usuario cierre el WebView
                     } else {
                         print("❌ openInWebView - Failed to load page: \(error ?? "unknown error")")
                         self?.sendError("Failed to load URL: \(url.absoluteString)", for: command.callbackId)
@@ -219,6 +222,9 @@ class HiddenInAppBrowser: CDVPlugin {
                 // Guardar referencias para closeWebView
                 self.modalWebView = webView
                 self.modalNavigationController = navigationController
+                
+                // Agregar listener para cuando se cierre el modal
+                navigationController.presentationController?.delegate = self
                 
                 // Load URL
                 let request = URLRequest(url: url)
@@ -245,6 +251,39 @@ class HiddenInAppBrowser: CDVPlugin {
                 }
             } else {
                 self.sendError("There's no browser view to close.", for: command.callbackId)
+            }
+        }
+    }
+    
+    @objc func closeWebViewAndSendSuccess() {
+        print("HiddenInAppBrowser: closeWebViewAndSendSuccess() called")
+        
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            
+            do {
+                // Cerrar modal WebView
+                if let webView = self.modalWebView {
+                    print("HiddenInAppBrowser: Closing modal WebView")
+                    webView.stopLoading()
+                    webView.removeFromSuperview()
+                    self.modalWebView = nil
+                }
+                
+                // Cerrar modal
+                if let navController = self.modalNavigationController {
+                    print("HiddenInAppBrowser: Closing modal navigation")
+                    navController.dismiss(animated: true) {
+                        self.modalNavigationController = nil
+                        // Enviar callback de éxito cuando se cierre el modal
+                        self.sendSuccess(for: self.lastCommandId ?? "")
+                    }
+                }
+                
+                print("HiddenInAppBrowser: Modal WebView closed successfully")
+                
+            } catch {
+                print("HiddenInAppBrowser: Error closing modal WebView: \(error)")
             }
         }
     }
@@ -283,11 +322,21 @@ class HiddenInAppBrowser: CDVPlugin {
     }
     
 
-}
+    }
+    
+    // MARK: - UIAdaptivePresentationControllerDelegate
+    
+    func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+        print("HiddenInAppBrowser: Modal dismissed by user gesture")
+        // Enviar callback de éxito cuando se cierre el modal por gesto
+        if let commandId = lastCommandId {
+            sendSuccess(for: commandId)
+        }
+    }
+    
 
-
-
-private extension HiddenInAppBrowser {
+    
+    private extension HiddenInAppBrowser {
     func createModel<T: Decodable>(for inputArgument: Any?) -> T? {
         print("createModel - Input argument: \(inputArgument ?? "nil")")
         print("createModel - Input argument type: \(type(of: inputArgument))")
