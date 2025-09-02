@@ -44,7 +44,7 @@ class HiddenInAppBrowser: NSObject {
         print("🔍 open - ===== INICIO DEL MÉTODO =====")
         print("open - Command received: \(command)")
         
-        self.commandDelegate.run { [weak self] in
+        self.commandDelegate?.run { [weak self] in
             guard let self = self else { 
                 print("❌ open - Self is nil")
                 return 
@@ -119,7 +119,7 @@ class HiddenInAppBrowser: NSObject {
         print("🔍 openInExternalBrowser - ===== INICIO DEL MÉTODO =====")
         print("openInExternalBrowser - Command received: \(command)")
         
-        self.commandDelegate.run { [weak self] in
+        self.commandDelegate?.run { [weak self] in
             guard let self = self else { 
                 print("❌ openInExternalBrowser - Self is nil")
                 return 
@@ -162,7 +162,7 @@ class HiddenInAppBrowser: NSObject {
         // Guardar el commandId para usarlo cuando se cierre el WebView
         self.lastCommandId = command.callbackId
         
-        self.commandDelegate.run { [weak self] in
+        self.commandDelegate?.run { [weak self] in
             guard let self = self else { 
                 print("❌ openInWebView - Self is nil")
                 return 
@@ -262,7 +262,7 @@ class HiddenInAppBrowser: NSObject {
     
     @objc(close:)
     func close(command: CDVInvokedUrlCommand) {
-        self.commandDelegate.run { [weak self] in
+        self.commandDelegate?.run { [weak self] in
             guard let self = self else { return }
             
             if let openedViewController = openedViewController {
@@ -352,7 +352,7 @@ class HiddenInAppBrowser: NSObject {
                 
             } catch {
                 print("HiddenInAppBrowser: Error closing modal WebView: \(error)")
-                self.commandDelegate.sendPluginResult(CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Error closing modal WebView: \(error.localizedDescription)"), callbackId: command.callbackId)
+                self.commandDelegate?.sendPluginResult(CDVPluginResult(status: .ERROR, messageAs: "Error closing modal WebView: \(error.localizedDescription)"), callbackId: command.callbackId)
             }
         }
     }
