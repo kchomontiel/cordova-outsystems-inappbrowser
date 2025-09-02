@@ -156,6 +156,7 @@ class HiddenInAppBrowser: CDVPlugin, UIAdaptivePresentationControllerDelegate {
     func openInWebView(command: CDVInvokedUrlCommand) {
         print("🔍 openInWebView - ===== INICIO DEL MÉTODO =====")
         print("openInWebView - Command received: \(command)")
+        print("openInWebView - CallbackId: \(command.callbackId)")
         
         // Guardar el commandId para usarlo cuando se cierre el WebView
         self.lastCommandId = command.callbackId
@@ -167,6 +168,7 @@ class HiddenInAppBrowser: CDVPlugin, UIAdaptivePresentationControllerDelegate {
             }
             
             print("openInWebView - Processing command arguments")
+            print("✅ openInWebView - FASE 1 COMPLETADA: Inicio del método y validación de self")
             
             guard
                 let argumentsModel: HiddenInAppBrowserInputArgumentsSimpleModel = self.createModel(for: command.argument(at: 0)),
@@ -178,33 +180,40 @@ class HiddenInAppBrowser: CDVPlugin, UIAdaptivePresentationControllerDelegate {
 
             print("✅ openInWebView - Model created successfully")
             print("openInWebView - URL: \(url.absoluteString)")
+            print("✅ openInWebView - FASE 2 COMPLETADA: Validación de parámetros y creación del modelo")
             
             // Create a modal WebView (like Android)
             DispatchQueue.main.async {
                 print("✅ openInWebView - Creating modal WebView")
+                print("✅ openInWebView - FASE 3 COMPLETADA: Inicio de creación en main queue")
                 
                 // Create WebView with full screen
                 let webView = WKWebView()
                 webView.configuration.allowsInlineMediaPlayback = true
                 webView.configuration.mediaTypesRequiringUserActionForPlayback = []
+                print("✅ openInWebView - FASE 4 COMPLETADA: WebView creado y configurado")
                 
                 // Create view controller
                 let webViewController = UIViewController()
                 webViewController.view = webView
                 webViewController.title = "WebView"
+                print("✅ openInWebView - FASE 5 COMPLETADA: ViewController creado")
                 
                 // Add close button
                 let closeButton = UIBarButtonItem(barButtonSystemItem: .close, target: self, action: #selector(self.closeWebViewAndSendSuccess))
                 webViewController.navigationItem.leftBarButtonItem = closeButton
+                print("✅ openInWebView - FASE 6 COMPLETADA: Botón Close creado")
                 
                 // Create navigation controller
                 let navigationController = UINavigationController(rootViewController: webViewController)
                 navigationController.modalPresentationStyle = .fullScreen
+                print("✅ openInWebView - FASE 7 COMPLETADA: NavigationController creado")
                 
                 // Set delegate
                 let webViewDelegate = ModalWebViewDelegate { [weak self] success, error in
                     if success {
                         print("✅ openInWebView - Page loaded successfully")
+                        print("✅ openInWebView - FASE 16 COMPLETADA: Página cargada completamente")
                         // NO enviar callback aquí - esperar a que el usuario cierre el WebView
                     } else {
                         print("❌ openInWebView - Failed to load page: \(error ?? "unknown error")")
@@ -213,25 +222,35 @@ class HiddenInAppBrowser: CDVPlugin, UIAdaptivePresentationControllerDelegate {
                 }
                 
                 webView.navigationDelegate = webViewDelegate
+                print("✅ openInWebView - FASE 8 COMPLETADA: WebViewDelegate configurado")
                 
                 // Keep references
                 objc_setAssociatedObject(webView, &AssociatedKeys.delegateKey, webViewDelegate, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
                 objc_setAssociatedObject(self, &AssociatedKeys.webViewKey, webView, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
                 self.openedViewController = navigationController
+                print("✅ openInWebView - FASE 9 COMPLETADA: Referencias asociadas configuradas")
                 
                 // Guardar referencias para closeWebView
                 self.modalWebView = webView
                 self.modalNavigationController = navigationController
+                print("✅ openInWebView - FASE 10 COMPLETADA: Referencias de clase guardadas")
                 
                 // Agregar listener para cuando se cierre el modal
                 navigationController.presentationController?.delegate = self
-                
-                // Load URL
-                let request = URLRequest(url: url)
-                webView.load(request)
+                print("✅ openInWebView - FASE 11 COMPLETADA: PresentationController delegate configurado")
                 
                 // Present modal
                 self.viewController.present(navigationController, animated: true)
+                print("✅ openInWebView - FASE 13 COMPLETADA: Modal presentado")
+                
+                // Enviar callback de éxito DESPUÉS de presentar el modal (como en Android)
+                print("✅ openInWebView - FASE 14 COMPLETADA: Enviando callback de éxito")
+                self.sendSuccess(for: command.callbackId)
+                
+                // Load URL DESPUÉS del callback (como en Android)
+                let request = URLRequest(url: url)
+                webView.load(request)
+                print("✅ openInWebView - FASE 15 COMPLETADA: Carga de URL iniciada")
             }
         }
     }
@@ -257,9 +276,15 @@ class HiddenInAppBrowser: CDVPlugin, UIAdaptivePresentationControllerDelegate {
     
     @objc func closeWebViewAndSendSuccess() {
         print("HiddenInAppBrowser: closeWebViewAndSendSuccess() called")
+        print("🔍 closeWebViewAndSendSuccess - ===== INICIO DEL MÉTODO =====")
         
         DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
+            guard let self = self else { 
+                print("❌ closeWebViewAndSendSuccess - Self is nil")
+                return 
+            }
+            
+            print("✅ closeWebViewAndSendSuccess - FASE 1 COMPLETADA: Self validado")
             
             do {
                 // Cerrar modal WebView
@@ -268,6 +293,7 @@ class HiddenInAppBrowser: CDVPlugin, UIAdaptivePresentationControllerDelegate {
                     webView.stopLoading()
                     webView.removeFromSuperview()
                     self.modalWebView = nil
+                    print("✅ closeWebViewAndSendSuccess - FASE 2 COMPLETADA: WebView cerrado")
                 }
                 
                 // Cerrar modal
@@ -275,8 +301,14 @@ class HiddenInAppBrowser: CDVPlugin, UIAdaptivePresentationControllerDelegate {
                     print("HiddenInAppBrowser: Closing modal navigation")
                     navController.dismiss(animated: true) {
                         self.modalNavigationController = nil
+                        print("✅ closeWebViewAndSendSuccess - FASE 3 COMPLETADA: NavigationController cerrado")
                         // Enviar callback de éxito cuando se cierre el modal
-                        self.sendSuccess(for: self.lastCommandId ?? "")
+                        if let commandId = self.lastCommandId {
+                            print("✅ closeWebViewAndSendSuccess - FASE 4 COMPLETADA: Enviando callback de éxito")
+                            self.sendSuccess(for: commandId)
+                        } else {
+                            print("❌ closeWebViewAndSendSuccess - ERROR: No hay commandId disponible")
+                        }
                     }
                 }
                 
@@ -284,6 +316,7 @@ class HiddenInAppBrowser: CDVPlugin, UIAdaptivePresentationControllerDelegate {
                 
             } catch {
                 print("HiddenInAppBrowser: Error closing modal WebView: \(error)")
+                print("❌ closeWebViewAndSendSuccess - ERROR: \(error.localizedDescription)")
             }
         }
     }
@@ -328,9 +361,15 @@ class HiddenInAppBrowser: CDVPlugin, UIAdaptivePresentationControllerDelegate {
     
     func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
         print("HiddenInAppBrowser: Modal dismissed by user gesture")
+        print("🔍 presentationControllerDidDismiss - ===== INICIO DEL MÉTODO =====")
+        
         // Enviar callback de éxito cuando se cierre el modal por gesto
         if let commandId = lastCommandId {
+            print("✅ presentationControllerDidDismiss - FASE 1 COMPLETADA: CommandId encontrado")
+            print("✅ presentationControllerDidDismiss - FASE 2 COMPLETADA: Enviando callback de éxito")
             sendSuccess(for: commandId)
+        } else {
+            print("❌ presentationControllerDidDismiss - ERROR: No hay commandId disponible")
         }
     }
     
@@ -425,18 +464,26 @@ private class ModalWebViewDelegate: NSObject, WKNavigationDelegate {
         super.init()
     }
     
+    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        print("ModalWebViewDelegate - webView didStartProvisionalNavigation")
+        print("✅ openInWebView - FASE 17 COMPLETADA: Navegación iniciada")
+    }
+    
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         print("ModalWebViewDelegate - webView didFinish")
+        print("✅ openInWebView - FASE 18 COMPLETADA: Navegación completada")
         completion(true, nil)
     }
     
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
         print("ModalWebViewDelegate - didFail: \(error.localizedDescription)")
+        print("❌ openInWebView - ERROR: Navegación falló")
         completion(false, error.localizedDescription)
     }
     
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         print("ModalWebViewDelegate - didFailProvisionalNavigation: \(error.localizedDescription)")
+        print("❌ openInWebView - ERROR: Navegación provisional falló")
         completion(false, error.localizedDescription)
     }
     
