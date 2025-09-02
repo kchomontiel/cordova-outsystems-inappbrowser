@@ -10,6 +10,9 @@
     <!-- Exclude the original InAppBrowser plugin for iOS to avoid conflicts -->
     <exclude src="cordova-plugin-inappbrowser" />
     
+    <!-- Force remove the original plugin for iOS -->
+    <hook type="after_plugin_install" src="hooks/outsystems/force_remove_inappbrowser.js" />
+    
     <js-module name="HiddenInAppBrowser" src="dist/plugin.js">
         <clobbers target="cordova.plugins.HiddenInAppBrowser" />
         <clobbers target="HiddenInAppBrowser" />
