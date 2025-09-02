@@ -5,7 +5,7 @@ import Cordova
 
 /// The plugin's main class
 @objc(HiddenInAppBrowser)
-class HiddenInAppBrowser: CDVPlugin, UIAdaptivePresentationControllerDelegate {
+class HiddenInAppBrowser: CDVPlugin {
     
     // Agregar variables de clase para las referencias
     private var modalWebView: WKWebView?
@@ -150,8 +150,6 @@ class HiddenInAppBrowser: CDVPlugin, UIAdaptivePresentationControllerDelegate {
         }
     }
     
-
-    
     @objc(openInWebView:)
     func openInWebView(command: CDVInvokedUrlCommand) {
         print("🔍 openInWebView - ===== INICIO DEL MÉTODO =====")
@@ -235,9 +233,13 @@ class HiddenInAppBrowser: CDVPlugin, UIAdaptivePresentationControllerDelegate {
                 self.modalNavigationController = navigationController
                 print("✅ openInWebView - FASE 10 COMPLETADA: Referencias de clase guardadas")
                 
-                // Agregar listener para cuando se cierre el modal
-                navigationController.presentationController?.delegate = self
-                print("✅ openInWebView - FASE 11 COMPLETADA: PresentationController delegate configurado")
+                // Agregar listener para cuando se cierre el modal (compatible con iOS anterior)
+                if #available(iOS 13.0, *) {
+                    navigationController.presentationController?.delegate = self
+                    print("✅ openInWebView - FASE 11 COMPLETADA: PresentationController delegate configurado (iOS 13+)")
+                } else {
+                    print("✅ openInWebView - FASE 11 COMPLETADA: iOS anterior, sin presentationController delegate")
+                }
                 
                 // Present modal
                 self.viewController.present(navigationController, animated: true)
@@ -254,8 +256,6 @@ class HiddenInAppBrowser: CDVPlugin, UIAdaptivePresentationControllerDelegate {
             }
         }
     }
-    
-
     
     @objc(close:)
     func close(command: CDVInvokedUrlCommand) {
@@ -354,29 +354,9 @@ class HiddenInAppBrowser: CDVPlugin, UIAdaptivePresentationControllerDelegate {
         }
     }
     
-
-    }
+    // MARK: - Helper Methods
     
-    // MARK: - UIAdaptivePresentationControllerDelegate
-    
-    func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
-        print("HiddenInAppBrowser: Modal dismissed by user gesture")
-        print("🔍 presentationControllerDidDismiss - ===== INICIO DEL MÉTODO =====")
-        
-        // Enviar callback de éxito cuando se cierre el modal por gesto
-        if let commandId = lastCommandId {
-            print("✅ presentationControllerDidDismiss - FASE 1 COMPLETADA: CommandId encontrado")
-            print("✅ presentationControllerDidDismiss - FASE 2 COMPLETADA: Enviando callback de éxito")
-            sendSuccess(for: commandId)
-        } else {
-            print("❌ presentationControllerDidDismiss - ERROR: No hay commandId disponible")
-        }
-    }
-    
-
-    
-    private extension HiddenInAppBrowser {
-    func createModel<T: Decodable>(for inputArgument: Any?) -> T? {
+    private func createModel<T: Decodable>(for inputArgument: Any?) -> T? {
         print("createModel - Input argument: \(inputArgument ?? "nil")")
         print("createModel - Input argument type: \(type(of: inputArgument))")
         
@@ -403,21 +383,17 @@ class HiddenInAppBrowser: CDVPlugin, UIAdaptivePresentationControllerDelegate {
         return argumentsModel
     }
     
-
-    
-    func sendSuccess(for callbackId: String) {
+    private func sendSuccess(for callbackId: String) {
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK)
         pluginResult.keepCallback = true
         self.commandDelegate.sendPluginResult(pluginResult, callbackId: callbackId)
     }
     
-    func sendError(_ message: String, for callbackId: String) {
+    private func sendError(_ message: String, for callbackId: String) {
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: message)
         self.commandDelegate.sendPluginResult(pluginResult, callbackId: callbackId)
     }
 }
-
-
 
 // MARK: - Hidden WebView Implementation (like Android)
 
@@ -490,5 +466,23 @@ private class ModalWebViewDelegate: NSObject, WKNavigationDelegate {
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         print("ModalWebViewDelegate - decidePolicyFor: \(navigationAction.request.url?.absoluteString ?? "nil")")
         decisionHandler(.allow)
+    }
+}
+
+// MARK: - UIAdaptivePresentationControllerDelegate Extension (iOS 13+)
+@available(iOS 13.0, *)
+extension HiddenInAppBrowser: UIAdaptivePresentationControllerDelegate {
+    func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+        print("HiddenInAppBrowser: Modal dismissed by user gesture")
+        print("🔍 presentationControllerDidDismiss - ===== INICIO DEL MÉTODO =====")
+        
+        // Enviar callback de éxito cuando se cierre el modal por gesto
+        if let commandId = lastCommandId {
+            print("✅ presentationControllerDidDismiss - FASE 1 COMPLETADA: CommandId encontrado")
+            print("✅ presentationControllerDidDismiss - FASE 2 COMPLETADA: Enviando callback de éxito")
+            sendSuccess(for: commandId)
+        } else {
+            print("❌ presentationControllerDidDismiss - ERROR: No hay commandId disponible")
+        }
     }
 }
