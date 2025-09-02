@@ -426,6 +426,10 @@ class HiddenInAppBrowser: CordovaPlugin() {
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - User-Agent configured: ${webView.settings.userAgentString}")
                         android.util.Log.d("HiddenInAppBrowser", "openInWebView - User-Agent length: ${webView.settings.userAgentString.length}")
                         
+                        // Verify User-Agent is actually set
+                        val actualUserAgent = webView.settings.userAgentString
+                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - Actual User-Agent after setting: $actualUserAgent")
+                        
                         // Enable cookie management
                         android.webkit.CookieManager.getInstance().apply {
                             setAcceptCookie(true)
@@ -451,6 +455,14 @@ class HiddenInAppBrowser: CordovaPlugin() {
                                 request?.url?.let { url ->
                                     android.util.Log.d("HiddenInAppBrowser", "openInWebView - Resource request: $url")
                                     safeEvaluateJavascript(view, "console.log('📡 WebView: Resource request - $url');")
+                                    
+                                    // Log all request headers for debugging
+                                    request.requestHeaders?.let { headers ->
+                                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - Request headers count: ${headers.size}")
+                                        headers.forEach { (key, value) ->
+                                            android.util.Log.d("HiddenInAppBrowser", "openInWebView - Header [$key]: $value")
+                                        }
+                                    }
                                 }
                                 
                                 // Add custom headers to make WebView look more like a real browser
@@ -480,6 +492,12 @@ class HiddenInAppBrowser: CordovaPlugin() {
                                     
                                     // Log all headers for debugging
                                     android.util.Log.d("HiddenInAppBrowser", "openInWebView - All headers configured: ${headers.keys.joinToString(", ")}")
+                                    
+                                    // Log final headers after modification
+                                    android.util.Log.d("HiddenInAppBrowser", "openInWebView - Final headers count: ${headers.size}")
+                                    headers.forEach { (key, value) ->
+                                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - Final Header [$key]: $value")
+                                    }
                                 }
                                 
                                 return super.shouldInterceptRequest(view, request)
@@ -490,10 +508,12 @@ class HiddenInAppBrowser: CordovaPlugin() {
                                 android.util.Log.d("HiddenInAppBrowser", "openInWebView - onPageStarted: $url")
                                 android.util.Log.d("HiddenInAppBrowser", "openInWebView - Current WebView URL: ${view?.url}")
                                 android.util.Log.d("HiddenInAppBrowser", "openInWebView - WebView Title: ${view?.title}")
+                                android.util.Log.d("HiddenInAppBrowser", "openInAppBrowser - WebView User-Agent: ${view?.settings?.userAgentString}")
                                 // Log to WebView console
                                 safeEvaluateJavascript(view, "console.log('📱 WebView: Page loading started - $url');")
                                 safeEvaluateJavascript(view, "console.log('🔍 WebView: Current URL - ${view?.url}');")
                                 safeEvaluateJavascript(view, "console.log('📋 WebView: Title - ${view?.title}');")
+                                safeEvaluateJavascript(view, "console.log('🖥️ WebView: User-Agent - ${view?.settings?.userAgentString}');")
                             }
                             
                             override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
@@ -501,12 +521,14 @@ class HiddenInAppBrowser: CordovaPlugin() {
                                 android.util.Log.d("HiddenInAppBrowser", "openInWebView - onPageFinished: $url")
                                 android.util.Log.d("HiddenInAppBrowser", "openInWebView - Final WebView URL: ${view?.url}")
                                 android.util.Log.d("HiddenInAppBrowser", "openInWebView - Final WebView Title: ${view?.title}")
+                                android.util.Log.d("HiddenInAppBrowser", "openInWebView - Final WebView User-Agent: ${view?.settings?.userAgentString}")
                                 android.util.Log.d("HiddenInAppBrowser", "✅ openInWebView - FASE 15 COMPLETADA: Página cargada completamente")
                                 // Log to WebView console
                                 safeEvaluateJavascript(view, "console.log('✅ WebView: Page loaded successfully - $url');")
                                 safeEvaluateJavascript(view, "console.log('🔍 WebView: Final URL - ${view?.url}');")
                                 safeEvaluateJavascript(view, "console.log('📋 WebView: Final Title - ${view?.title}');")
                                 safeEvaluateJavascript(view, "console.log('📊 WebView: Content Length - ${view?.contentHeight}');")
+                                safeEvaluateJavascript(view, "console.log('🖥️ WebView: Final User-Agent - ${view?.settings?.userAgentString}');")
                                 // NO enviar callback aquí - esperar a que el diálogo esté visible
                             }
                             
