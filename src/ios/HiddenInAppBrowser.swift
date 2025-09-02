@@ -32,7 +32,7 @@ class HiddenInAppBrowser: NSObject {
         case "openInWebView":
             openInWebView(command: command)
         case "closeWebView":
-            closeWebView(command: command)
+            closeWebView(command)
         default:
             return false
         }
@@ -245,7 +245,7 @@ class HiddenInAppBrowser: NSObject {
                 }
                 
                 // Present modal
-                self.viewController.present(navigationController, animated: true)
+                self.viewController?.present(navigationController, animated: true)
                 print("✅ openInWebView - FASE 13 COMPLETADA: Modal presentado")
                 
                 // Enviar callback de éxito DESPUÉS de presentar el modal (como en Android)
@@ -348,7 +348,7 @@ class HiddenInAppBrowser: NSObject {
                 }
                 
                 print("HiddenInAppBrowser: Modal WebView closed successfully")
-                self.commandDelegate.sendPluginResult(CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Modal WebView closed successfully"), callbackId: command.callbackId)
+                self.commandDelegate?.sendPluginResult(CDVPluginResult(status: .OK, messageAs: "Modal WebView closed successfully"), callbackId: command.callbackId)
                 
             } catch {
                 print("HiddenInAppBrowser: Error closing modal WebView: \(error)")
@@ -387,14 +387,14 @@ class HiddenInAppBrowser: NSObject {
     }
     
     private func sendSuccess(for callbackId: String) {
-        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK)
+        let pluginResult = CDVPluginResult(status: .OK)
         pluginResult.keepCallback = true
-        self.commandDelegate.sendPluginResult(pluginResult, callbackId: callbackId)
+        self.commandDelegate?.sendPluginResult(pluginResult, callbackId: callbackId)
     }
     
     private func sendError(_ message: String, for callbackId: String) {
-        let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: message)
-        self.commandDelegate.sendPluginResult(pluginResult, callbackId: callbackId)
+        let pluginResult = CDVPluginResult(status: .ERROR, messageAs: message)
+        self.commandDelegate?.sendPluginResult(pluginResult, callbackId: callbackId)
     }
 }
 
@@ -493,6 +493,7 @@ extension HiddenInAppBrowser: UIAdaptivePresentationControllerDelegate {
 // MARK: - Cordova Types (Basic implementations)
 @objc protocol CDVCommandDelegate {
     func sendPluginResult(_ result: CDVPluginResult, callbackId: String)
+    func run(_ block: @escaping () -> Void)
 }
 
 @objc class CDVInvokedUrlCommand: NSObject {
