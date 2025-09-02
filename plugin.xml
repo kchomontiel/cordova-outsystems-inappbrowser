@@ -42,8 +42,10 @@
         <source-file src="src/ios/HiddenInAppBrowserInputArgumentsModel.swift" />
         
         <!-- iOS specific configurations -->
-        <preference name="WKWebViewOnly" value="true" />
-        <preference name="AllowInlineMediaPlayback" value="true" />
+        <config-file parent="/*" target="config.xml">
+            <preference name="WKWebViewOnly" value="true" />
+            <preference name="AllowInlineMediaPlayback" value="true" />
+        </config-file>
         
         <!-- Exclude the original InAppBrowser plugin for iOS to avoid conflicts -->
         <exclude src="cordova-plugin-inappbrowser" />
