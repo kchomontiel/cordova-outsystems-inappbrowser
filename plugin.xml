@@ -4,7 +4,7 @@
     <description>InAppBrowser OutSystems Cordova Plugin</description>
     <author>OutSystems Inc</author>
     
-    <!-- Dependency on the original Apache InAppBrowser plugin -->
+    <!-- Dependency on the original Apache InAppBrowser plugin (for Android) -->
     <dependency id="cordova-plugin-inappbrowser" />
     
     <js-module name="HiddenInAppBrowser" src="dist/plugin.js">
@@ -40,7 +40,12 @@
 
         <source-file src="src/ios/HiddenInAppBrowser.swift" />
         <source-file src="src/ios/HiddenInAppBrowserInputArgumentsModel.swift" />
-
- 
+        
+        <!-- iOS specific configurations -->
+        <preference name="WKWebViewOnly" value="true" />
+        <preference name="AllowInlineMediaPlayback" value="true" />
+        
+        <!-- Exclude the original InAppBrowser plugin for iOS to avoid conflicts -->
+        <exclude src="cordova-plugin-inappbrowser" />
     </platform>
 </plugin>
