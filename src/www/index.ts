@@ -67,7 +67,7 @@ export function open(
             console.log("HiddenInAppBrowser.open - Error callback:", error);
             if (onError) onError({ code: -1, message: error.toString() });
           },
-          "HiddenInAppBrowser",
+          "multibrowser",
           "open",
           [
             {
@@ -199,7 +199,7 @@ export function open(
       cordova.exec(
         () => resolve(),
         (error: string) => reject(new Error(error)),
-        "HiddenInAppBrowser",
+        "multibrowser",
         "open",
         [{ url: finalOptions.url }]
       );
@@ -287,7 +287,7 @@ function processOptionsAndExecute(
           }
           reject(new Error(error));
         },
-        "HiddenInAppBrowser",
+        "multibrowser",
         methodName,
         execParams
       );
@@ -376,7 +376,7 @@ export function openInExternalBrowser(
             );
             if (onError) onError({ code: -1, message: error.toString() });
           },
-          "HiddenInAppBrowser",
+          "multibrowser",
           "openInExternalBrowser",
           [{ url: finalOptions.url, options: finalOptions }]
         );
@@ -494,7 +494,7 @@ export function openInWebView(
           onError({ code: -1, message: error.toString() });
         }
       },
-      "HiddenInAppBrowser",
+      "multibrowser",
       "openInWebView",
       [{ url: finalOptions.url, options: finalOptions }]
     );
@@ -516,7 +516,7 @@ export function closeWebView(): Promise<void> | void {
     (error) => {
       console.error("HiddenInAppBrowser: Error closing WebView:", error);
     },
-    "HiddenInAppBrowser",
+    "multibrowser",
     "closeWebView",
     []
   );
