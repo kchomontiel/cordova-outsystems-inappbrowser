@@ -27,6 +27,7 @@ import org.json.JSONException;
 import android.content.Intent;
 import android.net.Uri;
 import android.content.ActivityNotFoundException;
+import android.content.pm.ResolveInfo;
 import android.util.Log;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -41,6 +42,7 @@ import android.app.AlertDialog;
 import android.widget.RelativeLayout;
 import android.view.ViewGroup.LayoutParams;
 import android.os.Build;
+import java.util.List;
 
 public class InAppBrowser extends CordovaPlugin {
 
@@ -445,6 +447,19 @@ public class InAppBrowser extends CordovaPlugin {
         try {
             Log.d(TAG, "openExternalBrowser called with url: " + url);
             
+            // Validate URL format
+            if (url == null || url.trim().isEmpty()) {
+                Log.e(TAG, "URL is null or empty");
+                callbackContext.error("URL is null or empty");
+                return;
+            }
+            
+            // Ensure URL has protocol
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                url = "https://" + url;
+                Log.d(TAG, "Added https:// protocol to URL: " + url);
+            }
+            
             // Create intent for external browser
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             
@@ -452,11 +467,24 @@ public class InAppBrowser extends CordovaPlugin {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
             
+            // Log the intent details for debugging
+            Log.d(TAG, "Intent created: " + intent.toString());
+            Log.d(TAG, "Intent data: " + intent.getDataString());
+            
+            // Get package manager
+            Activity currentActivity = cordova.getActivity();
+            if (currentActivity == null) {
+                Log.e(TAG, "Current activity is null");
+                callbackContext.error("Activity not available");
+                return;
+            }
+            
             // Check if there's an app to handle this URL
-            if (intent.resolveActivity(cordova.getActivity().getPackageManager()) != null) {
+            if (intent.resolveActivity(currentActivity.getPackageManager()) != null) {
                 try {
+                    Log.d(TAG, "Starting external browser activity");
                     // Start the external browser activity
-                    cordova.getActivity().startActivity(intent);
+                    currentActivity.startActivity(intent);
                     callbackContext.success("URL opened in external browser");
                     Log.d(TAG, "URL opened in external browser successfully: " + url);
                 } catch (SecurityException se) {
@@ -468,7 +496,22 @@ public class InAppBrowser extends CordovaPlugin {
                 }
             } else {
                 Log.w(TAG, "No app available to handle URL: " + url);
-                callbackContext.error("No app available to handle this URL");
+                Log.d(TAG, "Available apps for this intent: " + getAvailableAppsForIntent(intent, currentActivity));
+                
+                // Try alternative approach - use default browser
+                try {
+                    Log.d(TAG, "Trying alternative approach with default browser");
+                    Intent alternativeIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    alternativeIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    
+                    // Try to start without checking resolveActivity
+                    currentActivity.startActivity(alternativeIntent);
+                    callbackContext.success("URL opened in default browser");
+                    Log.d(TAG, "URL opened in default browser successfully: " + url);
+                } catch (Exception e) {
+                    Log.e(TAG, "Alternative approach also failed: " + e.getMessage());
+                    callbackContext.error("No app available to handle this URL");
+                }
             }
         } catch (IllegalArgumentException iae) {
             Log.e(TAG, "Invalid URL format: " + url + " - " + iae.getMessage());
@@ -479,6 +522,22 @@ public class InAppBrowser extends CordovaPlugin {
         } catch (Exception e) {
             Log.e(TAG, "Error opening external browser: " + e.getMessage(), e);
             callbackContext.error("Error opening external browser: " + e.getMessage());
+        }
+    }
+    
+    private String getAvailableAppsForIntent(Intent intent, Activity activity) {
+        try {
+            List<ResolveInfo> resolveInfoList = activity.getPackageManager().queryIntentActivities(intent, 0);
+            StringBuilder apps = new StringBuilder();
+            for (ResolveInfo resolveInfo : resolveInfoList) {
+                if (resolveInfo.activityInfo != null) {
+                    apps.append(resolveInfo.activityInfo.packageName).append(", ");
+                }
+            }
+            return apps.toString();
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting available apps: " + e.getMessage());
+            return "Error getting available apps";
         }
     }
 }
