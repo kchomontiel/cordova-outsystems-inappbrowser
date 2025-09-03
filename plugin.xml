@@ -1,34 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
         xmlns:android="http://schemas.android.com/apk/res/android"
-        id="multibrowserplugin"
-        version="1.0.0">
+        id="cordova-plugin-inappbrowser"
+        version="5.0.0">
     
-    <name>OutSystems InAppBrowser</name>
-    <description>OutSystems InAppBrowser Plugin with multibrowser support</description>
+    <name>InAppBrowser</name>
+    <description>Cordova InAppBrowser Plugin</description>
     <license>Apache 2.0</license>
-    <keywords>cordova,outsystems,inappbrowser,multibrowser</keywords>
+    <keywords>cordova,inappbrowser</keywords>
     
     <!-- JavaScript interface -->
-    <js-module src="plugins/multibrowser/dist/plugin.js" name="multibrowser">
-        <clobbers target="multibrowser" />
+    <js-module src="www/inappbrowser.js" name="InAppBrowser">
+        <clobbers target="cordova.InAppBrowser" />
     </js-module>
     
     <!-- iOS Platform -->
     <platform name="ios">
         <config-file parent="/*" target="config.xml">
-            <feature name="multibrowser">
-                <param name="ios-package" value="HiddenInAppBrowser" />
+            <feature name="InAppBrowser">
+                <param name="ios-package" value="CDVInAppBrowser" />
             </feature>
-            <preference name="SwiftVersion" value="5" />
-            <preference name="deployment-target" value="16.0" />
-            <preference name="IPHONEOS_DEPLOYMENT_TARGET" value="16.0" />
-            <preference name="WKWebViewOnly" value="true" />
-            <preference name="AllowInlineMediaPlayback" value="true" />
         </config-file>
         
-        <source-file src="plugins/multibrowser/src/ios/HiddenInAppBrowser.swift" />
-        <source-file src="plugins/multibrowser/src/ios/HiddenInAppBrowser.h" />
+        <source-file src="src/ios/CDVInAppBrowser.m" />
+        <source-file src="src/ios/CDVInAppBrowser.h" />
         
         <framework src="WebKit.framework" />
     </platform>
@@ -36,33 +31,20 @@
     <!-- Android Platform -->
     <platform name="android">
         <config-file parent="/*" target="res/xml/config.xml">
-            <feature name="multibrowser">
-                <param name="android-package" value="com.outsystems.plugins.multibrowser.HiddenInAppBrowser" />
+            <feature name="InAppBrowser">
+                <param name="android-package" value="org.apache.cordova.inappbrowser.InAppBrowser" />
             </feature>
         </config-file>
         
-        <source-file src="plugins/multibrowser/src/android/HiddenInAppBrowser.kt" target-dir="app/src/main/kotlin/com/outsystems/plugins/multibrowser" />
-        <source-file src="plugins/multibrowser/src/android/WebViewActivity.kt" target-dir="app/src/main/kotlin/com/outsystems/plugins/multibrowser" />
-        <config-file parent="/*" target="AndroidManifest.xml">
-            <uses-permission android:name="android.permission.INTERNET" />
-            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-            <application>
-                <activity
-                    android:name=".WebViewActivity"
-                    android:exported="false"
-                    android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
-                    android:configChanges="orientation|keyboardHidden|screenSize" />
-            </application>
-        </config-file>
+        <source-file src="src/android/InAppBrowser.java" target-dir="src/org/apache/cordova/inappbrowser" />
         
         <uses-permission android:name="android.permission.INTERNET" />
-        <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     </platform>
     
     <!-- Web Platform -->
     <platform name="browser">
-        <js-module src="plugins/multibrowser/dist/plugin.js" name="multibrowser">
-            <clobbers target="window.multibrowser" />
+        <js-module src="www/inappbrowser.js" name="InAppBrowser">
+            <clobbers target="cordova.InAppBrowser" />
         </js-module>
     </platform>
     
