@@ -121,6 +121,21 @@ class HiddenInAppBrowser : CordovaPlugin() {
                 // Create a layout for the WebView (same as before)
                 val layout = FrameLayout(cordova.activity)
                 
+                // Create AlertDialog to show the WebView (BEFORE the button so it can reference it)
+                val dialog = android.app.AlertDialog.Builder(cordova.activity)
+                    .setView(layout)
+                    .setCancelable(false)
+                    .create()
+                
+                // Set dialog to full screen (same full-screen experience)
+                dialog.window?.apply {
+                    setLayout(
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                    setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.WHITE))
+                }
+                
                 // Add close button if requested (same style and position)
                 if (showCloseButton) {
                     val closeButton = android.widget.Button(cordova.activity).apply {
@@ -140,7 +155,7 @@ class HiddenInAppBrowser : CordovaPlugin() {
                         
                         setOnClickListener {
                             Log.d(TAG, "Close button clicked")
-                            dialog.dismiss() // Simple and clean close
+                            dialog.dismiss() // Now dialog is available here
                             callbackContext.success("WebView closed successfully")
                         }
                     }
@@ -158,21 +173,6 @@ class HiddenInAppBrowser : CordovaPlugin() {
                 }
                 
                 layout.addView(webView)
-                
-                // Create AlertDialog to show the WebView (instead of setContentView)
-                val dialog = android.app.AlertDialog.Builder(cordova.activity)
-                    .setView(layout)
-                    .setCancelable(false)
-                    .create()
-                
-                // Set dialog to full screen (same full-screen experience)
-                dialog.window?.apply {
-                    setLayout(
-                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                        android.view.ViewGroup.LayoutParams.MATCH_PARENT
-                    )
-                    setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.WHITE))
-                }
                 
                 // Show the dialog
                 dialog.show()
