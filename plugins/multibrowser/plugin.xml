@@ -36,9 +36,20 @@
         <header-file src="src/ios/HiddenInAppBrowser.h" />
         <source-file src="src/ios/HiddenInAppBrowser.swift" />
         
+        <!-- Build optimizations for faster compilation -->
         <config-file parent="/*" target="config.xml">
             <preference name="WKWebViewOnly" value="true" />
             <preference name="AllowInlineMediaPlayback" value="true" />
+            <preference name="DisallowOverscroll" value="true" />
+            <preference name="SuppressesIncrementalRendering" value="false" />
+        </config-file>
+        
+        <!-- Xcode build optimizations -->
+        <config-file parent="/*" target="project.pbxproj">
+            <preference name="SWIFT_OPTIMIZATION_LEVEL" value="-O" />
+            <preference name="SWIFT_COMPILATION_MODE" value="wholemodule" />
+            <preference name="ENABLE_BITCODE" value="NO" />
+            <preference name="ENABLE_TESTABILITY" value="NO" />
         </config-file>
     </platform>
 </plugin>
