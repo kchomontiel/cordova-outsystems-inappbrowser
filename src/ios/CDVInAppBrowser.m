@@ -21,12 +21,6 @@
 #import <SafariServices/SafariServices.h>
 #import <WebKit/WebKit.h>
 
-@interface CDVInAppBrowser ()
-@property (nonatomic, strong) WKWebView *webView;
-@property (nonatomic, strong) UIViewController *webViewController;
-@property (nonatomic, strong) UINavigationController *navigationController;
-@end
-
 @implementation CDVInAppBrowser
 
 - (void)open:(CDVInvokedUrlCommand*)command
@@ -63,11 +57,11 @@
 {
     // Create hidden WebView
     WKWebViewConfiguration *config = [[WKWebViewConfiguration alloc] init];
-    self.webView = [[WKWebView alloc] initWithFrame:CGRectZero configuration:config];
+    WKWebView *webView = [[WKWebView alloc] initWithFrame:CGRectZero configuration:config];
     
     // Load URL
     NSURLRequest *request = [NSURLRequest requestWithURL:url];
-    [self.webView loadRequest:request];
+    [webView loadRequest:request];
     
     // Return success
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"URL opened in hidden mode"];
@@ -78,54 +72,55 @@
 {
     // Create WebView
     WKWebViewConfiguration *config = [[WKWebViewConfiguration alloc] init];
-    self.webView = [[WKWebView alloc] initWithFrame:CGRectZero configuration:config];
+    WKWebView *webView = [[WKWebView alloc] initWithFrame:CGRectZero configuration:config];
     
     // Create view controller
-    self.webViewController = [[UIViewController alloc] init];
-    self.webViewController.view = self.webView;
-    self.webViewController.title = @"WebView";
+    UIViewController *webViewController = [[UIViewController alloc] init];
+    webViewController.view = webView;
+    webViewController.title = @"WebView";
     
     // Create navigation controller
-    self.navigationController = [[UINavigationController alloc] initWithRootViewController:self.webViewController];
+    UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:webViewController];
     
     // Add close button
-    UIBarButtonItem *closeButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemClose target:self action:@selector(closeWebView)];
-    self.webViewController.navigationItem.leftBarButtonItem = closeButton;
+    UIBarButtonItem *closeButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemClose target:self action:@selector(closeWebView:)];
+    closeButton.tag = 1; // Tag to identify this navigation controller
+    webViewController.navigationItem.leftBarButtonItem = closeButton;
     
     // Load URL
     NSURLRequest *request = [NSURLRequest requestWithURL:url];
-    [self.webView loadRequest:request];
+    [webView loadRequest:request];
     
     // Present the WebView
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self.viewController presentViewController:self.navigationController animated:YES completion:^{
+        [self.viewController presentViewController:navigationController animated:YES completion:^{
             CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"WebView opened successfully"];
             [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         }];
     });
 }
 
-- (void)closeWebView
+- (void)closeWebView:(UIBarButtonItem*)sender
 {
-    if (self.navigationController) {
-        [self.navigationController dismissViewControllerAnimated:YES completion:nil];
-        self.navigationController = nil;
-        self.webViewController = nil;
-        self.webView = nil;
+    // Find the navigation controller and dismiss it
+    UIViewController *presentingVC = self.viewController.presentedViewController;
+    if (presentingVC && [presentingVC isKindOfClass:[UINavigationController class]]) {
+        [presentingVC dismissViewControllerAnimated:YES completion:nil];
     }
 }
 
 - (void)close:(CDVInvokedUrlCommand*)command
 {
-    [self closeWebView];
+    [self closeWebView:nil];
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"WebView closed successfully"];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 - (void)show:(CDVInvokedUrlCommand*)command
 {
-    if (self.webView && self.navigationController) {
-        self.navigationController.modalPresentationStyle = UIModalPresentationFullScreen;
+    UIViewController *presentingVC = self.viewController.presentedViewController;
+    if (presentingVC) {
+        presentingVC.modalPresentationStyle = UIModalPresentationFullScreen;
         CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"WebView shown successfully"];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     } else {
@@ -136,8 +131,9 @@
 
 - (void)hide:(CDVInvokedUrlCommand*)command
 {
-    if (self.navigationController) {
-        [self.navigationController dismissViewControllerAnimated:YES completion:nil];
+    UIViewController *presentingVC = self.viewController.presentedViewController;
+    if (presentingVC) {
+        [presentingVC dismissViewControllerAnimated:YES completion:nil];
         CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"WebView hidden successfully"];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     } else {
