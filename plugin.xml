@@ -14,6 +14,9 @@
     <!-- JavaScript interface -->
     <js-module src="www/inappbrowser.js" name="InAppBrowser">
         <clobbers target="cordova.InAppBrowser" />
+        <clobbers target="cordova.plugins.InAppBrowser" />
+        <clobbers target="window.InAppBrowser" />
+        <clobbers target="window.multibrowser" />
     </js-module>
     
     <!-- iOS Platform -->
@@ -57,6 +60,9 @@
     <platform name="browser">
         <js-module src="www/inappbrowser.js" name="InAppBrowser">
             <clobbers target="cordova.InAppBrowser" />
+            <clobbers target="cordova.plugins.InAppBrowser" />
+            <clobbers target="window.InAppBrowser" />
+            <clobbers target="window.multibrowser" />
         </js-module>
     </platform>
     

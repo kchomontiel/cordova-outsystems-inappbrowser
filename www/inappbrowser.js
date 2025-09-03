@@ -61,4 +61,28 @@ var InAppBrowser = function () {
   };
 };
 
-module.exports = new InAppBrowser();
+// Create the plugin instance
+var inAppBrowser = new InAppBrowser();
+
+// Expose in multiple locations for maximum compatibility
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = inAppBrowser;
+}
+
+// Expose globally
+if (typeof window !== 'undefined') {
+    // Primary location (standard Apache way)
+    window.cordova = window.cordova || {};
+    window.cordova.InAppBrowser = inAppBrowser;
+    
+    // Secondary location (for compatibility)
+    if (window.cordova.plugins) {
+        window.cordova.plugins.InAppBrowser = inAppBrowser;
+    }
+    
+    // Tertiary location (direct global)
+    window.InAppBrowser = inAppBrowser;
+    
+    // Legacy location (for old code)
+    window.multibrowser = inAppBrowser;
+}
