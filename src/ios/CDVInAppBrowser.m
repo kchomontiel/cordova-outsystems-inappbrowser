@@ -19,6 +19,13 @@
 
 #import "CDVInAppBrowser.h"
 #import <SafariServices/SafariServices.h>
+#import <WebKit/WebKit.h>
+
+@interface CDVInAppBrowser ()
+@property (nonatomic, strong) WKWebView *webView;
+@property (nonatomic, strong) UIViewController *webViewController;
+@property (nonatomic, strong) UINavigationController *navigationController;
+@end
 
 @implementation CDVInAppBrowser
 
@@ -35,7 +42,7 @@
         return;
     }
     
-    // Parse options to check if hidden mode is requested
+    // Parse options
     BOOL isHidden = [options containsString:@"hidden=yes"];
     BOOL showLocation = [options containsString:@"location=yes"];
     BOOL showToolbar = [options containsString:@"toolbar=yes"];
@@ -44,34 +51,99 @@
     if (isHidden) {
         // Hidden mode - open in background without UI
         NSLog(@"Opening URL in hidden mode: %@", urlString);
-        // For now, just return success (implementation will be added later)
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"URL opened in hidden mode"];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        [self openHiddenWebView:url withOptions:options command:command];
     } else {
         // Normal mode - open with UI
         NSLog(@"Opening URL in normal mode: %@", urlString);
-        // For now, just return success (implementation will be added later)
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"InAppBrowser open method called"];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        [self openVisibleWebView:url withOptions:options command:command];
+    }
+}
+
+- (void)openHiddenWebView:(NSURL*)url withOptions:(NSString*)options command:(CDVInvokedUrlCommand*)command
+{
+    // Create hidden WebView
+    WKWebViewConfiguration *config = [[WKWebViewConfiguration alloc] init];
+    self.webView = [[WKWebView alloc] initWithFrame:CGRectZero configuration:config];
+    
+    // Load URL
+    NSURLRequest *request = [NSURLRequest requestWithURL:url];
+    [self.webView loadRequest:request];
+    
+    // Return success
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"URL opened in hidden mode"];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+- (void)openVisibleWebView:(NSURL*)url withOptions:(NSString*)options command:(CDVInvokedUrlCommand*)command
+{
+    // Create WebView
+    WKWebViewConfiguration *config = [[WKWebViewConfiguration alloc] init];
+    self.webView = [[WKWebView alloc] initWithFrame:CGRectZero configuration:config];
+    
+    // Create view controller
+    self.webViewController = [[UIViewController alloc] init];
+    self.webViewController.view = self.webView;
+    self.webViewController.title = @"WebView";
+    
+    // Create navigation controller
+    self.navigationController = [[UINavigationController alloc] initWithRootViewController:self.webViewController];
+    
+    // Add close button
+    UIBarButtonItem *closeButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemClose target:self action:@selector(closeWebView)];
+    self.webViewController.navigationItem.leftBarButtonItem = closeButton;
+    
+    // Load URL
+    NSURLRequest *request = [NSURLRequest requestWithURL:url];
+    [self.webView loadRequest:request];
+    
+    // Present the WebView
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.viewController presentViewController:self.navigationController animated:YES completion:^{
+            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"WebView opened successfully"];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        }];
+    });
+}
+
+- (void)closeWebView
+{
+    if (self.navigationController) {
+        [self.navigationController dismissViewControllerAnimated:YES completion:nil];
+        self.navigationController = nil;
+        self.webViewController = nil;
+        self.webView = nil;
     }
 }
 
 - (void)close:(CDVInvokedUrlCommand*)command
 {
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"InAppBrowser close method called"];
+    [self closeWebView];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"WebView closed successfully"];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 - (void)show:(CDVInvokedUrlCommand*)command
 {
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"InAppBrowser show method called"];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    if (self.webView && self.navigationController) {
+        self.navigationController.modalPresentationStyle = UIModalPresentationFullScreen;
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"WebView shown successfully"];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    } else {
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"No WebView to show"];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    }
 }
 
 - (void)hide:(CDVInvokedUrlCommand*)command
 {
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"InAppBrowser hide method called"];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    if (self.navigationController) {
+        [self.navigationController dismissViewControllerAnimated:YES completion:nil];
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"WebView hidden successfully"];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    } else {
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"No WebView to hide"];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    }
 }
 
 - (void)addEventListener:(CDVInvokedUrlCommand*)command
