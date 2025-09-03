@@ -19,70 +19,122 @@
 
 var InAppBrowser = function () {
   this.open = function (url, target, options, successCallback, errorCallback) {
-    cordova.exec(successCallback, errorCallback, "InAppBrowser", "open", [
-      url,
-      target,
-      options,
-    ]);
+    if (typeof cordova !== "undefined" && cordova.exec) {
+      cordova.exec(successCallback, errorCallback, "InAppBrowser", "open", [
+        url,
+        target,
+        options,
+      ]);
+    } else {
+      console.error("Cordova not available");
+      if (errorCallback) errorCallback("Cordova not available");
+    }
   };
 
   this.close = function (successCallback, errorCallback) {
-    cordova.exec(successCallback, errorCallback, "InAppBrowser", "close", []);
+    if (typeof cordova !== "undefined" && cordova.exec) {
+      cordova.exec(successCallback, errorCallback, "InAppBrowser", "close", []);
+    } else {
+      console.error("Cordova not available");
+      if (errorCallback) errorCallback("Cordova not available");
+    }
   };
 
   this.show = function (successCallback, errorCallback) {
-    cordova.exec(successCallback, errorCallback, "InAppBrowser", "show", []);
+    if (typeof cordova !== "undefined" && cordova.exec) {
+      cordova.exec(successCallback, errorCallback, "InAppBrowser", "show", []);
+    } else {
+      console.error("Cordova not available");
+      if (errorCallback) errorCallback("Cordova not available");
+    }
   };
 
   this.hide = function (successCallback, errorCallback) {
-    cordova.exec(successCallback, errorCallback, "InAppBrowser", "hide", []);
+    if (typeof cordova !== "undefined" && cordova.exec) {
+      cordova.exec(successCallback, errorCallback, "InAppBrowser", "hide", []);
+    } else {
+      console.error("Cordova not available");
+      if (errorCallback) errorCallback("Cordova not available");
+    }
   };
 
   this.addEventListener = function (eventname, callback) {
-    cordova.exec(callback, null, "InAppBrowser", "addEventListener", [
-      eventname,
-    ]);
+    if (typeof cordova !== "undefined" && cordova.exec) {
+      cordova.exec(callback, null, "InAppBrowser", "addEventListener", [
+        eventname,
+      ]);
+    } else {
+      console.error("Cordova not available");
+    }
   };
 
   this.removeEventListener = function (eventname, callback) {
-    cordova.exec(callback, null, "InAppBrowser", "removeEventListener", [
-      eventname,
-    ]);
+    if (typeof cordova !== "undefined" && cordova.exec) {
+      cordova.exec(callback, null, "InAppBrowser", "removeEventListener", [
+        eventname,
+      ]);
+    } else {
+      console.error("Cordova not available");
+    }
   };
 
   this.openExternal = function (url, successCallback, errorCallback) {
-    cordova.exec(
-      successCallback,
-      errorCallback,
-      "InAppBrowser",
-      "openExternal",
-      [url]
-    );
+    if (typeof cordova !== "undefined" && cordova.exec) {
+      cordova.exec(
+        successCallback,
+        errorCallback,
+        "InAppBrowser",
+        "openExternal",
+        [url]
+      );
+    } else {
+      console.error("Cordova not available");
+      if (errorCallback) errorCallback("Cordova not available");
+    }
   };
 };
 
 // Create the plugin instance
 var inAppBrowser = new InAppBrowser();
 
-// Expose in multiple locations for maximum compatibility
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = inAppBrowser;
-}
-
-// Expose globally
-if (typeof window !== 'undefined') {
+// Function to expose the plugin globally
+function exposePlugin() {
+  if (typeof window !== "undefined") {
     // Primary location (standard Apache way)
-    window.cordova = window.cordova || {};
-    window.cordova.InAppBrowser = inAppBrowser;
-    
-    // Secondary location (for compatibility)
-    if (window.cordova.plugins) {
+    if (window.cordova) {
+      window.cordova.InAppBrowser = inAppBrowser;
+
+      // Secondary location (for compatibility)
+      if (window.cordova.plugins) {
         window.cordova.plugins.InAppBrowser = inAppBrowser;
+      }
     }
-    
+
     // Tertiary location (direct global)
     window.InAppBrowser = inAppBrowser;
-    
+
     // Legacy location (for old code)
     window.multibrowser = inAppBrowser;
+
+    console.log("InAppBrowser plugin exposed globally");
+  }
+}
+
+// Expose immediately if possible
+exposePlugin();
+
+// Also expose when deviceready fires (in case Cordova loads later)
+if (typeof document !== "undefined") {
+  document.addEventListener(
+    "deviceready",
+    function () {
+      exposePlugin();
+    },
+    false
+  );
+}
+
+// Expose for module systems
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = inAppBrowser;
 }
