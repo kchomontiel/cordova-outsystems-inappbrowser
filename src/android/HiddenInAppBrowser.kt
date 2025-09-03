@@ -466,7 +466,6 @@ class HiddenInAppBrowser: CordovaPlugin() {
                                 // Log resource requests for debugging
                                 request?.url?.let { url ->
                                     android.util.Log.d("HiddenInAppBrowser", "openInWebView - Resource request: $url")
-                                    safeEvaluateJavascript(view, "console.log('📡 WebView: Resource request - $url');")
                                     
                                     // Log cookie state
                                     android.webkit.CookieManager.getInstance().let { cookieManager ->
@@ -614,32 +613,67 @@ class HiddenInAppBrowser: CordovaPlugin() {
                                 android.util.Log.e("HiddenInAppBrowser", "openInWebView - onReceivedHttpError: ${errorResponse?.statusCode}")
                                 android.util.Log.e("HiddenInAppBrowser", "openInWebView - Request URL: ${request?.url}")
                                 
+                                // Check if this is a non-critical resource that can be ignored
+                                val url = request?.url?.toString() ?: ""
+                                val statusCode = errorResponse?.statusCode ?: 0
+                                
+                                // List of non-critical resources that can fail without affecting page functionality
+                                val nonCriticalResources = listOf(
+                                    "favicon.ico",
+                                    ".ico",
+                                    ".png",
+                                    ".jpg",
+                                    ".jpeg",
+                                    ".gif",
+                                    ".svg",
+                                    ".woff",
+                                    ".woff2",
+                                    ".ttf",
+                                    ".eot"
+                                )
+                                
+                                // Check if this is a non-critical resource with 404 error
+                                val isNonCritical404 = statusCode == 404 && nonCriticalResources.any { url.contains(it) }
+                                
+                                if (isNonCritical404) {
+                                    // Log but don't send error callback for non-critical 404s
+                                    android.util.Log.d("HiddenInAppBrowser", "openInWebView - Ignoring non-critical 404: $url")
+                                    safeEvaluateJavascript(view, "console.log('ℹ️ Ignoring non-critical 404: $url');")
+                                    return // Don't proceed with error handling
+                                }
+                                
                                 // Log HTTP error to WebView console for debugging
-                                val httpErrorMessage = "🚨 HTTP Error: ${errorResponse?.statusCode} - URL: ${request?.url}"
+                                val httpErrorMessage = "🚨 HTTP Error: $statusCode - URL: $url"
                                 safeEvaluateJavascript(view, "console.error('$httpErrorMessage');")
                                 
-                                // Handle HTTP errors specifically
-                                errorResponse?.statusCode?.let { statusCode ->
-                                    when (statusCode) {
-                                        405 -> {
-                                            android.util.Log.e("HiddenInAppBrowser", "openInWebView - HTTP 405: Method Not Allowed")
-                                            safeEvaluateJavascript(view, "console.error('🚨 HTTP 405: Method Not Allowed - This URL requires specific HTTP method');")
-                                            sendError(callbackContext, "HTTP 405: Method Not Allowed - This URL requires specific HTTP method")
-                                        }
-                                        403 -> {
-                                            android.util.Log.e("HiddenInAppBrowser", "openInWebView - HTTP 403: Forbidden")
-                                            safeEvaluateJavascript(view, "console.error('🚨 HTTP 403: Forbidden - Access denied to this URL');")
-                                            sendError(callbackContext, "HTTP 403: Forbidden - Access denied to this URL")
-                                        }
-                                        401 -> {
-                                            android.util.Log.e("HiddenInAppBrowser", "openInWebView - HTTP 401: Unauthorized")
-                                            safeEvaluateJavascript(view, "console.error('🚨 HTTP 401: Unauthorized - Authentication required');")
-                                            sendError(callbackContext, "HTTP 401: Unauthorized - Authentication required")
-                                        }
-                                        else -> {
-                                            safeEvaluateJavascript(view, "console.error('🚨 HTTP Error: $statusCode');")
-                                            sendError(callbackContext, "HTTP Error: $statusCode")
-                                        }
+                                // Handle HTTP errors specifically - only for critical errors
+                                when (statusCode) {
+                                    405 -> {
+                                        android.util.Log.e("HiddenInAppBrowser", "openInWebView - HTTP 405: Method Not Allowed")
+                                        safeEvaluateJavascript(view, "console.error('🚨 HTTP 405: Method Not Allowed - This URL requires specific HTTP method');")
+                                        sendError(callbackContext, "HTTP 405: Method Not Allowed - This URL requires specific HTTP method")
+                                    }
+                                    403 -> {
+                                        android.util.Log.e("HiddenInAppBrowser", "openInWebView - HTTP 403: Forbidden")
+                                        safeEvaluateJavascript(view, "console.error('🚨 HTTP 403: Forbidden - Access denied to this URL');")
+                                        sendError(callbackContext, "HTTP 403: Forbidden - Access denied to this URL")
+                                    }
+                                    401 -> {
+                                        android.util.Log.e("HiddenInAppBrowser", "openInAppBrowser - HTTP 401: Unauthorized")
+                                        safeEvaluateJavascript(view, "console.error('🚨 HTTP 401: Unauthorized - Authentication required');")
+                                        sendError(callbackContext, "HTTP 401: Unauthorized - Authentication required")
+                                    }
+                                    500, 502, 503, 504 -> {
+                                        // Server errors - these are critical
+                                        android.util.Log.e("HiddenInAppBrowser", "openInWebView - HTTP $statusCode: Server Error")
+                                        safeEvaluateJavascript(view, "console.error('🚨 HTTP $statusCode: Server Error');")
+                                        sendError(callbackContext, "HTTP $statusCode: Server Error")
+                                    }
+                                    else -> {
+                                        // For other status codes, only log but don't send error callback
+                                        // unless it's a critical resource
+                                        android.util.Log.d("HiddenInAppBrowser", "openInWebView - HTTP $statusCode for URL: $url (logged but not critical)")
+                                        safeEvaluateJavascript(view, "console.log('ℹ️ HTTP $statusCode for URL: $url (not critical)');")
                                     }
                                 }
                             }
