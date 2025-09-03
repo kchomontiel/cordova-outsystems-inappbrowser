@@ -22,6 +22,7 @@
             </feature>
             <preference name="SwiftVersion" value="5" />
             <preference name="deployment-target" value="16.0" />
+            <preference name="IPHONEOS_DEPLOYMENT_TARGET" value="16.0" />
             <preference name="WKWebViewOnly" value="true" />
             <preference name="AllowInlineMediaPlayback" value="true" />
         </config-file>
