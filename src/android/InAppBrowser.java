@@ -38,12 +38,17 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.graphics.drawable.GradientDrawable;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.widget.RelativeLayout;
+import android.view.ViewGroup.LayoutParams;
 
 public class InAppBrowser extends CordovaPlugin {
 
     private static final String TAG = "InAppBrowser";
     private WebView webView;
-    private FrameLayout webViewContainer;
+    private AlertDialog webViewDialog;
     private Activity activity;
 
     @Override
@@ -128,42 +133,58 @@ public class InAppBrowser extends CordovaPlugin {
             webView.getSettings().setJavaScriptEnabled(true);
             webView.loadUrl(url);
             
-            // Create container
-            webViewContainer = new FrameLayout(activity);
-            webViewContainer.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            ));
+            // Create container with close button
+            RelativeLayout container = createWebViewContainer();
             
-            // Add close button
-            Button closeButton = createCloseButton();
-            webViewContainer.addView(closeButton);
+            // Add WebView to container
+            container.addView(webView);
             
-            // Add WebView
-            webViewContainer.addView(webView);
+            // Create and show dialog
+            showWebViewDialog(container, callbackContext);
             
-            // Set as content view
-            activity.setContentView(webViewContainer);
-            
-            callbackContext.success("WebView opened successfully");
         } catch (Exception e) {
             Log.e(TAG, "Error opening visible WebView: " + e.getMessage());
             callbackContext.error("Error opening visible WebView: " + e.getMessage());
         }
     }
     
+    private RelativeLayout createWebViewContainer() {
+        RelativeLayout container = new RelativeLayout(activity);
+        container.setLayoutParams(new ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        ));
+        
+        // Create close button
+        Button closeButton = createCloseButton();
+        
+        // Position close button at top-left
+        RelativeLayout.LayoutParams buttonParams = new RelativeLayout.LayoutParams(80, 80);
+        buttonParams.setMargins(20, 50, 0, 0);
+        closeButton.setLayoutParams(buttonParams);
+        
+        // Add close button to container
+        container.addView(closeButton);
+        
+        // Position WebView below close button
+        RelativeLayout.LayoutParams webViewParams = new RelativeLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        );
+        webViewParams.addRule(RelativeLayout.BELOW, closeButton.getId());
+        webView.setLayoutParams(webViewParams);
+        
+        return container;
+    }
+    
     private Button createCloseButton() {
         Button button = new Button(activity);
+        button.setId(View.generateViewId());
         
         // Set button properties
         button.setText("✕");
         button.setTextColor(Color.WHITE);
         button.setTextSize(18);
-        
-        // Set button size and position
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(80, 80);
-        params.setMargins(20, 50, 0, 0);
-        button.setLayoutParams(params);
         
         // Set button background
         GradientDrawable background = new GradientDrawable();
@@ -182,17 +203,34 @@ public class InAppBrowser extends CordovaPlugin {
         return button;
     }
     
+    private void showWebViewDialog(RelativeLayout container, CallbackContext callbackContext) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        builder.setView(container);
+        
+        // Create dialog
+        webViewDialog = builder.create();
+        webViewDialog.setCanceledOnTouchOutside(false);
+        
+        // Show dialog
+        webViewDialog.show();
+        
+        // Return success
+        callbackContext.success("WebView opened successfully");
+    }
+    
     private void closeWebView(CallbackContext callbackContext) {
         try {
-            if (webViewContainer != null && activity != null) {
-                // Restore original content view
-                activity.setContentView(activity.findViewById(android.R.id.content));
-                webViewContainer = null;
+            if (webViewDialog != null && webViewDialog.isShowing()) {
+                webViewDialog.dismiss();
+                webViewDialog = null;
+            }
+            
+            if (webView != null) {
                 webView = null;
-                
-                if (callbackContext != null) {
-                    callbackContext.success("WebView closed successfully");
-                }
+            }
+            
+            if (callbackContext != null) {
+                callbackContext.success("WebView closed successfully");
             }
         } catch (Exception e) {
             Log.e(TAG, "Error closing WebView: " + e.getMessage());
@@ -203,8 +241,8 @@ public class InAppBrowser extends CordovaPlugin {
     }
     
     private void showWebView(CallbackContext callbackContext) {
-        if (webViewContainer != null) {
-            webViewContainer.setVisibility(View.VISIBLE);
+        if (webViewDialog != null && !webViewDialog.isShowing()) {
+            webViewDialog.show();
             callbackContext.success("WebView shown successfully");
         } else {
             callbackContext.error("No WebView to show");
@@ -212,8 +250,8 @@ public class InAppBrowser extends CordovaPlugin {
     }
     
     private void hideWebView(CallbackContext callbackContext) {
-        if (webViewContainer != null) {
-            webViewContainer.setVisibility(View.GONE);
+        if (webViewDialog != null && webViewDialog.isShowing()) {
+            webViewDialog.hide();
             callbackContext.success("WebView hidden successfully");
         } else {
             callbackContext.error("No WebView to hide");
