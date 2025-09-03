@@ -1,5 +1,3 @@
-var exec = require("cordova/exec");
-
 var multibrowser = {
   openInWebView: function (
     url,
@@ -8,15 +6,17 @@ var multibrowser = {
     successCallback,
     errorCallback
   ) {
-    exec(successCallback, errorCallback, "multibrowser", "openInWebView", [
-      url,
-      target,
-      options,
-    ]);
+    cordova.exec(
+      successCallback,
+      errorCallback,
+      "multibrowser",
+      "openInWebView",
+      [url, target, options]
+    );
   },
 
   openHidden: function (url, target, options, successCallback, errorCallback) {
-    exec(successCallback, errorCallback, "multibrowser", "openHidden", [
+    cordova.exec(successCallback, errorCallback, "multibrowser", "openHidden", [
       url,
       target,
       options,
@@ -30,7 +30,7 @@ var multibrowser = {
     successCallback,
     errorCallback
   ) {
-    exec(
+    cordova.exec(
       successCallback,
       errorCallback,
       "multibrowser",
@@ -40,7 +40,13 @@ var multibrowser = {
   },
 
   closeWebView: function (successCallback, errorCallback) {
-    exec(successCallback, errorCallback, "multibrowser", "closeWebView", []);
+    cordova.exec(
+      successCallback,
+      errorCallback,
+      "multibrowser",
+      "closeWebView",
+      []
+    );
   },
 };
 

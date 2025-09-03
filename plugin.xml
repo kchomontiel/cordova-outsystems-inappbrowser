@@ -49,7 +49,7 @@
     <!-- Web Platform -->
     <platform name="browser">
         <js-module src="plugins/multibrowser/dist/plugin.js" name="multibrowser">
-            <clobbers target="multibrowser" />
+            <clobbers target="cordova.plugins.multibrowser" />
         </js-module>
     </platform>
     
