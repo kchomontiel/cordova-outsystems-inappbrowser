@@ -254,16 +254,28 @@ public class InAppBrowser extends CordovaPlugin {
             ViewGroup.LayoutParams.MATCH_PARENT
         ));
         
+        // Create toolbar background (white)
+        RelativeLayout toolbarBackground = new RelativeLayout(currentActivity);
+        RelativeLayout.LayoutParams toolbarParams = new RelativeLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            120 // Height for toolbar
+        );
+        toolbarBackground.setLayoutParams(toolbarParams);
+        toolbarBackground.setBackgroundColor(Color.WHITE);
+        
         // Create close button
         Button closeButton = createCloseButton(currentActivity);
         
-        // Position close button at top-left
+        // Position close button at top-left within toolbar
         RelativeLayout.LayoutParams buttonParams = new RelativeLayout.LayoutParams(80, 80);
-        buttonParams.setMargins(20, 50, 0, 0);
+        buttonParams.setMargins(20, 20, 0, 0);
         closeButton.setLayoutParams(buttonParams);
         
-        // Add close button to container
-        container.addView(closeButton);
+        // Add close button to toolbar
+        toolbarBackground.addView(closeButton);
+        
+        // Add toolbar to main container
+        container.addView(toolbarBackground);
         
         // Position WebView below close button
         RelativeLayout.LayoutParams webViewParams = new RelativeLayout.LayoutParams(
@@ -271,7 +283,7 @@ public class InAppBrowser extends CordovaPlugin {
             ViewGroup.LayoutParams.MATCH_PARENT
         );
         webViewParams.addRule(RelativeLayout.BELOW, closeButton.getId());
-        webViewParams.setMargins(0, 100, 0, 0); // Add margin to avoid overlap with button
+        // No margins - WebView takes full screen
         webView.setLayoutParams(webViewParams);
         
         Log.d(TAG, "WebView container created successfully");
