@@ -17,42 +17,48 @@
  * under the License.
  */
 
-var exec = require('cordova/exec');
+var InAppBrowser = function () {
+  this.open = function (url, target, options, successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, "InAppBrowser", "open", [
+      url,
+      target,
+      options,
+    ]);
+  };
 
-var InAppBrowser = function() {
-    this.open = function(url, target, options, eventCallback) {
-        // If no target specified, use _self
-        target = target || "_self";
-        
-        // If no options specified, use empty object
-        options = options || {};
-        
-        // If no eventCallback specified, use empty function
-        eventCallback = eventCallback || function() {};
-        
-        // Call the native plugin
-        exec(eventCallback, eventCallback, "InAppBrowser", "open", [url, target, options]);
-    };
-    
-    this.close = function() {
-        exec(null, null, "InAppBrowser", "close", []);
-    };
-    
-    this.show = function() {
-        exec(null, null, "InAppBrowser", "show", []);
-    };
-    
-    this.hide = function() {
-        exec(null, null, "InAppBrowser", "hide", []);
-    };
-    
-    this.addEventListener = function(eventname, func) {
-        exec(null, null, "InAppBrowser", "addEventListener", [eventname]);
-    };
-    
-    this.removeEventListener = function(eventname, func) {
-        exec(null, null, "InAppBrowser", "removeEventListener", [eventname]);
-    };
+  this.close = function (successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, "InAppBrowser", "close", []);
+  };
+
+  this.show = function (successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, "InAppBrowser", "show", []);
+  };
+
+  this.hide = function (successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, "InAppBrowser", "hide", []);
+  };
+
+  this.addEventListener = function (eventname, callback) {
+    cordova.exec(callback, null, "InAppBrowser", "addEventListener", [
+      eventname,
+    ]);
+  };
+
+  this.removeEventListener = function (eventname, callback) {
+    cordova.exec(callback, null, "InAppBrowser", "removeEventListener", [
+      eventname,
+    ]);
+  };
+
+  this.openExternal = function (url, successCallback, errorCallback) {
+    cordova.exec(
+      successCallback,
+      errorCallback,
+      "InAppBrowser",
+      "openExternal",
+      [url]
+    );
+  };
 };
 
 module.exports = new InAppBrowser();

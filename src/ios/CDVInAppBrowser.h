@@ -27,5 +27,6 @@
 - (void)hide:(CDVInvokedUrlCommand*)command;
 - (void)addEventListener:(CDVInvokedUrlCommand*)command;
 - (void)removeEventListener:(CDVInvokedUrlCommand*)command;
+- (void)openExternal:(CDVInvokedUrlCommand*)command;
 
 @end

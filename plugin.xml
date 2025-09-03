@@ -8,6 +8,8 @@
     <description>Cordova InAppBrowser Plugin</description>
     <license>Apache 2.0</license>
     <keywords>cordova,inappbrowser</keywords>
+    <repo>https://github.com/apache/cordova-plugin-inappbrowser</repo>
+    <issue>https://github.com/apache/cordova-plugin-inappbrowser/issues</issue>
     
     <!-- JavaScript interface -->
     <js-module src="www/inappbrowser.js" name="InAppBrowser">
@@ -19,6 +21,7 @@
         <config-file parent="/*" target="config.xml">
             <feature name="InAppBrowser">
                 <param name="ios-package" value="CDVInAppBrowser" />
+                <param name="onload" value="true" />
             </feature>
         </config-file>
         
@@ -26,6 +29,7 @@
         <source-file src="src/ios/CDVInAppBrowser.h" />
         
         <framework src="WebKit.framework" />
+        <preference name="IPHONEOS_DEPLOYMENT_TARGET" value="16.0" />
     </platform>
     
     <!-- Android Platform -->
@@ -33,6 +37,7 @@
         <config-file parent="/*" target="res/xml/config.xml">
             <feature name="InAppBrowser">
                 <param name="android-package" value="org.apache.cordova.inappbrowser.InAppBrowser" />
+                <param name="onload" value="true" />
             </feature>
         </config-file>
         
