@@ -1,181 +1,214 @@
-import WebKit
 import UIKit
+import ObjectiveC
+@preconcurrency import WebKit
 
-@objc(HiddenInAppBrowser) class HiddenInAppBrowser : CDVPlugin {
+/// The plugin's main class - Compatible with multibrowser plugin
+@objc(HiddenInAppBrowser)
+class HiddenInAppBrowser: CDVPlugin {
+    
+    // Agregar variables de clase para las referencias (como en Android)
+    private var modalWebView: WKWebView?
+    private var modalNavigationController: UINavigationController?
+    
+    private var openedViewController: UIViewController?
+    
+    override func pluginInitialize() {
+        print("🔧 HiddenInAppBrowser - pluginInitialize called")
+        print("🔧 HiddenInAppBrowser - Plugin initialization completed")
+        NSLog("🔧 HiddenInAppBrowser - NSLog test - Plugin initialized successfully")
+    }
+    
+    // MARK: - Multibrowser Plugin Methods (Compatible with Android)
     
     @objc(openInWebView:)
-    func openInWebView(_ command: CDVInvokedUrlCommand) {
-        guard let urlString = command.argument(at: 0) as? String,
-              let url = URL(string: urlString) else {
-            sendError(command, errorMessage: "Invalid URL")
-            return
+    func openInWebView(command: CDVInvokedUrlCommand) {
+        print("🔍 openInWebView - ===== INICIO DEL MÉTODO =====")
+        print("openInWebView - Command received: \(command)")
+        
+        // Extract parameters like Android implementation
+        guard let url = command.argument(at: 0) as? String,
+              let target = command.argument(at: 1) as? String,
+              let options = command.argument(at: 2) as? String else {
+            print("❌ openInWebView - Invalid parameters")
+            return self.sendError("Invalid parameters", for: command.callbackId)
         }
         
-        let target = command.argument(at: 1) as? String ?? "_blank"
-        let options = command.argument(at: 2) as? String ?? ""
+        print("✅ openInWebView - Parameters extracted: URL=\(url), Target=\(target), Options=\(options)")
         
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            
-            let webViewController = WebViewController(url: url, target: target, options: options)
-            webViewController.successCallback = { [weak self] message in
-                self?.sendSuccess(command, message: message)
-            }
-            webViewController.errorCallback = { [weak self] errorMessage in
-                self?.sendError(command, errorMessage: errorMessage)
+        self.commandDelegate.run { [weak self] in
+            guard let self else { 
+                print("❌ openInWebView - Self is nil")
+                return 
             }
             
-            let navigationController = UINavigationController(rootViewController: webViewController)
-            self.viewController.present(navigationController, animated: true)
+            // Create a modal WebView (like Android implementation)
+            DispatchQueue.main.async {
+                print("✅ openInWebView - Creating modal WebView")
+                
+                // Create WebView with full screen
+                let webView = WKWebView()
+                webView.configuration.allowsInlineMediaPlayback = true
+                webView.configuration.mediaTypesRequiringUserActionForPlayback = []
+                
+                // Create view controller
+                let webViewController = UIViewController()
+                webViewController.view = webView
+                webViewController.title = "WebView"
+                
+                // Add close button
+                let closeButton = UIBarButtonItem(barButtonSystemItem: .close, target: self, action: #selector(self.closeWebView))
+                webViewController.navigationItem.leftBarButtonItem = closeButton
+                
+                // Create navigation controller
+                let navigationController = UINavigationController(rootViewController: webViewController)
+                navigationController.modalPresentationStyle = .fullScreen
+                
+                // Set delegate
+                let webViewDelegate = ModalWebViewDelegate { [weak self] success, error in
+                    if success {
+                        print("✅ openInWebView - Page loaded successfully")
+                        // NO enviar callback aquí - como en Android, callback se envía después de mostrar el modal
+                    } else {
+                        print("❌ openInWebView - Failed to load page: \(error ?? "unknown error")")
+                        self?.sendError("Failed to load URL: \(url)", for: command.callbackId)
+                    }
+                }
+                
+                webView.navigationDelegate = webViewDelegate
+                
+                // Keep references
+                objc_setAssociatedObject(webView, &AssociatedKeys.delegateKey, webViewDelegate, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+                objc_setAssociatedObject(self, &AssociatedKeys.webViewKey, webView, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+                self.openedViewController = navigationController
+                
+                // Guardar referencias para closeWebView (como en Android)
+                self.modalWebView = webView
+                self.modalNavigationController = navigationController
+                
+                // Present modal
+                self.viewController.present(navigationController, animated: true)
+                print("✅ openInWebView - Modal presentado")
+                
+                // ENVIAR CALLBACK DESPUÉS DE MOSTRAR EL MODAL (como en Android)
+                // Agregar delay de 2 segundos como en Android para GTM y contenido
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    print("✅ openInWebView - Enviando callback de éxito después de 2 segundos (como en Android)")
+                    self.sendSuccess("Page loaded successfully", for: command.callbackId)
+                }
+                
+                // Load URL DESPUÉS del callback (como en Android)
+                let request = URLRequest(url: URL(string: url)!)
+                webView.load(request)
+                print("✅ openInWebView - Carga de URL iniciada")
+            }
         }
     }
     
     @objc(openHidden:)
-    func openHidden(_ command: CDVInvokedUrlCommand) {
-        guard let urlString = command.argument(at: 0) as? String else {
-            sendError(command, errorMessage: "URL required")
-            return
+    func openHidden(command: CDVInvokedUrlCommand) {
+        print("🔍 openHidden - ===== INICIO DEL MÉTODO =====")
+        print("openHidden - Command received: \(command)")
+        
+        // Extract parameters like Android implementation
+        guard let url = command.argument(at: 0) as? String,
+              let target = command.argument(at: 1) as? String,
+              let options = command.argument(at: 2) as? String else {
+            print("❌ openHidden - Invalid parameters")
+            return self.sendError("Invalid parameters", for: command.callbackId)
         }
         
-        sendSuccess(command, message: "Hidden mode activated")
+        print("✅ openHidden - Parameters extracted: URL=\(url), Target=\(target), Options=\(options)")
+        
+        // For hidden mode, we'll just return success immediately (like Android)
+        print("✅ openHidden - Hidden mode activated")
+        self.sendSuccess("Hidden mode activated", for: command.callbackId)
     }
     
     @objc(openInExternalBrowser:)
-    func openInExternalBrowser(_ command: CDVInvokedUrlCommand) {
-        guard let urlString = command.argument(at: 0) as? String,
-              let url = URL(string: urlString) else {
-            sendError(command, errorMessage: "Invalid URL")
-            return
+    func openInExternalBrowser(command: CDVInvokedUrlCommand) {
+        print("🔍 openInExternalBrowser - ===== INICIO DEL MÉTODO =====")
+        print("openInExternalBrowser - Command received: \(command)")
+        
+        // Extract parameters like Android implementation
+        guard let url = command.argument(at: 0) as? String,
+              let target = command.argument(at: 1) as? String,
+              let options = command.argument(at: 2) as? String else {
+            print("❌ openInExternalBrowser - Invalid parameters")
+            return self.sendError("Invalid parameters", for: command.callbackId)
         }
         
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            
-            if UIApplication.shared.canOpenURL(url) {
-                UIApplication.shared.open(url) { success in
+        print("✅ openInExternalBrowser - Parameters extracted: URL=\(url), Target=\(target), Options=\(options)")
+        
+        // Open in external browser
+        DispatchQueue.main.async {
+            if let urlObj = URL(string: url) {
+                UIApplication.shared.open(urlObj) { success in
                     if success {
-                        self.sendSuccess(command, message: "External browser opened")
+                        print("✅ openInExternalBrowser - URL opened successfully")
+                        self.sendSuccess("External browser opened", for: command.callbackId)
                     } else {
-                        self.sendError(command, errorMessage: "Failed to open external browser")
+                        print("❌ openInExternalBrowser - Failed to open URL")
+                        self.sendError("Failed to open URL: \(url)", for: command.callbackId)
                     }
                 }
             } else {
-                self.sendError(command, errorMessage: "Cannot open URL in external browser")
+                self.sendError("Invalid URL: \(url)", for: command.callbackId)
             }
         }
     }
     
-    private func sendSuccess(_ command: CDVInvokedUrlCommand, message: String) {
-        let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: message)
-        commandDelegate.send(result, callbackId: command.callbackId)
-    }
+    // MARK: - Helper Methods
     
-    private func sendError(_ command: CDVInvokedUrlCommand, errorMessage: String) {
-        let result = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: errorMessage)
-        commandDelegate.send(result, callbackId: command.callbackId)
-    }
-}
-
-class WebViewController: UIViewController {
-    private let webView: WKWebView
-    private let url: URL
-    private let target: String
-    private let options: String
-    var successCallback: ((String) -> Void)?
-    var errorCallback: ((String) -> Void)?
-    
-    init(url: URL, target: String, options: String) {
-        self.url = url
-        self.target = target
-        self.options = options
-        
-        let config = WKWebViewConfiguration()
-        config.allowsInlineMediaPlayback = true
-        config.mediaTypesRequiringUserActionForPlayback = []
-        
-        self.webView = WKWebView(frame: .zero, configuration: config)
-        super.init(nibName: nil, bundle: nil)
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        setupWebView()
-        setupNavigationBar()
-        loadURL()
-    }
-    
-    private func setupWebView() {
-        webView.navigationDelegate = self
-        webView.uiDelegate = self
-        webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        webView.frame = view.bounds
-        view.addSubview(webView)
-    }
-    
-    private func setupNavigationBar() {
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .done,
-            target: self,
-            action: #selector(closeWebView)
-        )
-        navigationItem.title = "WebView"
-    }
-    
-    private func loadURL() {
-        webView.load(URLRequest(url: url))
-    }
-    
-    @objc private func closeWebView() {
-        dismiss(animated: true) { [weak self] in
-            self?.successCallback?("WebView closed successfully")
+    @objc func closeWebView() {
+        if let openedViewController = openedViewController {
+            openedViewController.dismiss(animated: true)
         }
     }
+    
+    private func sendSuccess(_ message: String, for callbackId: String) {
+        let pluginResult = CDVPluginResult(status: .ok, messageAs: message)!
+        pluginResult.keepCallback = true
+        self.commandDelegate.send(pluginResult, callbackId: callbackId)
+    }
+    
+    private func sendError(_ message: String, for callbackId: String) {
+        let pluginResult = CDVPluginResult(status: .error, messageAs: message)!
+        self.commandDelegate.send(pluginResult, callbackId: callbackId)
+    }
 }
 
-// MARK: - WKNavigationDelegate
-extension WebViewController: WKNavigationDelegate {
+// MARK: - WebView Delegates
+
+private struct AssociatedKeys {
+    static var delegateKey = "delegateKey"
+    static var webViewKey = "webViewKey"
+}
+
+private class ModalWebViewDelegate: NSObject, WKNavigationDelegate {
+    private let completion: (Bool, String?) -> Void
+    
+    init(completion: @escaping (Bool, String?) -> Void) {
+        self.completion = completion
+        super.init()
+    }
+    
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        successCallback?("Page loaded successfully")
+        print("ModalWebViewDelegate - webView didFinish")
+        completion(true, nil)
     }
     
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-        errorCallback?(error.localizedDescription)
+        print("ModalWebViewDelegate - didFail: \(error.localizedDescription)")
+        completion(false, error.localizedDescription)
     }
     
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-        errorCallback?(error.localizedDescription)
-    }
-}
-
-// MARK: - WKUIDelegate
-extension WebViewController: WKUIDelegate {
-    func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
-        if navigationAction.targetFrame == nil {
-            webView.load(navigationAction.request)
-        }
-        return nil
+        print("ModalWebViewDelegate - didFailProvisionalNavigation: \(error.localizedDescription)")
+        completion(false, error.localizedDescription)
     }
     
-    func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
-        let alert = UIAlertController(title: "Alert", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
-            completionHandler()
-        })
-        present(alert, animated: true)
-    }
-    
-    func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
-        let alert = UIAlertController(title: "Confirm", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
-            completionHandler(false)
-        })
-        alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
-            completionHandler(true)
-        })
-        present(alert, animated: true)
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        print("ModalWebViewDelegate - decidePolicyFor: \(navigationAction.request.url?.absoluteString ?? "nil")")
+        decisionHandler(.allow)
     }
 }

@@ -1,3 +1,9 @@
 node_modules
 package-lock.json
 cordova-plugin-inappbrowser-master
+
+# Test projects
+test_*
+*_test
+*_ios*
+*_android*
