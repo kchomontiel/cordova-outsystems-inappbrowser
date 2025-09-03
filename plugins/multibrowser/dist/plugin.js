@@ -55,12 +55,7 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports = multibrowser;
 }
 
-// Exponer en window para uso global
+// Exponer en window para uso global (principal)
 if (typeof window !== "undefined") {
   window.multibrowser = multibrowser;
-}
-
-// Exponer en cordova.plugins
-if (typeof cordova !== "undefined" && cordova.plugins) {
-  cordova.plugins.multibrowser = multibrowser;
 }
