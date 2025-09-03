@@ -21,6 +21,9 @@ class HiddenInAppBrowser : CordovaPlugin() {
         private const val ACTION_OPEN_IN_EXTERNAL_BROWSER = "openInExternalBrowser"
         private const val ACTION_CLOSE_WEBVIEW = "closeWebView"
     }
+    
+    // Store the original Cordova view
+    private var originalCordovaView: android.view.View? = null
 
     override fun execute(action: String, args: JSONArray, callbackContext: CallbackContext): Boolean {
         try {
@@ -67,6 +70,11 @@ class HiddenInAppBrowser : CordovaPlugin() {
         cordova.activity.runOnUiThread {
             try {
                 Log.d(TAG, "Opening URL in WebView: $url")
+                
+                // Store the original Cordova view before changing it
+                if (originalCordovaView == null) {
+                    originalCordovaView = cordova.activity.findViewById<android.view.View>(android.R.id.content)
+                }
                 
                 val webView = WebView(cordova.activity)
                 webView.settings.apply {
@@ -174,8 +182,18 @@ class HiddenInAppBrowser : CordovaPlugin() {
         cordova.activity.runOnUiThread {
             try {
                 Log.d(TAG, "Closing WebView")
-                cordova.activity.setContentView(null) // Clear the current content view
-                callbackContext.success("WebView closed")
+                
+                // Restore the original Cordova view
+                if (originalCordovaView != null) {
+                    cordova.activity.setContentView(originalCordovaView)
+                    originalCordovaView = null // Clear the reference
+                    callbackContext.success("WebView closed successfully")
+                } else {
+                    // Fallback: finish the activity if no original view
+                    cordova.activity.finish()
+                    callbackContext.success("WebView closed (activity finished)")
+                }
+                
             } catch (e: Exception) {
                 Log.e(TAG, "Error closing WebView", e)
                 callbackContext.error("Error closing WebView: ${e.message}")
