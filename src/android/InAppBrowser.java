@@ -132,16 +132,35 @@ public class InAppBrowser extends CordovaPlugin {
         try {
             Log.d(TAG, "openHiddenWebView called");
             
-            // Create hidden WebView
-            webView = new WebView(cordova.getActivity());
-            webView.getSettings().setJavaScriptEnabled(true);
-            webView.getSettings().setDomStorageEnabled(true);
-            webView.getSettings().setAllowFileAccess(true);
+            // Get activity reference
+            final Activity currentActivity = cordova.getActivity();
             
-            // Load URL
-            webView.loadUrl(url);
+            // Run UI operations on main thread
+            currentActivity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Log.d(TAG, "Running hidden WebView operations on main thread");
+                        
+                        // Create hidden WebView
+                        webView = new WebView(currentActivity);
+                        webView.getSettings().setJavaScriptEnabled(true);
+                        webView.getSettings().setDomStorageEnabled(true);
+                        webView.getSettings().setAllowFileAccess(true);
+                        
+                        // Load URL
+                        webView.loadUrl(url);
+                        
+                        Log.d(TAG, "Hidden WebView created and loaded URL on UI thread");
+                        
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error creating hidden WebView on UI thread: " + e.getMessage(), e);
+                        callbackContext.error("Error creating hidden WebView: " + e.getMessage());
+                    }
+                }
+            });
             
-            Log.d(TAG, "Hidden WebView created and loaded URL");
+            // Return success immediately (WebView is being created in background)
             callbackContext.success("URL opened in hidden mode");
             
         } catch (Exception e) {
@@ -154,38 +173,53 @@ public class InAppBrowser extends CordovaPlugin {
         try {
             Log.d(TAG, "openVisibleWebView called");
             
-            activity = cordova.getActivity();
+            // Get activity reference
+            final Activity currentActivity = cordova.getActivity();
             
-            // Create WebView
-            webView = new WebView(activity);
-            webView.getSettings().setJavaScriptEnabled(true);
-            webView.getSettings().setDomStorageEnabled(true);
-            webView.getSettings().setAllowFileAccess(true);
-            webView.getSettings().setBuiltInZoomControls(true);
-            webView.getSettings().setDisplayZoomControls(false);
-            
-            // Set WebViewClient to handle navigation
-            webView.setWebViewClient(new WebViewClient() {
+            // Run UI operations on main thread
+            currentActivity.runOnUiThread(new Runnable() {
                 @Override
-                public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                    view.loadUrl(url);
-                    return true;
+                public void run() {
+                    try {
+                        Log.d(TAG, "Running UI operations on main thread");
+                        
+                        // Create WebView
+                        webView = new WebView(currentActivity);
+                        webView.getSettings().setJavaScriptEnabled(true);
+                        webView.getSettings().setDomStorageEnabled(true);
+                        webView.getSettings().setAllowFileAccess(true);
+                        webView.getSettings().setBuiltInZoomControls(true);
+                        webView.getSettings().setDisplayZoomControls(false);
+                        
+                        // Set WebViewClient to handle navigation
+                        webView.setWebViewClient(new WebViewClient() {
+                            @Override
+                            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                                view.loadUrl(url);
+                                return true;
+                            }
+                        });
+                        
+                        // Load URL
+                        webView.loadUrl(url);
+                        
+                        // Create container with close button
+                        RelativeLayout container = createWebViewContainer();
+                        
+                        // Add WebView to container
+                        container.addView(webView);
+                        
+                        // Create and show dialog
+                        showWebViewDialog(container, callbackContext);
+                        
+                        Log.d(TAG, "Visible WebView created and shown on UI thread");
+                        
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error in UI thread: " + e.getMessage(), e);
+                        callbackContext.error("Error creating WebView: " + e.getMessage());
+                    }
                 }
             });
-            
-            // Load URL
-            webView.loadUrl(url);
-            
-            // Create container with close button
-            RelativeLayout container = createWebViewContainer();
-            
-            // Add WebView to container
-            container.addView(webView);
-            
-            // Create and show dialog
-            showWebViewDialog(container, callbackContext);
-            
-            Log.d(TAG, "Visible WebView created and shown");
             
         } catch (Exception e) {
             Log.e(TAG, "Error opening visible WebView: " + e.getMessage(), e);
@@ -285,22 +319,35 @@ public class InAppBrowser extends CordovaPlugin {
         try {
             Log.d(TAG, "closeWebView called");
             
-            if (webViewDialog != null && webViewDialog.isShowing()) {
-                webViewDialog.dismiss();
-                webViewDialog = null;
-                Log.d(TAG, "WebView dialog dismissed");
-            }
-            
-            if (webView != null) {
-                webView = null;
-                Log.d(TAG, "WebView cleared");
-            }
+            // Run UI operations on main thread
+            cordova.getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (webViewDialog != null && webViewDialog.isShowing()) {
+                            webViewDialog.dismiss();
+                            webViewDialog = null;
+                            Log.d(TAG, "WebView dialog dismissed");
+                        }
+                        
+                        if (webView != null) {
+                            webView = null;
+                            Log.d(TAG, "WebView cleared");
+                        }
+                        
+                        Log.d(TAG, "WebView closed successfully on UI thread");
+                        
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error closing WebView on UI thread: " + e.getMessage(), e);
+                    }
+                }
+            });
             
             if (callbackContext != null) {
                 callbackContext.success("WebView closed successfully");
             }
             
-            Log.d(TAG, "WebView closed successfully");
+            Log.d(TAG, "WebView close operation initiated");
             
         } catch (Exception e) {
             Log.e(TAG, "Error closing WebView: " + e.getMessage(), e);
@@ -314,8 +361,24 @@ public class InAppBrowser extends CordovaPlugin {
         try {
             Log.d(TAG, "showWebView called");
             
+            // Run UI operations on main thread
+            cordova.getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (webViewDialog != null && !webViewDialog.isShowing()) {
+                            webViewDialog.show();
+                            Log.d(TAG, "WebView shown successfully on UI thread");
+                        } else {
+                            Log.w(TAG, "No WebView to show");
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error showing WebView on UI thread: " + e.getMessage(), e);
+                    }
+                }
+            });
+            
             if (webViewDialog != null && !webViewDialog.isShowing()) {
-                webViewDialog.show();
                 callbackContext.success("WebView shown successfully");
                 Log.d(TAG, "WebView shown successfully");
             } else {
@@ -332,8 +395,24 @@ public class InAppBrowser extends CordovaPlugin {
         try {
             Log.d(TAG, "hideWebView called");
             
+            // Run UI operations on main thread
+            cordova.getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (webViewDialog != null && webViewDialog.isShowing()) {
+                            webViewDialog.hide();
+                            Log.d(TAG, "WebView hidden successfully on UI thread");
+                        } else {
+                            Log.w(TAG, "No WebView to hide");
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error hiding WebView on UI thread: " + e.getMessage(), e);
+                    }
+                }
+            });
+            
             if (webViewDialog != null && webViewDialog.isShowing()) {
-                webViewDialog.hide();
                 callbackContext.success("WebView hidden successfully");
                 Log.d(TAG, "WebView hidden successfully");
             } else {
