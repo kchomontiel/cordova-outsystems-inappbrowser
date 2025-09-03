@@ -47,7 +47,6 @@ public class InAppBrowser extends CordovaPlugin {
     private static final String TAG = "InAppBrowser";
     private WebView webView;
     private AlertDialog webViewDialog;
-    private Activity activity;
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
@@ -221,13 +220,13 @@ public class InAppBrowser extends CordovaPlugin {
                         webView.loadUrl(url);
                         
                         // Create container with close button
-                        RelativeLayout container = createWebViewContainer();
+                        RelativeLayout container = createWebViewContainer(currentActivity);
                         
                         // Add WebView to container
                         container.addView(webView);
                         
                         // Create and show dialog
-                        showWebViewDialog(container, callbackContext);
+                        showWebViewDialog(container, callbackContext, currentActivity);
                         
                         Log.d(TAG, "Visible WebView created and shown on UI thread");
                         
@@ -244,17 +243,17 @@ public class InAppBrowser extends CordovaPlugin {
         }
     }
     
-    private RelativeLayout createWebViewContainer() {
+    private RelativeLayout createWebViewContainer(Activity currentActivity) {
         Log.d(TAG, "createWebViewContainer called");
         
-        RelativeLayout container = new RelativeLayout(activity);
+        RelativeLayout container = new RelativeLayout(currentActivity);
         container.setLayoutParams(new ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
         ));
         
         // Create close button
-        Button closeButton = createCloseButton();
+        Button closeButton = createCloseButton(currentActivity);
         
         // Position close button at top-left
         RelativeLayout.LayoutParams buttonParams = new RelativeLayout.LayoutParams(80, 80);
@@ -277,10 +276,10 @@ public class InAppBrowser extends CordovaPlugin {
         return container;
     }
     
-    private Button createCloseButton() {
+    private Button createCloseButton(Activity currentActivity) {
         Log.d(TAG, "createCloseButton called");
         
-        Button button = new Button(activity);
+        Button button = new Button(currentActivity);
         button.setId(View.generateViewId());
         
         // Set button properties
@@ -307,11 +306,11 @@ public class InAppBrowser extends CordovaPlugin {
         return button;
     }
     
-    private void showWebViewDialog(RelativeLayout container, CallbackContext callbackContext) {
+    private void showWebViewDialog(RelativeLayout container, CallbackContext callbackContext, Activity currentActivity) {
         try {
             Log.d(TAG, "showWebViewDialog called");
             
-            AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+            AlertDialog.Builder builder = new AlertDialog.Builder(currentActivity);
             builder.setView(container);
             
             // Create dialog
