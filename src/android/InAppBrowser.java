@@ -260,11 +260,8 @@ public class InAppBrowser extends CordovaPlugin {
                         // Load URL
                         webView.loadUrl(url);
                         
-                        // Create container with close button
+                        // Create container with close button (WebView ya está incluido)
                         RelativeLayout container = createWebViewContainer(currentActivity);
-                        
-                        // Add WebView to container
-                        container.addView(webView);
                         
                         // Create and show dialog
                         showWebViewDialog(container, callbackContext, currentActivity);
