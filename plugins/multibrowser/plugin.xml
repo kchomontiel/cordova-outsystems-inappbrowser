@@ -23,7 +23,6 @@
         </config-file>
         
         <source-file src="src/android/HiddenInAppBrowser.kt" target-dir="app/src/main/kotlin/com/outsystems/plugins/multibrowser" />
-
     </platform>
     
     <platform name="ios">
@@ -34,8 +33,8 @@
             <preference name="SwiftVersion" value="5" />
         </config-file>
 
+        <header-file src="src/ios/HiddenInAppBrowser.h" />
         <source-file src="src/ios/HiddenInAppBrowser.swift" />
-        <source-file src="src/ios/HiddenInAppBrowserInputArgumentsModel.swift" />
         
         <config-file parent="/*" target="config.xml">
             <preference name="WKWebViewOnly" value="true" />
