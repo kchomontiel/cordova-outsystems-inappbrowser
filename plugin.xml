@@ -29,7 +29,10 @@
         <source-file src="src/ios/CDVInAppBrowser.h" />
         
         <framework src="WebKit.framework" />
+        
+        <!-- iOS Build Preferences -->
         <preference name="IPHONEOS_DEPLOYMENT_TARGET" value="16.0" />
+        <preference name="SWIFT_VERSION" value="5.0" />
     </platform>
     
     <!-- Android Platform -->
@@ -44,6 +47,10 @@
         <source-file src="src/android/InAppBrowser.java" target-dir="src/org/apache/cordova/inappbrowser" />
         
         <uses-permission android:name="android.permission.INTERNET" />
+        
+        <!-- Android Build Preferences -->
+        <preference name="android-minSdkVersion" value="22" />
+        <preference name="android-targetSdkVersion" value="33" />
     </platform>
     
     <!-- Web Platform -->
