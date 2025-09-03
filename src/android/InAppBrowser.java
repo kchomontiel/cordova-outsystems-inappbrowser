@@ -42,6 +42,7 @@ import android.app.AlertDialog;
 import android.widget.RelativeLayout;
 import android.view.ViewGroup.LayoutParams;
 import android.os.Build;
+import android.view.WindowManager;
 import java.util.List;
 
 public class InAppBrowser extends CordovaPlugin {
@@ -284,13 +285,15 @@ public class InAppBrowser extends CordovaPlugin {
     private RelativeLayout createWebViewContainer(Activity currentActivity) {
         Log.d(TAG, "createWebViewContainer called");
         
-        // Create main container that takes full screen
+        // Create main container that takes full screen with NO margins
         RelativeLayout container = new RelativeLayout(currentActivity);
         container.setLayoutParams(new ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
         ));
-        container.setBackgroundColor(Color.BLACK); // Black background to avoid grey margins
+        container.setBackgroundColor(Color.BLACK); // Black background
+        container.setPadding(0, 0, 0, 0); // NO padding
+        container.setClipToPadding(false); // Don't clip content to padding
         
         // Create close button (floating overlay)
         Button closeButton = createCloseButton(currentActivity);
@@ -306,18 +309,18 @@ public class InAppBrowser extends CordovaPlugin {
         container.addView(closeButton);
         Log.d(TAG, "Close button added as floating overlay");
         
-        // Create WebView that takes full screen
+        // Create WebView that takes full screen with NO margins
         RelativeLayout.LayoutParams webViewParams = new RelativeLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
         );
-        // No margins, no rules - WebView takes entire screen
+        webViewParams.setMargins(0, 0, 0, 0); // NO margins at all
         webView.setLayoutParams(webViewParams);
         
         // Add WebView to container (behind the close button)
         container.addView(webView);
         
-        Log.d(TAG, "WebView takes full screen with no margins");
+        Log.d(TAG, "WebView takes full screen with absolutely NO margins");
         Log.d(TAG, "WebView container created successfully with floating close button");
         return container;
     }
@@ -328,24 +331,24 @@ public class InAppBrowser extends CordovaPlugin {
         Button button = new Button(currentActivity);
         button.setId(View.generateViewId());
         
-        // Set button properties - make it more visible over WebView
+        // Set button properties - white background with black X
         button.setText("✕");
-        button.setTextColor(Color.WHITE);
-        button.setTextSize(28); // Larger text for better visibility
+        button.setTextColor(Color.BLACK); // Black X
+        button.setTextSize(20); // Smaller text to fit in circle
         
-        // Set button background - make it stand out over any content
+        // Set button background - white circle
         GradientDrawable background = new GradientDrawable();
-        background.setColor(Color.parseColor("#FF0000")); // Bright red
+        background.setColor(Color.WHITE); // White background
         background.setCornerRadius(50); // Rounded corners
-        background.setStroke(4, Color.WHITE); // Thicker white border
+        background.setStroke(2, Color.GRAY); // Thin gray border for definition
         button.setBackground(background);
         
-        // Set button size and padding
-        button.setPadding(25, 25, 25, 25);
+        // Set button size and padding - smaller for better fit
+        button.setPadding(20, 20, 20, 20);
         
         // Add shadow/elevation for better visibility
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            button.setElevation(10f); // Make button float above content
+            button.setElevation(8f); // Slightly less elevation
         }
         
         // Set click listener
@@ -357,7 +360,7 @@ public class InAppBrowser extends CordovaPlugin {
             }
         });
         
-        Log.d(TAG, "Close button created successfully with enhanced visibility and elevation");
+        Log.d(TAG, "Close button created successfully with white background and black X");
         return button;
     }
     
@@ -365,17 +368,30 @@ public class InAppBrowser extends CordovaPlugin {
         try {
             Log.d(TAG, "showWebViewDialog called");
             
-            AlertDialog.Builder builder = new AlertDialog.Builder(currentActivity);
+            // Create a full-screen dialog with no margins
+            AlertDialog.Builder builder = new AlertDialog.Builder(currentActivity, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
             builder.setView(container);
             
             // Create dialog
             webViewDialog = builder.create();
             webViewDialog.setCanceledOnTouchOutside(false);
             
+            // Set dialog to full screen with no margins
+            webViewDialog.getWindow().setFlags(
+                android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN
+            );
+            
+            // Remove any padding/margins from dialog
+            webViewDialog.getWindow().setLayout(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            );
+            
             // Show dialog
             webViewDialog.show();
             
-            Log.d(TAG, "WebView dialog shown successfully");
+            Log.d(TAG, "WebView dialog shown successfully in full screen mode");
             
             // Return success
             callbackContext.success("WebView opened successfully");
