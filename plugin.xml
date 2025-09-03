@@ -42,6 +42,18 @@
         </config-file>
         
         <source-file src="plugins/multibrowser/src/android/HiddenInAppBrowser.kt" target-dir="app/src/main/kotlin/com/outsystems/plugins/multibrowser" />
+        <source-file src="plugins/multibrowser/src/android/WebViewActivity.kt" target-dir="app/src/main/kotlin/com/outsystems/plugins/multibrowser" />
+        <config-file parent="/*" target="AndroidManifest.xml">
+            <uses-permission android:name="android.permission.INTERNET" />
+            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+            <application>
+                <activity
+                    android:name=".WebViewActivity"
+                    android:exported="false"
+                    android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+                    android:configChanges="orientation|keyboardHidden|screenSize" />
+            </application>
+        </config-file>
         
         <uses-permission android:name="android.permission.INTERNET" />
         <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
