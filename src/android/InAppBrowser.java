@@ -284,50 +284,41 @@ public class InAppBrowser extends CordovaPlugin {
     private RelativeLayout createWebViewContainer(Activity currentActivity) {
         Log.d(TAG, "createWebViewContainer called");
         
+        // Create main container that takes full screen
         RelativeLayout container = new RelativeLayout(currentActivity);
         container.setLayoutParams(new ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
         ));
+        container.setBackgroundColor(Color.BLACK); // Black background to avoid grey margins
         
-        // Create toolbar background (white)
-        RelativeLayout toolbarBackground = new RelativeLayout(currentActivity);
-        RelativeLayout.LayoutParams toolbarParams = new RelativeLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            120 // Height for toolbar
-        );
-        toolbarBackground.setLayoutParams(toolbarParams);
-        toolbarBackground.setBackgroundColor(Color.WHITE);
-        
-        // Create close button
+        // Create close button (floating overlay)
         Button closeButton = createCloseButton(currentActivity);
         
-        // Position close button at top-left within toolbar - make it more prominent
-        RelativeLayout.LayoutParams buttonParams = new RelativeLayout.LayoutParams(100, 100); // Larger button
-        buttonParams.setMargins(30, 30, 0, 0); // More margin for better positioning
+        // Position close button as floating overlay at top-left
+        RelativeLayout.LayoutParams buttonParams = new RelativeLayout.LayoutParams(100, 100);
+        buttonParams.setMargins(30, 50, 0, 0); // Top-left corner with status bar consideration
+        buttonParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+        buttonParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
         closeButton.setLayoutParams(buttonParams);
         
-        // Add close button to toolbar
-        toolbarBackground.addView(closeButton);
+        // Add close button to main container (on top)
+        container.addView(closeButton);
+        Log.d(TAG, "Close button added as floating overlay");
         
-        // Add toolbar to main container
-        container.addView(toolbarBackground);
-        
-        Log.d(TAG, "Close button positioned at top-left with enhanced size and positioning");
-        
-        // Position WebView below close button
+        // Create WebView that takes full screen
         RelativeLayout.LayoutParams webViewParams = new RelativeLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
         );
-        webViewParams.addRule(RelativeLayout.BELOW, closeButton.getId());
-        // No margins - WebView takes full screen
+        // No margins, no rules - WebView takes entire screen
         webView.setLayoutParams(webViewParams);
         
-        // Add WebView to container
+        // Add WebView to container (behind the close button)
         container.addView(webView);
         
-        Log.d(TAG, "WebView container created successfully with WebView added");
+        Log.d(TAG, "WebView takes full screen with no margins");
+        Log.d(TAG, "WebView container created successfully with floating close button");
         return container;
     }
     
@@ -337,20 +328,25 @@ public class InAppBrowser extends CordovaPlugin {
         Button button = new Button(currentActivity);
         button.setId(View.generateViewId());
         
-        // Set button properties - make it more visible
+        // Set button properties - make it more visible over WebView
         button.setText("✕");
         button.setTextColor(Color.WHITE);
-        button.setTextSize(24); // Increased text size
+        button.setTextSize(28); // Larger text for better visibility
         
-        // Set button background - make it more prominent
+        // Set button background - make it stand out over any content
         GradientDrawable background = new GradientDrawable();
-        background.setColor(Color.parseColor("#FF0000")); // Brighter red
-        background.setCornerRadius(50); // Larger corner radius
-        background.setStroke(3, Color.WHITE); // White border
+        background.setColor(Color.parseColor("#FF0000")); // Bright red
+        background.setCornerRadius(50); // Rounded corners
+        background.setStroke(4, Color.WHITE); // Thicker white border
         button.setBackground(background);
         
         // Set button size and padding
-        button.setPadding(20, 20, 20, 20);
+        button.setPadding(25, 25, 25, 25);
+        
+        // Add shadow/elevation for better visibility
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            button.setElevation(10f); // Make button float above content
+        }
         
         // Set click listener
         button.setOnClickListener(new View.OnClickListener() {
@@ -361,7 +357,7 @@ public class InAppBrowser extends CordovaPlugin {
             }
         });
         
-        Log.d(TAG, "Close button created successfully with enhanced visibility");
+        Log.d(TAG, "Close button created successfully with enhanced visibility and elevation");
         return button;
     }
     
