@@ -147,14 +147,26 @@ class HiddenInAppBrowser : CordovaPlugin() {
                         
                         setOnClickListener {
                             Log.d(TAG, "Close button clicked")
-                            // Restore the original Cordova view
-                            if (originalCordovaView != null) {
-                                cordova.activity.setContentView(originalCordovaView)
-                                originalCordovaView = null // Clear the reference
+                            // Instead of restoring the original view, create a new clean layout
+                            try {
+                                // Clear the current content view
+                                cordova.activity.setContentView(null)
+                                
+                                // Create a new clean layout for Cordova
+                                val cleanLayout = android.widget.FrameLayout(cordova.activity)
+                                cleanLayout.id = android.R.id.content
+                                
+                                // Set the new clean layout
+                                cordova.activity.setContentView(cleanLayout)
+                                
+                                // Clear the reference
+                                originalCordovaView = null
+                                
                                 callbackContext.success("WebView closed successfully")
-                            } else {
-                                Log.w(TAG, "No original view stored, cannot restore")
-                                callbackContext.error("Cannot restore original view")
+                            } catch (e: Exception) {
+                                Log.w(TAG, "Error creating clean layout, finishing activity", e)
+                                cordova.activity.finish()
+                                callbackContext.success("WebView closed (activity finished)")
                             }
                         }
                     }
@@ -209,14 +221,26 @@ class HiddenInAppBrowser : CordovaPlugin() {
             try {
                 Log.d(TAG, "Closing WebView")
                 
-                // Restore the original Cordova view that we stored
-                if (originalCordovaView != null) {
-                    cordova.activity.setContentView(originalCordovaView)
-                    originalCordovaView = null // Clear the reference
+                // Instead of restoring the original view, create a new clean layout
+                try {
+                    // Clear the current content view
+                    cordova.activity.setContentView(null)
+                    
+                    // Create a new clean layout for Cordova
+                    val cleanLayout = android.widget.FrameLayout(cordova.activity)
+                    cleanLayout.id = android.R.id.content
+                    
+                    // Set the new clean layout
+                    cordova.activity.setContentView(cleanLayout)
+                    
+                    // Clear the reference
+                    originalCordovaView = null
+                    
                     callbackContext.success("WebView closed successfully")
-                } else {
-                    Log.w(TAG, "No original view stored, cannot restore")
-                    callbackContext.error("Cannot restore original view")
+                } catch (e: Exception) {
+                    Log.w(TAG, "Error creating clean layout, finishing activity", e)
+                    cordova.activity.finish()
+                    callbackContext.success("WebView closed (activity finished)")
                 }
                 
             } catch (e: Exception) {
