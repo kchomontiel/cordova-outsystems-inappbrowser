@@ -102,7 +102,7 @@ public class InAppBrowser extends CordovaPlugin {
     
     private void openInAppBrowser(String url, String target, String options, CallbackContext callbackContext) {
         try {
-            Log.d(TAG, "openInAppBrowser called with url: " + url);
+            Log.d(TAG, "openInAppBrowser called with url: " + url + ", target: " + target);
             
             // Parse options
             boolean isHidden = options != null && options.contains("hidden=yes");
@@ -111,15 +111,32 @@ public class InAppBrowser extends CordovaPlugin {
             boolean hideNavigationButtons = options != null && options.contains("hidenavigationbuttons=yes");
             
             Log.d(TAG, "Options parsed - hidden: " + isHidden + ", location: " + showLocation + ", toolbar: " + showToolbar);
+            Log.d(TAG, "Target: " + target);
             
-            if (isHidden) {
-                // Hidden mode - open in background without UI
-                Log.d(TAG, "Opening URL in hidden mode: " + url);
-                openHiddenWebView(url, callbackContext);
+            // Check target parameter
+            if ("_system".equals(target)) {
+                // External browser - use openExternal
+                Log.d(TAG, "Opening URL in external browser (target: _system): " + url);
+                openExternalBrowser(url, callbackContext);
+            } else if ("_blank".equals(target) || "_self".equals(target)) {
+                // Internal WebView - check if hidden or visible
+                if (isHidden) {
+                    // Hidden mode - open in background without UI
+                    Log.d(TAG, "Opening URL in hidden WebView (target: " + target + "): " + url);
+                    openHiddenWebView(url, callbackContext);
+                } else {
+                    // Normal mode - open with UI
+                    Log.d(TAG, "Opening URL in visible WebView (target: " + target + "): " + url);
+                    openVisibleWebView(url, callbackContext);
+                }
             } else {
-                // Normal mode - open with UI
-                Log.d(TAG, "Opening URL in normal mode: " + url);
-                openVisibleWebView(url, callbackContext);
+                // Default behavior - treat as internal WebView
+                Log.d(TAG, "Unknown target '" + target + "', defaulting to internal WebView");
+                if (isHidden) {
+                    openHiddenWebView(url, callbackContext);
+                } else {
+                    openVisibleWebView(url, callbackContext);
+                }
             }
             
         } catch (Exception e) {
@@ -429,17 +446,34 @@ public class InAppBrowser extends CordovaPlugin {
         try {
             Log.d(TAG, "openExternalBrowser called with url: " + url);
             
+            // Create intent for external browser
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             
+            // Add flags for better compatibility
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+            
+            // Check if there's an app to handle this URL
             if (intent.resolveActivity(cordova.getActivity().getPackageManager()) != null) {
-                cordova.getActivity().startActivity(intent);
-                callbackContext.success("URL opened in external browser");
-                Log.d(TAG, "URL opened in external browser successfully");
+                try {
+                    // Start the external browser activity
+                    cordova.getActivity().startActivity(intent);
+                    callbackContext.success("URL opened in external browser");
+                    Log.d(TAG, "URL opened in external browser successfully: " + url);
+                } catch (SecurityException se) {
+                    Log.e(TAG, "SecurityException opening external browser: " + se.getMessage());
+                    callbackContext.error("Permission denied to open external browser");
+                } catch (Exception e) {
+                    Log.e(TAG, "Exception starting external browser: " + e.getMessage());
+                    callbackContext.error("Error starting external browser: " + e.getMessage());
+                }
             } else {
-                callbackContext.error("No app available to handle this URL");
                 Log.w(TAG, "No app available to handle URL: " + url);
+                callbackContext.error("No app available to handle this URL");
             }
+        } catch (IllegalArgumentException iae) {
+            Log.e(TAG, "Invalid URL format: " + url + " - " + iae.getMessage());
+            callbackContext.error("Invalid URL format: " + url);
         } catch (ActivityNotFoundException e) {
             Log.e(TAG, "ActivityNotFoundException: " + e.getMessage());
             callbackContext.error("No app available to handle this URL");
