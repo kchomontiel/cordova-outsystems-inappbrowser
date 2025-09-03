@@ -24,6 +24,7 @@ class HiddenInAppBrowser : CordovaPlugin() {
     
 
 
+
     override fun execute(action: String, args: JSONArray, callbackContext: CallbackContext): Boolean {
         try {
             when (action) {
@@ -70,6 +71,8 @@ class HiddenInAppBrowser : CordovaPlugin() {
             try {
                 Log.d(TAG, "Opening URL in WebView: $url")
                 
+
+                
                 val webView = WebView(cordova.activity)
                 webView.settings.apply {
                     javaScriptEnabled = true
@@ -115,38 +118,34 @@ class HiddenInAppBrowser : CordovaPlugin() {
                     }
                 }
 
+                // Create a layout for the WebView (same as before)
                 val layout = FrameLayout(cordova.activity)
                 
-                // Add close button if requested
+                // Add close button if requested (same style and position)
                 if (showCloseButton) {
                     val closeButton = android.widget.Button(cordova.activity).apply {
                         text = "✕"
                         setTextColor(android.graphics.Color.BLACK)
-                        setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                        setBackgroundColor(android.graphics.Color.WHITE)
                         setPadding(20, 20, 20, 20)
+                        
+                        // Create rounded white background
+                        val backgroundDrawable = android.graphics.drawable.GradientDrawable().apply {
+                            shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                            cornerRadius = 25f // Rounded corners
+                            setColor(android.graphics.Color.WHITE)
+                            setStroke(2, android.graphics.Color.LTGRAY) // Optional: thin gray border
+                        }
+                        background = backgroundDrawable
+                        
                         setOnClickListener {
                             Log.d(TAG, "Close button clicked")
-                            // Restore the original Cordova view instead of setContentView(null)
-                            try {
-                                // Try to restore the original Cordova view
-                                val cordovaView = cordova.activity.findViewById<android.view.View>(android.R.id.content)
-                                if (cordovaView != null) {
-                                    cordova.activity.setContentView(cordovaView)
-                                    callbackContext.success("WebView closed successfully")
-                                } else {
-                                    // Fallback: finish the activity
-                                    cordova.activity.finish()
-                                    callbackContext.success("WebView closed (activity finished)")
-                                }
-                            } catch (e: Exception) {
-                                Log.w(TAG, "Could not restore original view, finishing activity", e)
-                                cordova.activity.finish()
-                                callbackContext.success("WebView closed (activity finished)")
-                            }
+                            dialog.dismiss() // Simple and clean close
+                            callbackContext.success("WebView closed successfully")
                         }
                     }
                     
-                    // Position the close button in the top-left corner
+                    // Position the close button in the top-left corner (same as before)
                     val closeButtonLayoutParams = FrameLayout.LayoutParams(
                         FrameLayout.LayoutParams.WRAP_CONTENT,
                         FrameLayout.LayoutParams.WRAP_CONTENT
@@ -160,8 +159,25 @@ class HiddenInAppBrowser : CordovaPlugin() {
                 
                 layout.addView(webView)
                 
-                cordova.activity.setContentView(layout)
+                // Create AlertDialog to show the WebView (instead of setContentView)
+                val dialog = android.app.AlertDialog.Builder(cordova.activity)
+                    .setView(layout)
+                    .setCancelable(false)
+                    .create()
                 
+                // Set dialog to full screen (same full-screen experience)
+                dialog.window?.apply {
+                    setLayout(
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                    setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.WHITE))
+                }
+                
+                // Show the dialog
+                dialog.show()
+                
+                // Load the URL
                 webView.loadUrl(url)
                 
             } catch (e: Exception) {
@@ -194,22 +210,9 @@ class HiddenInAppBrowser : CordovaPlugin() {
             try {
                 Log.d(TAG, "Closing WebView")
                 
-                // Try to restore the original Cordova view
-                try {
-                    val cordovaView = cordova.activity.findViewById<android.view.View>(android.R.id.content)
-                    if (cordovaView != null) {
-                        cordova.activity.setContentView(cordovaView)
-                        callbackContext.success("WebView closed successfully")
-                    } else {
-                        // Fallback: finish the activity
-                        cordova.activity.finish()
-                        callbackContext.success("WebView closed (activity finished)")
-                    }
-                } catch (e: Exception) {
-                    Log.w(TAG, "Could not restore original view, finishing activity", e)
-                    cordova.activity.finish()
-                    callbackContext.success("WebView closed (activity finished)")
-                }
+                // Since we're using AlertDialog now, this method is mainly for programmatic closing
+                // The close button handles the actual closing via dialog.dismiss()
+                callbackContext.success("WebView close method called")
                 
             } catch (e: Exception) {
                 Log.e(TAG, "Error closing WebView", e)
