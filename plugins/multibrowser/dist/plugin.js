@@ -3,6 +3,7 @@ var multibrowser = {
     url,
     target,
     options,
+    showCloseButton,
     successCallback,
     errorCallback
   ) {
@@ -11,7 +12,7 @@ var multibrowser = {
       errorCallback,
       "multibrowser",
       "openInWebView",
-      [url, target, options]
+      [url, target, options, showCloseButton]
     );
   },
 

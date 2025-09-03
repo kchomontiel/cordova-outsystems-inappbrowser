@@ -33,7 +33,10 @@ class HiddenInAppBrowser: CDVPlugin {
             return self.sendError("Invalid parameters", for: command.callbackId)
         }
         
-        print("✅ openInWebView - Parameters extracted: URL=\(url), Target=\(target), Options=\(options)")
+        // Extract showCloseButton parameter (default to true if not provided)
+        let showCloseButton = command.argument(at: 3) as? Bool ?? true
+        
+        print("✅ openInWebView - Parameters extracted: URL=\(url), Target=\(target), Options=\(options), ShowCloseButton=\(showCloseButton)")
         
         self.commandDelegate.run { [weak self] in
             guard let self else { 
@@ -55,9 +58,11 @@ class HiddenInAppBrowser: CDVPlugin {
                 webViewController.view = webView
                 webViewController.title = "WebView"
                 
-                // Add close button
-                let closeButton = UIBarButtonItem(barButtonSystemItem: .close, target: self, action: #selector(self.closeWebView))
-                webViewController.navigationItem.leftBarButtonItem = closeButton
+                // Add close button conditionally
+                if showCloseButton {
+                    let closeButton = UIBarButtonItem(barButtonSystemItem: .close, target: self, action: #selector(self.closeWebView))
+                    webViewController.navigationItem.leftBarButtonItem = closeButton
+                }
                 
                 // Create navigation controller
                 let navigationController = UINavigationController(rootViewController: webViewController)
@@ -122,6 +127,30 @@ class HiddenInAppBrowser: CDVPlugin {
         // For hidden mode, we'll just return success immediately (like Android)
         print("✅ openHidden - Hidden mode activated")
         self.sendSuccess("Hidden mode activated", for: command.callbackId)
+    }
+    
+    @objc(closeWebView:)
+    func closeWebView(command: CDVInvokedUrlCommand) {
+        print("🔍 closeWebView - ===== INICIO DEL MÉTODO =====")
+        print("closeWebView - Command received: \(command)")
+        
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { 
+                print("❌ closeWebView - Self is nil")
+                return 
+            }
+            
+            if let openedViewController = self.openedViewController {
+                print("✅ closeWebView - Cerrando WebView")
+                openedViewController.dismiss(animated: true) {
+                    print("✅ closeWebView - WebView cerrado exitosamente")
+                    self.sendSuccess("WebView closed successfully", for: command.callbackId)
+                }
+            } else {
+                print("❌ closeWebView - No hay WebView abierto")
+                self.sendError("No WebView is currently open", for: command.callbackId)
+            }
+        }
     }
     
     @objc(openInExternalBrowser:)

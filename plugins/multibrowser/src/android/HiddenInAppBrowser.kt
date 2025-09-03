@@ -19,6 +19,7 @@ class HiddenInAppBrowser : CordovaPlugin() {
         private const val ACTION_OPEN_IN_WEBVIEW = "openInWebView"
         private const val ACTION_OPEN_HIDDEN = "openHidden"
         private const val ACTION_OPEN_IN_EXTERNAL_BROWSER = "openInExternalBrowser"
+        private const val ACTION_CLOSE_WEBVIEW = "closeWebView"
     }
 
     override fun execute(action: String, args: JSONArray, callbackContext: CallbackContext): Boolean {
@@ -28,7 +29,8 @@ class HiddenInAppBrowser : CordovaPlugin() {
                     val url = args.getString(0)
                     val target = if (args.length() > 1) args.getString(1) else "_blank"
                     val options = if (args.length() > 2) args.getString(2) else ""
-                    openInWebView(url, target, options, callbackContext)
+                    val showCloseButton = if (args.length() > 3) args.getBoolean(3) else true
+                    openInWebView(url, target, options, showCloseButton, callbackContext)
                     return true
                 }
                 ACTION_OPEN_HIDDEN -> {
@@ -45,6 +47,10 @@ class HiddenInAppBrowser : CordovaPlugin() {
                     openInExternalBrowser(url, target, options, callbackContext)
                     return true
                 }
+                ACTION_CLOSE_WEBVIEW -> {
+                    closeWebView(callbackContext)
+                    return true
+                }
                 else -> {
                     callbackContext.error("Unknown action: $action")
                     return false
@@ -57,7 +63,7 @@ class HiddenInAppBrowser : CordovaPlugin() {
         }
     }
 
-    private fun openInWebView(url: String, target: String, options: String, callbackContext: CallbackContext) {
+    private fun openInWebView(url: String, target: String, options: String, showCloseButton: Boolean, callbackContext: CallbackContext) {
         cordova.activity.runOnUiThread {
             try {
                 Log.d(TAG, "Opening URL in WebView: $url")
@@ -108,6 +114,31 @@ class HiddenInAppBrowser : CordovaPlugin() {
                 }
 
                 val layout = FrameLayout(cordova.activity)
+                
+                // Add close button if requested
+                if (showCloseButton) {
+                    val closeButton = android.widget.Button(cordova.activity).apply {
+                        text = "✕"
+                        setTextColor(android.graphics.Color.WHITE)
+                        setBackgroundColor(android.graphics.Color.RED)
+                        setPadding(20, 20, 20, 20)
+                        setOnClickListener {
+                            closeWebView(callbackContext)
+                        }
+                    }
+                    
+                    // Position the close button in the top-left corner
+                    val closeButtonLayoutParams = FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.WRAP_CONTENT,
+                        FrameLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        topMargin = 50
+                        leftMargin = 20
+                    }
+                    
+                    layout.addView(closeButton, closeButtonLayoutParams)
+                }
+                
                 layout.addView(webView)
                 
                 cordova.activity.setContentView(layout)
@@ -136,6 +167,19 @@ class HiddenInAppBrowser : CordovaPlugin() {
         } catch (e: Exception) {
             Log.e(TAG, "Error opening external browser", e)
             callbackContext.error("Error opening external browser: ${e.message}")
+        }
+    }
+
+    private fun closeWebView(callbackContext: CallbackContext) {
+        cordova.activity.runOnUiThread {
+            try {
+                Log.d(TAG, "Closing WebView")
+                cordova.activity.setContentView(null) // Clear the current content view
+                callbackContext.success("WebView closed")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error closing WebView", e)
+                callbackContext.error("Error closing WebView: ${e.message}")
+            }
         }
     }
 }
