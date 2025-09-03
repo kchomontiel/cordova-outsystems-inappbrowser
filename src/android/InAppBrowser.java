@@ -305,9 +305,9 @@ public class InAppBrowser extends CordovaPlugin {
         // Create close button
         Button closeButton = createCloseButton(currentActivity);
         
-        // Position close button at top-left within toolbar
-        RelativeLayout.LayoutParams buttonParams = new RelativeLayout.LayoutParams(80, 80);
-        buttonParams.setMargins(20, 20, 0, 0);
+        // Position close button at top-left within toolbar - make it more prominent
+        RelativeLayout.LayoutParams buttonParams = new RelativeLayout.LayoutParams(100, 100); // Larger button
+        buttonParams.setMargins(30, 30, 0, 0); // More margin for better positioning
         closeButton.setLayoutParams(buttonParams);
         
         // Add close button to toolbar
@@ -315,6 +315,8 @@ public class InAppBrowser extends CordovaPlugin {
         
         // Add toolbar to main container
         container.addView(toolbarBackground);
+        
+        Log.d(TAG, "Close button positioned at top-left with enhanced size and positioning");
         
         // Position WebView below close button
         RelativeLayout.LayoutParams webViewParams = new RelativeLayout.LayoutParams(
@@ -325,7 +327,10 @@ public class InAppBrowser extends CordovaPlugin {
         // No margins - WebView takes full screen
         webView.setLayoutParams(webViewParams);
         
-        Log.d(TAG, "WebView container created successfully");
+        // Add WebView to container
+        container.addView(webView);
+        
+        Log.d(TAG, "WebView container created successfully with WebView added");
         return container;
     }
     
@@ -335,16 +340,20 @@ public class InAppBrowser extends CordovaPlugin {
         Button button = new Button(currentActivity);
         button.setId(View.generateViewId());
         
-        // Set button properties
+        // Set button properties - make it more visible
         button.setText("✕");
         button.setTextColor(Color.WHITE);
-        button.setTextSize(18);
+        button.setTextSize(24); // Increased text size
         
-        // Set button background
+        // Set button background - make it more prominent
         GradientDrawable background = new GradientDrawable();
-        background.setColor(Color.parseColor("#FF4444"));
-        background.setCornerRadius(40);
+        background.setColor(Color.parseColor("#FF0000")); // Brighter red
+        background.setCornerRadius(50); // Larger corner radius
+        background.setStroke(3, Color.WHITE); // White border
         button.setBackground(background);
+        
+        // Set button size and padding
+        button.setPadding(20, 20, 20, 20);
         
         // Set click listener
         button.setOnClickListener(new View.OnClickListener() {
@@ -355,7 +364,7 @@ public class InAppBrowser extends CordovaPlugin {
             }
         });
         
-        Log.d(TAG, "Close button created successfully");
+        Log.d(TAG, "Close button created successfully with enhanced visibility");
         return button;
     }
     
