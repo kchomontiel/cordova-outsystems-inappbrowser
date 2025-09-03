@@ -152,38 +152,77 @@ public class InAppBrowser extends CordovaPlugin {
             
             // Get activity reference
             final Activity currentActivity = cordova.getActivity();
+            if (currentActivity == null) {
+                Log.e(TAG, "openHiddenWebView - Activity is null");
+                callbackContext.error("Activity is not available");
+                return;
+            }
+            
+            Log.d(TAG, "openHiddenWebView - Activity is available, creating hidden WebView");
             
             // Run UI operations on main thread
             currentActivity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        Log.d(TAG, "Running hidden WebView operations on main thread");
+                        Log.d(TAG, "openHiddenWebView - Creating hidden WebView on UI thread");
                         
-                        // Create hidden WebView
+                        // Create a background WebView (invisible)
                         webView = new WebView(currentActivity);
-                        webView.getSettings().setJavaScriptEnabled(true);
-                        webView.getSettings().setDomStorageEnabled(true);
-                        webView.getSettings().setAllowFileAccess(true);
+                        Log.d(TAG, "openHiddenWebView - WebView created");
                         
-                        // Load URL
+                        // Configure WebView settings
+                        WebSettings settings = webView.getSettings();
+                        settings.setJavaScriptEnabled(true);
+                        settings.setDomStorageEnabled(true);
+                        settings.setLoadWithOverviewMode(true);
+                        settings.setUseWideViewPort(true);
+                        settings.setBuiltInZoomControls(true);
+                        settings.setDisplayZoomControls(false);
+                        settings.setSupportZoom(true);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+                        }
+                        Log.d(TAG, "openHiddenWebView - WebView settings configured");
+                        
+                        // Set WebView to be invisible
+                        webView.setAlpha(0f);
+                        webView.setVisibility(View.GONE);
+                        Log.d(TAG, "openHiddenWebView - WebView set to invisible");
+                        
+                        // Create a custom WebViewClient to handle navigation
+                        webView.setWebViewClient(new WebViewClient() {
+                            @Override
+                            public void onPageFinished(WebView view, String url) {
+                                super.onPageFinished(view, url);
+                                Log.d(TAG, "openHiddenWebView - Page finished loading: " + url);
+                                callbackContext.success("URL loaded in hidden WebView successfully");
+                            }
+                            
+                            @Override
+                            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                                super.onReceivedError(view, errorCode, description, failingUrl);
+                                Log.e(TAG, "openHiddenWebView - Error loading URL: " + description);
+                                callbackContext.error("Error loading URL: " + description);
+                            }
+                        });
+                        Log.d(TAG, "openHiddenWebView - WebViewClient configured");
+                        
+                        // Load the URL in background
+                        Log.d(TAG, "openHiddenWebView - Loading URL: " + url);
                         webView.loadUrl(url);
-                        
-                        Log.d(TAG, "Hidden WebView created and loaded URL on UI thread");
+                        Log.d(TAG, "openHiddenWebView - URL load initiated");
                         
                     } catch (Exception e) {
-                        Log.e(TAG, "Error creating hidden WebView on UI thread: " + e.getMessage(), e);
-                        callbackContext.error("Error creating hidden WebView: " + e.getMessage());
+                        Log.e(TAG, "openHiddenWebView - Error creating hidden WebView: " + e.getMessage(), e);
+                        callbackContext.error("Error loading URL in hidden mode: " + e.getMessage());
                     }
                 }
             });
             
-            // Return success immediately (WebView is being created in background)
-            callbackContext.success("URL opened in hidden mode");
-            
         } catch (Exception e) {
-            Log.e(TAG, "Error opening hidden WebView: " + e.getMessage(), e);
-            callbackContext.error("Error opening hidden WebView: " + e.getMessage());
+            Log.e(TAG, "openHiddenWebView - Error setting up hidden WebView: " + e.getMessage(), e);
+            callbackContext.error("Error setting up hidden WebView: " + e.getMessage());
         }
     }
     
