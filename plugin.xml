@@ -33,9 +33,11 @@
         
         <framework src="WebKit.framework" />
         
-        <!-- iOS Build Preferences -->
-        <preference name="IPHONEOS_DEPLOYMENT_TARGET" value="16.0" />
-        <preference name="SWIFT_VERSION" value="5.0" />
+        <!-- iOS Build Configuration -->
+        <config-file parent="/*" target="config.xml">
+            <preference name="IPHONEOS_DEPLOYMENT_TARGET" value="16.0" />
+            <preference name="SWIFT_VERSION" value="5.0" />
+        </config-file>
     </platform>
     
     <!-- Android Platform -->
@@ -51,9 +53,11 @@
         
         <uses-permission android:name="android.permission.INTERNET" />
         
-        <!-- Android Build Preferences -->
-        <preference name="android-minSdkVersion" value="22" />
-        <preference name="android-targetSdkVersion" value="33" />
+        <!-- Android Build Configuration -->
+        <config-file parent="/*" target="res/xml/config.xml">
+            <preference name="android-minSdkVersion" value="22" />
+            <preference name="android-targetSdkVersion" value="33" />
+        </config-file>
     </platform>
     
     <!-- Web Platform -->
