@@ -11,7 +11,7 @@
     
     <!-- JavaScript interface -->
     <js-module src="plugins/multibrowser/dist/plugin.js" name="multibrowser">
-        <clobbers target="cordova.plugins.multibrowser" />
+        <clobbers target="multibrowser" />
     </js-module>
     
     <!-- iOS Platform -->
